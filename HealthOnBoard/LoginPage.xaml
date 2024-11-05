@@ -1,0 +1,19 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.LoginPage"
+             Title="Logowanie">
+
+    <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="CenterAndExpand">
+        <!-- Pole wejściowe dla PIN -->
+        <Entry x:Name="PINEntry"
+               Placeholder="Wprowadź PIN"
+               IsPassword="True"
+               Keyboard="Numeric"
+               HorizontalOptions="FillAndExpand" />
+
+        <!-- Przycisk logowania -->
+        <Button Text="Zaloguj się"
+                HorizontalOptions="Center"
+                Clicked="OnLoginClicked" />
+    </VerticalStackLayout>
+</ContentPage>

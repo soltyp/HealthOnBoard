@@ -1,0 +1,52 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.DashboardPage"
+             Title="Dashboard"
+             BackgroundColor="#f4f4f9">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15" VerticalOptions="CenterAndExpand">
+
+            <!-- Witaj i Informacje Użytkownika -->
+            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
+                <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Label Text="Witaj," FontSize="28" TextColor="#333333" HorizontalOptions="Center" />
+                    <Label x:Name="WelcomeLabel" FontSize="24" TextColor="#2E8B57" HorizontalOptions="Center" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Informacja o Roli -->
+            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
+                <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                    <Label Text="Twoja Rola:" FontSize="18" TextColor="#333333" HorizontalOptions="Center" />
+                    <Label x:Name="RoleLabel" FontSize="22" TextColor="#4A90E2" HorizontalOptions="Center" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Dodatkowe Informacje o Użytkowniku -->
+            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Szczegóły użytkownika:" FontSize="20" TextColor="#333333" FontAttributes="Bold" />
+                    <HorizontalStackLayout>
+                        <Label Text="ID Użytkownika:" FontSize="18" TextColor="#666666" />
+                        <Label x:Name="UserIDLabel" FontSize="18" TextColor="#333333" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout>
+                        <Label Text="Status aktywności:" FontSize="18" TextColor="#666666" />
+                        <Label x:Name="ActiveStatusLabel" FontSize="18" TextColor="#333333" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Opcje/Działania dla użytkownika -->
+            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
+                <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+                    <Label Text="Opcje" FontSize="20" TextColor="#333333" FontAttributes="Bold" HorizontalOptions="Center" />
+                    <Button Text="Wyloguj się" BackgroundColor="#FF6347" TextColor="White" CornerRadius="8" WidthRequest="200" Clicked="OnLogoutClicked"/>
+                    <Button Text="Ustawienia" BackgroundColor="#4682B4" TextColor="White" CornerRadius="8" WidthRequest="200" Clicked="OnSettingsClicked"/>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
