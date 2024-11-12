@@ -2,18 +2,52 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HealthOnBoard.LoginPage"
              Title="Logowanie">
-
     <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="CenterAndExpand">
         <!-- Pole wejściowe dla PIN -->
         <Entry x:Name="PINEntry"
                Placeholder="Wprowadź PIN"
                IsPassword="True"
                Keyboard="Numeric"
-               HorizontalOptions="FillAndExpand" />
+               HorizontalOptions="FillAndExpand"
+               IsVisible="{Binding IsPinInputVisible}" />
 
-        <!-- Przycisk logowania -->
-        <Button Text="Zaloguj się"
-                HorizontalOptions="Center"
-                Clicked="OnLoginClicked" />
+        <!-- Pole wejściowe dla PIN bezpieczeństwa -->
+        <Entry x:Name="SecurityPinEntry"
+               Placeholder="Wprowadź PIN bezpieczeństwa"
+               IsPassword="True"
+               Keyboard="Numeric"
+               HorizontalOptions="FillAndExpand"
+               IsVisible="{Binding IsSecurityPinInputVisible}" />
+
+        
+
+        <!-- Klawiatura numeryczna -->
+        <Grid Padding="10" ColumnSpacing="5" RowSpacing="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Klawisze numeryczne -->
+            <Button Text="1" Grid.Row="0" Grid.Column="0" Clicked="OnNumberClicked" />
+            <Button Text="2" Grid.Row="0" Grid.Column="1" Clicked="OnNumberClicked" />
+            <Button Text="3" Grid.Row="0" Grid.Column="2" Clicked="OnNumberClicked" />
+            <Button Text="4" Grid.Row="1" Grid.Column="0" Clicked="OnNumberClicked" />
+            <Button Text="5" Grid.Row="1" Grid.Column="1" Clicked="OnNumberClicked" />
+            <Button Text="6" Grid.Row="1" Grid.Column="2" Clicked="OnNumberClicked" />
+            <Button Text="7" Grid.Row="2" Grid.Column="0" Clicked="OnNumberClicked" />
+            <Button Text="8" Grid.Row="2" Grid.Column="1" Clicked="OnNumberClicked" />
+            <Button Text="9" Grid.Row="2" Grid.Column="2" Clicked="OnNumberClicked" />
+            <Button Text="Cofnij" Grid.Row="3" Grid.Column="0" Clicked="OnBackspaceClicked" />
+            <Button Text="0" Grid.Row="3" Grid.Column="1" Clicked="OnNumberClicked" />
+            <Button Text="OK" Grid.Row="3" Grid.Column="2" Clicked="OnOkClicked" />
+        </Grid>
     </VerticalStackLayout>
 </ContentPage>
