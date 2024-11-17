@@ -5,6 +5,8 @@ using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using HospitalManagementAPI;
 using HospitalManagementAPI.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HealthOnBoard
 {
@@ -16,12 +18,30 @@ namespace HealthOnBoard
         public bool IsPinInputVisible { get; set; } = true;
         public bool IsSecurityPinInputVisible { get; set; } = false;
 
+        // Lista numerów łóżek
+        public List<int> BedNumbers { get; } = Enumerable.Range(1, 5).ToList();
+
+        private int _selectedBedNumber = 1; // Domyślnie wybrany numer łóżka
+        public int SelectedBedNumber
+        {
+            get => _selectedBedNumber;
+            set
+            {
+                if (_selectedBedNumber != value)
+                {
+                    _selectedBedNumber = value;
+                    Debug.WriteLine($"Wybrano numer łóżka: {_selectedBedNumber}");
+                    OnPropertyChanged(nameof(SelectedBedNumber));
+                }
+            }
+        }
+
         public LoginPage(IConfiguration configuration)
         {
             InitializeComponent();
             _loginService = new LoginService();
             _databaseService = new DatabaseService(configuration);
-            BindingContext = this;
+            BindingContext = this; // Powiązanie z kontekstem danych
         }
 
         // Obsługa kliknięcia przycisku logowania
@@ -29,6 +49,7 @@ namespace HealthOnBoard
         {
             var pin = PINEntry.Text;
             Debug.WriteLine($"PIN przed autoryzacją: {pin}");
+            Debug.WriteLine($"Wybrany numer łóżka: {SelectedBedNumber}");
 
             if (string.IsNullOrWhiteSpace(pin))
             {
@@ -51,8 +72,20 @@ namespace HealthOnBoard
             if (user != null)
             {
                 Debug.WriteLine($"Uwierzytelniono użytkownika: {user.FirstName}");
-                await Navigation.PushAsync(new DashboardPage(user));
-                await DisplayAlert("Sukces", $"Witaj, {user.FirstName}!", "OK");
+
+                // Pobranie pacjenta przypisanego do wybranego numeru łóżka
+                var patient = await _databaseService.GetPatientByBedNumberAsync(SelectedBedNumber);
+
+                if (patient != null)
+                {
+                    // Przejście do DashboardPage z danymi użytkownika i pacjenta
+                    await Navigation.PushAsync(new DashboardPage(user, patient));
+                    await DisplayAlert("Sukces", $"Witaj, {user.FirstName}! Pacjent: {patient.Name}, Łóżko: {SelectedBedNumber}", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Uwaga", $"Brak pacjenta przypisanego do łóżka {SelectedBedNumber}.", "OK");
+                }
             }
             else
             {
@@ -103,7 +136,6 @@ namespace HealthOnBoard
                 }
             }
         }
-
 
         // Obsługa kliknięcia przycisku Cofnij
         private void OnBackspaceClicked(object sender, EventArgs e)

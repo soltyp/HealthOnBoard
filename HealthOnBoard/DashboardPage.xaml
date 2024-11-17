@@ -38,6 +38,25 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- Informacje o Pacjencie -->
+            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Informacje o Pacjencie:" FontSize="20" TextColor="#333333" FontAttributes="Bold" />
+                    <HorizontalStackLayout>
+                        <Label Text="Imię i nazwisko:" FontSize="18" TextColor="#666666" />
+                        <Label x:Name="PatientNameLabel" FontSize="18" TextColor="#333333" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout>
+                        <Label Text="Wiek:" FontSize="18" TextColor="#666666" />
+                        <Label x:Name="PatientAgeLabel" FontSize="18" TextColor="#333333" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout>
+                        <Label Text="Numer łóżka:" FontSize="18" TextColor="#666666" />
+                        <Label x:Name="BedNumberLabel" FontSize="18" TextColor="#333333" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- Opcje/Działania dla użytkownika -->
             <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
                 <VerticalStackLayout Spacing="15" HorizontalOptions="Center">

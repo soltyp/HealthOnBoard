@@ -6,6 +6,8 @@ using Dapper;
 using System.Diagnostics;
 using HospitalManagementAPI;
 using HospitalManagementData;
+using HealthOnBoard;
+
 
 public class DatabaseService
 {
@@ -15,7 +17,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
+        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
 
 
 
@@ -25,6 +27,16 @@ public class DatabaseService
             throw new InvalidOperationException("Connection string is not configured.");
         }
     }
+
+    public async Task<Patient?> GetPatientByBedNumberAsync(int bedNumber)
+    {
+        using (var connection = new SqlConnection(_connectionString)) // Użycie bezpośrednio zainicjalizowanego _connectionString
+        {
+            const string query = "SELECT * FROM Patients WHERE BedNumber = @BedNumber";
+            return await connection.QueryFirstOrDefaultAsync<Patient>(query, new { BedNumber = bedNumber });
+        }
+    }
+
 
     public async Task<bool> IsLockedOutAsync()
     {

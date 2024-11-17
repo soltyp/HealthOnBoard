@@ -2,32 +2,60 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HealthOnBoard.LoginPage"
              Title="Logowanie">
-    <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="CenterAndExpand">
-        <!-- Pole wejściowe dla PIN -->
-        <Entry x:Name="PINEntry"
-               Placeholder="Wprowadź PIN"
-               IsPassword="True"
-               Keyboard="Numeric"
-               HorizontalOptions="FillAndExpand"
-               IsVisible="{Binding IsPinInputVisible}" />
+    <Grid Padding="20" RowSpacing="20" ColumnSpacing="20" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand">
+        <!-- Definicje układu siatki -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!-- Górna sekcja z polami -->
+            <RowDefinition Height="*" />
+            <!-- Dolna sekcja z przyciskami -->
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-        <!-- Pole wejściowe dla PIN bezpieczeństwa -->
-        <Entry x:Name="SecurityPinEntry"
-               Placeholder="Wprowadź PIN bezpieczeństwa"
-               IsPassword="True"
-               Keyboard="Numeric"
-               HorizontalOptions="FillAndExpand"
-               IsVisible="{Binding IsSecurityPinInputVisible}" />
+        <!-- Sekcja wejściowa -->
+        <VerticalStackLayout Grid.Row="0" Spacing="20" Padding="0">
+            <!-- Pole wejściowe dla PIN -->
+            <Entry x:Name="PINEntry"
+                   Placeholder="Wprowadź PIN"
+                   IsPassword="True"
+                   Keyboard="Numeric"
+                   HorizontalOptions="FillAndExpand"
+                   FontSize="24"
+                   HeightRequest="60"
+                   IsVisible="{Binding IsPinInputVisible}" />
 
-        
+            <!-- Pole wejściowe dla PIN bezpieczeństwa -->
+            <Entry x:Name="SecurityPinEntry"
+                   Placeholder="Wprowadź PIN bezpieczeństwa"
+                   IsPassword="True"
+                   Keyboard="Numeric"
+                   HorizontalOptions="FillAndExpand"
+                   FontSize="24"
+                   HeightRequest="60"
+                   IsVisible="{Binding IsSecurityPinInputVisible}" />
+
+            <!-- Picker do wyboru numeru łóżka -->
+            <!-- Picker do wyboru numeru łóżka -->
+            <Picker x:Name="BedPicker"
+                    Title="Wybierz numer łóżka (Będzie przypisany 'na stałe' do łóżka - admin bedzie mogl zmienic jak tablet bedzie zmieniał łóżko)"
+                    ItemsSource="{Binding BedNumbers}" 
+                    SelectedItem="{Binding SelectedBedNumber, Mode=TwoWay}"
+                    FontSize="19"
+                    HorizontalOptions="FillAndExpand"
+                    HeightRequest="120"
+                   Margin="0,30,0,30" />
+
+        </VerticalStackLayout>
 
         <!-- Klawiatura numeryczna -->
-        <Grid Padding="10" ColumnSpacing="5" RowSpacing="5">
+        <Grid Grid.Row="1" Padding="10" ColumnSpacing="15" RowSpacing="15" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -36,18 +64,18 @@
             </Grid.ColumnDefinitions>
 
             <!-- Klawisze numeryczne -->
-            <Button Text="1" Grid.Row="0" Grid.Column="0" Clicked="OnNumberClicked" />
-            <Button Text="2" Grid.Row="0" Grid.Column="1" Clicked="OnNumberClicked" />
-            <Button Text="3" Grid.Row="0" Grid.Column="2" Clicked="OnNumberClicked" />
-            <Button Text="4" Grid.Row="1" Grid.Column="0" Clicked="OnNumberClicked" />
-            <Button Text="5" Grid.Row="1" Grid.Column="1" Clicked="OnNumberClicked" />
-            <Button Text="6" Grid.Row="1" Grid.Column="2" Clicked="OnNumberClicked" />
-            <Button Text="7" Grid.Row="2" Grid.Column="0" Clicked="OnNumberClicked" />
-            <Button Text="8" Grid.Row="2" Grid.Column="1" Clicked="OnNumberClicked" />
-            <Button Text="9" Grid.Row="2" Grid.Column="2" Clicked="OnNumberClicked" />
-            <Button Text="Cofnij" Grid.Row="3" Grid.Column="0" Clicked="OnBackspaceClicked" />
-            <Button Text="0" Grid.Row="3" Grid.Column="1" Clicked="OnNumberClicked" />
-            <Button Text="OK" Grid.Row="3" Grid.Column="2" Clicked="OnOkClicked" />
+            <Button Text="1" FontSize="36" Grid.Row="0" Grid.Column="0" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="2" FontSize="36" Grid.Row="0" Grid.Column="1" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="3" FontSize="36" Grid.Row="0" Grid.Column="2" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="4" FontSize="36" Grid.Row="1" Grid.Column="0" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="5" FontSize="36" Grid.Row="1" Grid.Column="1" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="6" FontSize="36" Grid.Row="1" Grid.Column="2" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="7" FontSize="36" Grid.Row="2" Grid.Column="0" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="8" FontSize="36" Grid.Row="2" Grid.Column="1" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="9" FontSize="36" Grid.Row="2" Grid.Column="2" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="Cofnij" FontSize="28" Grid.Row="3" Grid.Column="0" Clicked="OnBackspaceClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="0" FontSize="36" Grid.Row="3" Grid.Column="1" Clicked="OnNumberClicked" BackgroundColor="#6200EE" TextColor="White" />
+            <Button Text="OK" FontSize="28" Grid.Row="3" Grid.Column="2" Clicked="OnOkClicked" BackgroundColor="#6200EE" TextColor="White" />
         </Grid>
-    </VerticalStackLayout>
+    </Grid>
 </ContentPage>
