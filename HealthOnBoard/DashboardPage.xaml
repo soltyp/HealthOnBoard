@@ -2,70 +2,153 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HealthOnBoard.DashboardPage"
              Title="Dashboard"
-             BackgroundColor="#f4f4f9">
+             BackgroundColor="#1E1E2F">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15" VerticalOptions="CenterAndExpand">
+    <Grid x:Name="MainGrid" 
+          Padding="20" 
+          RowSpacing="20" 
+          ColumnSpacing="20" 
+          VerticalOptions="FillAndExpand" 
+          HorizontalOptions="FillAndExpand">
 
-            <!-- Witaj i Informacje Użytkownika -->
-            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
-                <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
-                    <Label Text="Witaj," FontSize="28" TextColor="#333333" HorizontalOptions="Center" />
-                    <Label x:Name="WelcomeLabel" FontSize="24" TextColor="#2E8B57" HorizontalOptions="Center" FontAttributes="Bold" />
-                </VerticalStackLayout>
-            </Frame>
+        <!-- Definicje układu siatki -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <!-- Informacja o Roli -->
-            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
-                <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-                    <Label Text="Twoja Rola:" FontSize="18" TextColor="#333333" HorizontalOptions="Center" />
-                    <Label x:Name="RoleLabel" FontSize="22" TextColor="#4A90E2" HorizontalOptions="Center" FontAttributes="Bold" />
-                </VerticalStackLayout>
-            </Frame>
+        <!-- Górna sekcja informacji -->
+        <ScrollView Grid.Row="0" VerticalOptions="FillAndExpand">
+            <VerticalStackLayout Spacing="20" Padding="0">
+                <!-- Powitanie -->
+                <Label Text="Witaj," 
+                       FontSize="32" 
+                       TextColor="#FFFFFF" 
+                       HorizontalOptions="Center" 
+                       FontAttributes="Bold" />
 
-            <!-- Dodatkowe Informacje o Użytkowniku -->
-            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Szczegóły użytkownika:" FontSize="20" TextColor="#333333" FontAttributes="Bold" />
-                    <HorizontalStackLayout>
-                        <Label Text="ID Użytkownika:" FontSize="18" TextColor="#666666" />
-                        <Label x:Name="UserIDLabel" FontSize="18" TextColor="#333333" />
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout>
-                        <Label Text="Status aktywności:" FontSize="18" TextColor="#666666" />
-                        <Label x:Name="ActiveStatusLabel" FontSize="18" TextColor="#333333" />
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Frame>
+                <Label x:Name="WelcomeLabel" 
+                       FontSize="28" 
+                       TextColor="#00FF88" 
+                       HorizontalOptions="Center" 
+                       FontAttributes="Bold" />
 
-            <!-- Informacje o Pacjencie -->
-            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Informacje o Pacjencie:" FontSize="20" TextColor="#333333" FontAttributes="Bold" />
-                    <HorizontalStackLayout>
-                        <Label Text="Imię i nazwisko:" FontSize="18" TextColor="#666666" />
-                        <Label x:Name="PatientNameLabel" FontSize="18" TextColor="#333333" />
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout>
-                        <Label Text="Wiek:" FontSize="18" TextColor="#666666" />
-                        <Label x:Name="PatientAgeLabel" FontSize="18" TextColor="#333333" />
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout>
-                        <Label Text="Numer łóżka:" FontSize="18" TextColor="#666666" />
-                        <Label x:Name="BedNumberLabel" FontSize="18" TextColor="#333333" />
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Frame>
+                <!-- Informacje o użytkowniku -->
+                <Frame BackgroundColor="#292A3A" CornerRadius="12" Padding="15" HasShadow="False">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Informacje o użytkowniku" 
+                               FontSize="20" 
+                               TextColor="#FFFFFF" 
+                               FontAttributes="Bold" />
 
-            <!-- Opcje/Działania dla użytkownika -->
-            <Frame CornerRadius="15" Padding="20" BackgroundColor="#ffffff" HasShadow="True">
-                <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
-                    <Label Text="Opcje" FontSize="20" TextColor="#333333" FontAttributes="Bold" HorizontalOptions="Center" />
-                    <Button Text="Wyloguj się" BackgroundColor="#FF6347" TextColor="White" CornerRadius="8" WidthRequest="200" Clicked="OnLogoutClicked"/>
-                    <Button Text="Ustawienia" BackgroundColor="#4682B4" TextColor="White" CornerRadius="8" WidthRequest="200" Clicked="OnSettingsClicked"/>
-                </VerticalStackLayout>
-            </Frame>
+                        <HorizontalStackLayout>
+                            <Label Text="ID Użytkownika:" 
+                                   FontSize="18" 
+                                   TextColor="#A0A0A0" />
+                            <Label x:Name="UserIDLabel" 
+                                   FontSize="18" 
+                                   TextColor="#FFFFFF" />
+                        </HorizontalStackLayout>
 
+                        <HorizontalStackLayout>
+                            <Label Text="Status aktywności:" 
+                                   FontSize="18" 
+                                   TextColor="#A0A0A0" />
+                            <Label x:Name="ActiveStatusLabel" 
+                                   FontSize="18" 
+                                   TextColor="#FFFFFF" />
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout>
+                            <Label Text="Rola:" 
+                                   FontSize="18" 
+                                   TextColor="#A0A0A0" />
+                            <Label x:Name="RoleLabel" 
+                                   FontSize="18" 
+                                   TextColor="#00CCFF" 
+                                   FontAttributes="Bold" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Informacje o pacjencie -->
+                <Frame BackgroundColor="#292A3A" CornerRadius="12" Padding="15" HasShadow="False">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Informacje o Pacjencie" 
+                               FontSize="20" 
+                               TextColor="#FFFFFF" 
+                               FontAttributes="Bold" />
+
+                        <HorizontalStackLayout>
+                            <Label Text="Imię i nazwisko:" 
+                                   FontSize="18" 
+                                   TextColor="#A0A0A0" />
+                            <Label x:Name="PatientNameLabel" 
+                                   FontSize="18" 
+                                   TextColor="#FFFFFF" />
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout>
+                            <Label Text="Wiek:" 
+                                   FontSize="18" 
+                                   TextColor="#A0A0A0" />
+                            <Label x:Name="PatientAgeLabel" 
+                                   FontSize="18" 
+                                   TextColor="#FFFFFF" />
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout>
+                            <Label Text="Numer łóżka:" 
+                                   FontSize="18" 
+                                   TextColor="#A0A0A0" />
+                            <Label x:Name="BedNumberLabel" 
+                                   FontSize="18" 
+                                   TextColor="#FFFFFF" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Dolna sekcja -->
+        <VerticalStackLayout Grid.Row="1" Spacing="20" VerticalOptions="EndAndExpand">
+            <!-- Dodanie licznika -->
+            <Label x:Name="CountdownLabel"
+                   Text="Pozostały czas do wylogowania: 3:00"
+                   FontSize="18"
+                   TextColor="#FFCC00"
+                   HorizontalOptions="Center" />
+
+            <!-- Sekcja przycisków -->
+            <Grid Padding="10" ColumnSpacing="20" RowSpacing="15" HorizontalOptions="FillAndExpand">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Text="Wyloguj się" 
+                        FontSize="22" 
+                        Grid.Row="0" 
+                        Grid.Column="0" 
+                        Clicked="OnLogoutClicked" 
+                        BackgroundColor="#FF3B30" 
+                        TextColor="#FFFFFF" 
+                        CornerRadius="12"
+                        HeightRequest="60" />
+
+                <Button Text="Ustawienia" 
+                        FontSize="22" 
+                        Grid.Row="0" 
+                        Grid.Column="1" 
+                        Clicked="OnSettingsClicked" 
+                        BackgroundColor="#007AFF" 
+                        TextColor="#FFFFFF" 
+                        CornerRadius="12"
+                        HeightRequest="60" />
+            </Grid>
         </VerticalStackLayout>
-    </ScrollView>
+    </Grid>
 </ContentPage>
