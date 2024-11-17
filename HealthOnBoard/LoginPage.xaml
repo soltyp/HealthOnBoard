@@ -16,6 +16,15 @@
 
         <!-- Sekcja wejściowa -->
         <VerticalStackLayout Grid.Row="0" Spacing="20" Padding="0">
+            <!-- Informacja o blokadzie -->
+            <Label x:Name="LockoutMessage"
+                   Text="Logowanie zablokowane. Spróbuj ponownie za 3 minuty."
+                   TextColor="Red"
+                   FontSize="18"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   IsVisible="False" />
+
             <!-- Pole wejściowe dla PIN -->
             <Entry x:Name="PINEntry"
                    Placeholder="Wprowadź PIN"
@@ -37,16 +46,14 @@
                    IsVisible="{Binding IsSecurityPinInputVisible}" />
 
             <!-- Picker do wyboru numeru łóżka -->
-            <!-- Picker do wyboru numeru łóżka -->
             <Picker x:Name="BedPicker"
-                    Title="Wybierz numer łóżka (Będzie przypisany 'na stałe' do łóżka - admin bedzie mogl zmienic jak tablet bedzie zmieniał łóżko)"
+                    Title="Numer łóźka"
                     ItemsSource="{Binding BedNumbers}" 
                     SelectedItem="{Binding SelectedBedNumber, Mode=TwoWay}"
                     FontSize="19"
                     HorizontalOptions="FillAndExpand"
-                    HeightRequest="120"
-                   Margin="0,30,0,30" />
-
+                    HeightRequest="80"
+                    Margin="0,30,0,30" />
         </VerticalStackLayout>
 
         <!-- Klawiatura numeryczna -->

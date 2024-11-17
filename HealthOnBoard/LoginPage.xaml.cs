@@ -7,6 +7,7 @@ using HospitalManagementAPI;
 using HospitalManagementAPI.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 
 namespace HealthOnBoard
 {
@@ -36,6 +37,12 @@ namespace HealthOnBoard
             }
         }
 
+        // Zmienne blokady
+        private bool _isLockedOut;
+        private DateTime _lockoutEndTime;
+        private int _failedAttempts; // Licznik nieudanych prób
+        private System.Timers.Timer _lockoutTimer;
+
         public LoginPage(IConfiguration configuration)
         {
             InitializeComponent();
@@ -44,9 +51,14 @@ namespace HealthOnBoard
             BindingContext = this; // Powiązanie z kontekstem danych
         }
 
-        // Obsługa kliknięcia przycisku logowania
         private async void OnLoginClicked(object sender, EventArgs e)
         {
+            if (_isLockedOut)
+            {
+                await DisplayAlert("Blokada aktywna", "System jest zablokowany. Użyj PIN-u bezpieczeństwa lub poczekaj na zakończenie blokady.", "OK");
+                return;
+            }
+
             var pin = PINEntry.Text;
             Debug.WriteLine($"PIN przed autoryzacją: {pin}");
             Debug.WriteLine($"Wybrany numer łóżka: {SelectedBedNumber}");
@@ -57,43 +69,90 @@ namespace HealthOnBoard
                 return;
             }
 
-            var isLockedOut = await _databaseService.IsLockedOutAsync();
-            if (isLockedOut)
-            {
-                await DisplayAlert("Uwaga", "Logowanie zablokowane po 3 nieudanych próbach. Wprowadź PIN bezpieczeństwa, aby odblokować.", "OK");
-                IsPinInputVisible = false;
-                IsSecurityPinInputVisible = true;
-                OnPropertyChanged(nameof(IsPinInputVisible));
-                OnPropertyChanged(nameof(IsSecurityPinInputVisible));
-                return;
-            }
-
             var user = await _loginService.AuthenticateUserAsync(pin);
             if (user != null)
             {
                 Debug.WriteLine($"Uwierzytelniono użytkownika: {user.FirstName}");
-
-                // Pobranie pacjenta przypisanego do wybranego numeru łóżka
-                var patient = await _databaseService.GetPatientByBedNumberAsync(SelectedBedNumber);
-
-                if (patient != null)
-                {
-                    // Przejście do DashboardPage z danymi użytkownika i pacjenta
-                    await Navigation.PushAsync(new DashboardPage(user, patient));
-                    await DisplayAlert("Sukces", $"Witaj, {user.FirstName}! Pacjent: {patient.Name}, Łóżko: {SelectedBedNumber}", "OK");
-                }
-                else
-                {
-                    await DisplayAlert("Uwaga", $"Brak pacjenta przypisanego do łóżka {SelectedBedNumber}.", "OK");
-                }
+                await NavigateToDashboard(user);
+                _failedAttempts = 0; // Reset liczby nieudanych prób po sukcesie
             }
             else
             {
-                await DisplayAlert("Błąd", "Niepoprawny PIN", "OK");
+                _failedAttempts++;
+                if (_failedAttempts >= 3)
+                {
+                    StartLockout();
+                    await DisplayAlert("Blokada", "Logowanie zablokowane po 3 nieudanych próbach. Użyj PIN-u bezpieczeństwa lub poczekaj 3 minuty.", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Błąd", $"Niepoprawny PIN. Pozostało prób: {3 - _failedAttempts}.", "OK");
+                }
             }
         }
 
-        // Obsługa kliknięcia przycisku logowania PIN bezpieczeństwa
+        private void StartLockout()
+        {
+            _isLockedOut = true;
+            _lockoutEndTime = DateTime.Now.AddMinutes(3);
+            LockoutMessage.IsVisible = true;
+            LockoutMessage.Text = "Logowanie zablokowane. Spróbuj ponownie za 180 sekund.";
+
+            IsPinInputVisible = false;
+            IsSecurityPinInputVisible = true;
+            OnPropertyChanged(nameof(IsPinInputVisible));
+            OnPropertyChanged(nameof(IsSecurityPinInputVisible));
+
+            _lockoutTimer = new System.Timers.Timer(1000); // Timer aktualizuje co sekundę
+            _lockoutTimer.Elapsed += UpdateLockoutMessage;
+            _lockoutTimer.Start();
+        }
+
+        private void UpdateLockoutMessage(object sender, ElapsedEventArgs e)
+        {
+            Dispatcher.Dispatch(() =>
+            {
+                var remainingTime = _lockoutEndTime - DateTime.Now;
+                if (remainingTime.TotalSeconds <= 0)
+                {
+                    EndLockout();
+                }
+                else
+                {
+                    LockoutMessage.Text = $"Logowanie zablokowane. Spróbuj ponownie za {Math.Ceiling(remainingTime.TotalSeconds)} sekund.";
+                }
+            });
+        }
+
+        private void EndLockout()
+        {
+            _isLockedOut = false;
+            _failedAttempts = 0; // Reset liczby nieudanych prób
+            LockoutMessage.IsVisible = false;
+            _lockoutTimer?.Stop();
+            _lockoutTimer?.Dispose();
+
+            IsPinInputVisible = true;
+            IsSecurityPinInputVisible = false;
+            OnPropertyChanged(nameof(IsPinInputVisible));
+            OnPropertyChanged(nameof(IsSecurityPinInputVisible));
+        }
+
+        private async Task NavigateToDashboard(User user)
+        {
+            var patient = await _databaseService.GetPatientByBedNumberAsync(SelectedBedNumber);
+
+            if (patient != null)
+            {
+                await Navigation.PushAsync(new DashboardPage(user, patient));
+                await DisplayAlert("Sukces", $"Witaj, {user.FirstName}! Pacjent: {patient.Name}, Łóżko: {SelectedBedNumber}", "OK");
+            }
+            else
+            {
+                await DisplayAlert("Uwaga", $"Brak pacjenta przypisanego do łóżka {SelectedBedNumber}.", "OK");
+            }
+        }
+
         private async void OnSecurityPinUnlockClicked(object sender, EventArgs e)
         {
             var securityPin = SecurityPinEntry.Text;
@@ -108,10 +167,7 @@ namespace HealthOnBoard
             if (success)
             {
                 await DisplayAlert("Sukces", "Odblokowano możliwość logowania", "OK");
-                IsPinInputVisible = true;
-                IsSecurityPinInputVisible = false;
-                OnPropertyChanged(nameof(IsPinInputVisible));
-                OnPropertyChanged(nameof(IsSecurityPinInputVisible));
+                EndLockout(); // Natychmiastowe zakończenie blokady
             }
             else
             {
@@ -119,7 +175,6 @@ namespace HealthOnBoard
             }
         }
 
-        // Obsługa kliknięcia przycisku klawiatury numerycznej
         private void OnNumberClicked(object sender, EventArgs e)
         {
             if (sender is Button button)
@@ -137,7 +192,6 @@ namespace HealthOnBoard
             }
         }
 
-        // Obsługa kliknięcia przycisku Cofnij
         private void OnBackspaceClicked(object sender, EventArgs e)
         {
             if (IsPinInputVisible && !string.IsNullOrEmpty(PINEntry.Text))
@@ -150,7 +204,6 @@ namespace HealthOnBoard
             }
         }
 
-        // Obsługa kliknięcia przycisku OK
         private async void OnOkClicked(object sender, EventArgs e)
         {
             if (IsPinInputVisible)

@@ -96,6 +96,25 @@ public class DatabaseService
         }
     }
 
+    public async Task<int> GetFailedLoginAttemptsAsync()
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                var query = "SELECT TOP 1 FailedAttempts FROM GlobalLoginState ORDER BY ID DESC";
+                return await connection.QueryFirstOrDefaultAsync<int>(query);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas pobierania liczby nieudanych prób logowania: {ex.Message}");
+            throw;
+        }
+    }
+
+
     public async Task<User?> AuthenticateUserAsync(string pin)
     {
         if (await IsLockedOutAsync())

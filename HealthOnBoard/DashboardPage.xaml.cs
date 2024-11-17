@@ -72,6 +72,7 @@ namespace HealthOnBoard
 
                 // Wyloguj, gdy czas siê skoñczy
                 if (_remainingTimeInSeconds <= 0)
+
                 {
                     _logoutTimer.Stop();
                     LogoutUser();
