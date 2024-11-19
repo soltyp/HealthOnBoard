@@ -22,8 +22,8 @@ namespace HealthOnBoard
             // Ustawienia UI
             WelcomeLabel.Text = $"Witaj, {_user.FirstName}!";
             RoleLabel.Text = $"{_user.Role}";
-            UserIDLabel.Text = $"{_user.UserID}";
-            ActiveStatusLabel.Text = _user.ActiveStatus ? "Aktywny" : "Nieaktywny";
+            //UserIDLabel.Text = $"{_user.UserID}";
+            //ActiveStatusLabel.Text = _user.ActiveStatus ? "Aktywny" : "Nieaktywny";
 
             PatientNameLabel.Text = _patient.Name ?? "Brak danych";
             PatientAgeLabel.Text = _patient.Age > 0 ? _patient.Age.ToString() : "Brak danych";
@@ -68,7 +68,7 @@ namespace HealthOnBoard
                 int minutes = _remainingTimeInSeconds / 60;
                 int seconds = _remainingTimeInSeconds % 60;
 
-                CountdownLabel.Text = $"Pozosta³y czas do wylogowania: {minutes:D2}:{seconds:D2}";
+                LogoutTimer.Text = $"Pozosta³y czas do wylogowania: {minutes:D2}:{seconds:D2}";
 
                 // Wyloguj, gdy czas siê skoñczy
                 if (_remainingTimeInSeconds <= 0)
