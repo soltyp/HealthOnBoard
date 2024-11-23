@@ -144,7 +144,7 @@ namespace HealthOnBoard
 
             if (patient != null)
             {
-                await Navigation.PushAsync(new DashboardPage(user, patient));
+                await Navigation.PushAsync(new DashboardPage(user, patient, _databaseService));
                 await DisplayAlert("Sukces", $"Witaj, {user.FirstName}! Pacjent: {patient.Name}, Łóżko: {SelectedBedNumber}", "OK");
             }
             else

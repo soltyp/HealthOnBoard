@@ -193,4 +193,50 @@ public class DatabaseService
             throw;
         }
     }
+
+    public async Task<bool> AddPatientActionAsync(int userID, int patientID, string actionType, string actionDetails, DateTime actionDate)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                string query = @"
+                INSERT INTO PatientActivityLog (UserID, PatientID, ActionType, ActionDetails, ActionDate)
+                VALUES (@UserID, @PatientID, @ActionType, @ActionDetails, @ActionDate)";
+
+                await connection.ExecuteAsync(query, new
+                {
+                    UserID = userID,
+                    PatientID = patientID,
+                    ActionType = actionType,
+                    ActionDetails = actionDetails,
+                    ActionDate = actionDate
+                });
+
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas dodawania akcji pacjenta: {ex.Message}");
+            return false;
+        }
+    }
+    public async Task<List<PatientActivity>> GetRecentActivitiesAsync(int patientId, int limit = 5)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+            SELECT TOP (@Limit) ActionType, ActionDetails, ActionDate
+            FROM PatientActivityLog
+            WHERE PatientID = @PatientID
+            ORDER BY ActionDate DESC";
+
+            var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId, Limit = limit });
+            return activities.ToList();
+        }
+    }
+
+
+
 }
