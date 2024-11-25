@@ -34,6 +34,8 @@ namespace HealthOnBoard
                 RecentActivities.Clear();
                 foreach (var activity in activities)
                 {
+                    // Upewnij siê, ¿e PatientID jest poprawnie przypisane
+                    activity.PatientID = _patient.PatientID;
                     RecentActivities.Add(activity);
                 }
             }
@@ -43,6 +45,7 @@ namespace HealthOnBoard
                 await DisplayAlert("B³¹d", "Nie uda³o siê pobraæ operacji pacjenta.", "OK");
             }
         }
+
 
 
         public ObservableCollection<string> ActionTypes { get; set; } = new ObservableCollection<string>
@@ -120,6 +123,11 @@ namespace HealthOnBoard
             _user = user ?? throw new ArgumentNullException(nameof(user), "User cannot be null");
             _patient = patient ?? throw new ArgumentNullException(nameof(patient), "Patient cannot be null");
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService), "DatabaseService cannot be null");
+
+            if (_patient.PatientID <= 0)
+            {
+                Debug.WriteLine("B³¹d: Nieprawid³owy PatientID w obiekcie Patient.");
+            }
 
             // Ustaw dane w interfejsie u¿ytkownika
             UserFirstNameLabel.Text = _user.FirstName ?? "Brak danych";
@@ -215,5 +223,105 @@ namespace HealthOnBoard
                 await Navigation.PopToRootAsync();
             }
         }
+
+        private async void OnDeleteActionClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PatientActivity activity)
+            {
+                Debug.WriteLine($"Rozpoczynam usuwanie czynnoœci: {activity.ActionType}, {activity.ActionDetails}, {activity.ActionDate}, PatientID: {activity.PatientID}");
+
+                bool confirmDelete = await DisplayAlert("Potwierdzenie", "Czy na pewno chcesz usun¹æ tê czynnoœæ?", "Tak", "Nie");
+                if (!confirmDelete)
+                {
+                    Debug.WriteLine("Usuwanie anulowane przez u¿ytkownika.");
+                    return;
+                }
+
+                try
+                {
+                    Debug.WriteLine("Wywo³ywanie metody DeletePatientActionAsync...");
+                    bool success = await _databaseService.DeletePatientActionAsync(activity);
+
+                    if (success)
+                    {
+                        Debug.WriteLine("Czynnoœæ zosta³a usuniêta z bazy danych.");
+                        RecentActivities.Remove(activity);
+                        await DisplayAlert("Sukces", "Czynnoœæ zosta³a usuniêta.", "OK");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Metoda DeletePatientActionAsync zwróci³a false. Czynnoœæ nie zosta³a usuniêta.");
+                        await DisplayAlert("B³¹d", "Nie uda³o siê usun¹æ czynnoœci.", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Wyj¹tek podczas usuwania czynnoœci: {ex.Message}");
+                    Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas usuwania czynnoœci.", "OK");
+                }
+            }
+            else
+            {
+                Debug.WriteLine("Nie uda³o siê pobraæ danych czynnoœci z CommandParameter.");
+            }
+        }
+
+        private async void OnEditActionClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PatientActivity activity)
+            {
+                // Wyœwietl Picker do wyboru nowego typu akcji
+                string newActionType = await DisplayActionSheet(
+                    "Zmieñ typ akcji",
+                    "Anuluj",
+                    null,
+                    ActionTypes.ToArray() // Zamieniamy ObservableCollection na tablicê stringów
+                );
+
+                // SprawdŸ, czy u¿ytkownik wybra³ nowy typ akcji (anulowanie zwraca null)
+                if (!string.IsNullOrWhiteSpace(newActionType) && newActionType != "Anuluj")
+                {
+                    activity.ActionType = newActionType;
+                }
+
+                // Wyœwietl dialog do edycji szczegó³ów akcji
+                string newActionDetails = await DisplayPromptAsync(
+                    "Edytuj szczegó³y czynnoœci",
+                    "Zmieñ szczegó³y czynnoœci:",
+                    initialValue: activity.ActionDetails
+                );
+
+                if (!string.IsNullOrWhiteSpace(newActionDetails))
+                {
+                    try
+                    {
+                        // Aktualizuj szczegó³y i typ akcji
+                        activity.ActionDetails = newActionDetails;
+
+                        // Wywo³aj metodê aktualizacji w bazie
+                        bool success = await _databaseService.UpdatePatientActionAsync(activity);
+
+                        if (success)
+                        {
+                            await DisplayAlert("Sukces", "Czynnoœæ zosta³a zaktualizowana.", "OK");
+                            await LoadRecentActivitiesAsync(); // Odœwie¿ listê czynnoœci
+                        }
+                        else
+                        {
+                            await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ czynnoœci.", "OK");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"B³¹d podczas edytowania czynnoœci: {ex.Message}");
+                        await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji czynnoœci.", "OK");
+                    }
+                }
+            }
+        }
+
+
+
     }
 }

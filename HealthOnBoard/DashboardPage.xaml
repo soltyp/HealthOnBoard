@@ -123,12 +123,40 @@
                         <CollectionView x:Name="RecentActivitiesList" ItemsSource="{Binding RecentActivities}" BackgroundColor="Transparent">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
-                                    <Frame BackgroundColor="#1E1E2F" CornerRadius="10" Padding="10" Margin="5,5,5,5">
-                                        <VerticalStackLayout>
-                                            <Label Text="{Binding ActionType}" FontSize="16" TextColor="#FFFFFF" FontAttributes="Bold" />
-                                            <Label Text="{Binding ActionDetails}" FontSize="14" TextColor="#A0A0A0" />
-                                            <Label Text="{Binding ActionDate, StringFormat='{0:dd-MM-yyyy HH:mm}'}" FontSize="12" TextColor="#888888" />
-                                        </VerticalStackLayout>
+                                    <Frame BackgroundColor="#1E1E2F" 
+                                           CornerRadius="10" 
+                                           Padding="10" 
+                                           Margin="5,5,5,5" 
+                                           BorderColor="#FFFFFF"
+                                           HasShadow="True">
+                                        <Grid ColumnDefinitions="*, Auto, Auto">
+                                            <!-- Sekcja z etykietami -->
+                                            <VerticalStackLayout Grid.Column="0">
+                                                <Label Text="{Binding ActionType}" FontSize="16" TextColor="#FFFFFF" FontAttributes="Bold" />
+                                                <Label Text="{Binding ActionDetails}" FontSize="14" TextColor="#A0A0A0" />
+                                                <Label Text="{Binding ActionDate, StringFormat='{0:dd-MM-yyyy HH:mm}'}" FontSize="12" TextColor="#888888" />
+                                            </VerticalStackLayout>
+
+                                            <!-- Przycisk Edytuj -->
+                                            <Button Grid.Column="1" Text="Edytuj"
+                                                    FontSize="14"
+                                                    BackgroundColor="#007BFF"
+                                                    TextColor="#FFFFFF"
+                                                    CommandParameter="{Binding}"
+                                                    Clicked="OnEditActionClicked"
+                                                    VerticalOptions="Center"
+                                                    HorizontalOptions="End" />
+
+                                            <!-- Przycisk Usuń -->
+                                            <Button Grid.Column="2" Text="Usuń"
+                                                    FontSize="14"
+                                                    BackgroundColor="#FF3B30"
+                                                    TextColor="#FFFFFF"
+                                                    CommandParameter="{Binding}"
+                                                    Clicked="OnDeleteActionClicked"
+                                                    VerticalOptions="Center"
+                                                    HorizontalOptions="End" />
+                                        </Grid>
                                     </Frame>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>

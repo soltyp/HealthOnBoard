@@ -11,6 +11,7 @@ namespace HospitalManagementData
         public string ActionType { get; set; }
         public string ActionDetails { get; set; }
         public DateTime ActionDate { get; set; }
+        public int PatientID { get; set; }
     }
 
 }

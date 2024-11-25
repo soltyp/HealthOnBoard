@@ -237,6 +237,96 @@ public class DatabaseService
         }
     }
 
+    public async Task<bool> DeletePatientActionAsync(PatientActivity activity)
+    {
+        if (activity.PatientID <= 0)
+        {
+            Debug.WriteLine("Nieprawidłowy PatientID. Operacja usunięcia została przerwana.");
+            return false;
+        }
+
+        try
+        {
+            // Logujemy otrzymane dane
+            Debug.WriteLine("Rozpoczynam usuwanie czynności:");
+            Debug.WriteLine($"ActionType: {activity.ActionType}");
+            Debug.WriteLine($"ActionDetails: {activity.ActionDetails}");
+            Debug.WriteLine($"ActionDate: {activity.ActionDate}");
+            Debug.WriteLine($"PatientID: {activity.PatientID}");
+
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                Debug.WriteLine("Nawiązywanie połączenia z bazą danych...");
+
+                string query = @"
+                DELETE FROM PatientActivityLog
+                WHERE ActionType = @ActionType 
+              AND ActionDetails = @ActionDetails 
+              AND ActionDate = @ActionDate
+                AND PatientID = @PatientID";
+
+                Debug.WriteLine($"Zapytanie SQL: {query}");
+
+                // Logujemy przekazywane parametry
+                Debug.WriteLine($"Parametry zapytania:");
+                Debug.WriteLine($"- ActionType: {activity.ActionType}");
+                Debug.WriteLine($"- ActionDetails: {activity.ActionDetails}");
+                Debug.WriteLine($"- ActionDate: {activity.ActionDate}");
+                Debug.WriteLine($"- PatientID: {activity.PatientID}");
+
+                int rowsAffected = await connection.ExecuteAsync(query, new
+                {
+                    ActionType = activity.ActionType,
+                    ActionDetails = activity.ActionDetails,
+                    ActionDate = activity.ActionDate,
+                    PatientID = activity.PatientID
+                });
+
+                Debug.WriteLine($"Liczba usuniętych wierszy: {rowsAffected}");
+
+                return rowsAffected > 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas usuwania czynności: {ex.Message}");
+            Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+            return false;
+        }
+    }
+
+    public async Task<bool> UpdatePatientActionAsync(PatientActivity activity)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                string query = @"
+                UPDATE PatientActivityLog
+                SET ActionType = @ActionType, 
+                    ActionDetails = @ActionDetails
+                WHERE ActionDate = @ActionDate
+                  AND PatientID = @PatientID";
+
+                int rowsAffected = await connection.ExecuteAsync(query, new
+                {
+                    ActionType = activity.ActionType,
+                    ActionDetails = activity.ActionDetails,
+                    ActionDate = activity.ActionDate,
+                    PatientID = activity.PatientID
+                });
+
+                return rowsAffected > 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas aktualizacji czynności: {ex.Message}");
+            return false;
+        }
+    }
+
 
 
 }
