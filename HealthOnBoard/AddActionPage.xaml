@@ -1,0 +1,44 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.AddActionPage"
+             Title="Dodaj Akcję"
+             BackgroundColor="#1E1E2F">
+    <Grid Padding="20">
+        <VerticalStackLayout Spacing="20">
+            <Label Text="Dodaj nową akcję"
+                   FontSize="24"
+                   TextColor="#FFFFFF"
+                   HorizontalOptions="Center" />
+
+            <Picker x:Name="ActionTypePicker"
+                    Title="Wybierz typ akcji"
+                    FontSize="18"
+                    ItemsSource="{Binding ActionTypes}"
+                    HorizontalOptions="FillAndExpand" />
+
+            <Editor x:Name="ActionDetailsEditor"
+                    Placeholder="Wprowadź szczegóły akcji"
+                    FontSize="16"
+                    TextColor="#FFFFFF"
+                    BackgroundColor="#292A3A"
+                    HeightRequest="100"
+                    VerticalOptions="Start" />
+
+            <Button Text="Dodaj akcję"
+                    FontSize="18"
+                    BackgroundColor="#00CC99"
+                    TextColor="#FFFFFF"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    Clicked="OnSaveActionClicked" />
+
+            <Button Text="Anuluj"
+                    FontSize="18"
+                    BackgroundColor="#FF3B30"
+                    TextColor="#FFFFFF"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    Clicked="OnCancelClicked" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

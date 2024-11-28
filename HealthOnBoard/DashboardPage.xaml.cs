@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Timers;
+using HospitalManagementAPI.Models;
 using HospitalManagementData;
 
 namespace HealthOnBoard
@@ -148,48 +149,7 @@ namespace HealthOnBoard
             _databaseService = databaseService;
         }
 
-        private async void OnAddActionClicked(object sender, EventArgs e)
-        {
-            string selectedActionType = ActionTypePicker.SelectedItem as string;
-            string actionDetails = ActionDetailsEditor.Text;
-
-            if (string.IsNullOrWhiteSpace(selectedActionType))
-            {
-                await DisplayAlert("B³¹d", "Proszê wybraæ typ akcji.", "OK");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(actionDetails))
-            {
-                await DisplayAlert("B³¹d", "Proszê wprowadziæ szczegó³y akcji.", "OK");
-                return;
-            }
-
-            // Tworzenie nowej akcji
-            var newAction = new
-            {
-                UserID = _user.UserID,
-                PatientID = _patient.PatientID,
-                ActionType = selectedActionType,
-                ActionDetails = actionDetails,
-                ActionDate = DateTime.Now
-            };
-
-            // Wywo³anie zapisania akcji
-            bool success = await SaveActionToDatabase(newAction);
-            await LoadRecentActivitiesAsync();
-
-            if (success)
-            {
-                await DisplayAlert("Sukces", "Akcja zosta³a dodana pomyœlnie.", "OK");
-                ActionDetailsEditor.Text = string.Empty;
-                ActionTypePicker.SelectedIndex = -1;
-            }
-            else
-            {
-                await DisplayAlert("B³¹d", "Nie uda³o siê zapisaæ akcji.", "OK");
-            }
-        }
+        
 
         private async Task<bool> SaveActionToDatabase(object newAction)
         {
@@ -319,6 +279,34 @@ namespace HealthOnBoard
                     }
                 }
             }
+        }
+        private async void OnMorePatientDataClicked(object sender, EventArgs e)
+        {
+            int patientId = _patient.PatientID;
+            await Navigation.PushAsync(new AddActionPage(_patient.PatientID, _user.UserID, _databaseService, async () =>
+            {
+                await LoadRecentActivitiesAsync();
+            }));
+
+        }
+        private async void OnShowPatientHistoryClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new PatientHistoryPage(_user, _patient.PatientID, _databaseService));
+        }
+
+
+
+
+
+
+        private async void OnAddActionPageClicked(object sender, EventArgs e)
+        {
+            // Otwórz now¹ stronê AddActionPage
+            await Navigation.PushAsync(new AddActionPage(_patient.PatientID, _user.UserID, _databaseService, async () =>
+            {
+                // Odœwie¿ listê aktywnoœci po dodaniu akcji
+                await LoadRecentActivitiesAsync();
+            }));
         }
 
 

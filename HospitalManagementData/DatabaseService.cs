@@ -17,7 +17,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
+        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
 
 
 
@@ -327,6 +327,37 @@ public class DatabaseService
         }
     }
 
+    
+
+    public async Task<Patient?> GetPatientDetailsAsync(int patientId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+        SELECT 
+            PatientID, Name, Age, BedNumber, PESEL, Address, PhoneNumber, Email, 
+            DateOfBirth, Gender, EmergencyContact, BloodType, Allergies, ChronicDiseases
+        FROM dbo.Patients
+        WHERE PatientID = @PatientID";
+
+            return await connection.QueryFirstOrDefaultAsync<Patient>(query, new { PatientID = patientId });
+        }
+    }
+
+    public async Task<List<PatientActivity>> GetPatientHistoryAsync(int patientId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+            SELECT *
+            FROM PatientActivity
+            WHERE PatientID = @PatientID
+            ORDER BY ActionDate DESC";
+
+            var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId });
+            return activities.ToList();
+        }
+    }
 
 
 }

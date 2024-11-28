@@ -35,7 +35,6 @@
 
             <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
                 <Label x:Name="UserFirstNameLabel" Text="Jan" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
-                <Label x:Name="UserLastNameLabel" Text="Kowalski" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
                 <Label x:Name="RoleLabel" Text="Ordynator" TextColor="#00CCFF" FontSize="14" />
             </HorizontalStackLayout>
 
@@ -68,22 +67,49 @@
             <VerticalStackLayout Spacing="20" Padding="20">
 
                 <!-- Informacje o pacjencie -->
-                <Frame BackgroundColor="#292A3A" CornerRadius="12" Padding="15">
-                    <VerticalStackLayout Spacing="10">
-                        <HorizontalStackLayout>
-                            <Label Text="Imię i nazwisko:" FontSize="18" TextColor="#A0A0A0" />
-                            <Label x:Name="PatientNameLabel" Text="Jan Kowalski" FontSize="18" TextColor="#FFFFFF" />
+                <Frame BackgroundColor="#292A3A" CornerRadius="12" Padding="10">
+                    <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Center">
+                        <!-- Ikona pacjenta -->
+                        <Image Source="patient_icon.png"
+               HeightRequest="40"
+               WidthRequest="40"
+               VerticalOptions="Center"
+               HorizontalOptions="Start" />
+
+                        <!-- Dane pacjenta -->
+                        <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                            <Label x:Name="PatientNameLabel"
+                   Text="Jan Kowalski"
+                   TextColor="#FFFFFF"
+                   FontSize="16"
+                   FontAttributes="Bold" />
+
+                            <Label x:Name="PatientAgeLabel"
+                   Text="35 lat"
+                   TextColor="#FFFFFF"
+                   FontSize="16"
+                   FontAttributes="Bold" />
+
+                            <Label x:Name="BedNumberLabel"
+                   Text="Łóżko: 101"
+                   TextColor="#00CCFF"
+                   FontSize="16" />
                         </HorizontalStackLayout>
-                        <HorizontalStackLayout>
-                            <Label Text="Wiek:" FontSize="18" TextColor="#A0A0A0" />
-                            <Label x:Name="PatientAgeLabel" Text="35" FontSize="18" TextColor="#FFFFFF" />
-                        </HorizontalStackLayout>
-                        <HorizontalStackLayout>
-                            <Label Text="Numer łóżka:" FontSize="18" TextColor="#A0A0A0" />
-                            <Label x:Name="BedNumberLabel" Text="101" FontSize="18" TextColor="#FFFFFF" />
-                        </HorizontalStackLayout>
-                    </VerticalStackLayout>
+
+                        <!-- Przycisk "Więcej danych pacjenta" -->
+                        <Button Grid.Column="2"
+                Text="Więcej danych"
+                FontSize="14"
+                BackgroundColor="#007BFF"
+                TextColor="#FFFFFF"
+                CornerRadius="15"
+                HeightRequest="34"
+                VerticalOptions="Center"
+                HorizontalOptions="End"
+                Clicked="OnMorePatientDataClicked" />
+                    </Grid>
                 </Frame>
+
 
                 <!-- Sekcja dodawania akcji -->
                 <Frame BackgroundColor="#292A3A" CornerRadius="12" Padding="15">
@@ -91,21 +117,7 @@
                         <!-- Sekcja dodawania akcji -->
                         <Label Text="Dodaj akcję na pacjencie" FontSize="18" TextColor="#FFFFFF" />
 
-                        <!-- Picker wyboru typu akcji -->
-                        <Picker x:Name="ActionTypePicker"
-                Title="Wybierz typ akcji"
-                ItemsSource="{Binding ActionTypes}" 
-                FontSize="18"
-                HorizontalOptions="FillAndExpand" />
-
-                        <!-- Pole szczegółów -->
-                        <Editor x:Name="ActionDetailsEditor"
-                Placeholder="Wprowadź szczegóły akcji"
-                FontSize="16"
-                TextColor="#FFFFFF"
-                BackgroundColor="#1E1E2F"
-                HeightRequest="100"
-                VerticalOptions="Start" />
+                        
 
                         <!-- Przycisk dodania akcji -->
                         <Button Text="Dodaj akcję"
@@ -114,7 +126,16 @@
                 TextColor="#FFFFFF"
                 CornerRadius="10"
                 HeightRequest="50"
-                Clicked="OnAddActionClicked" />
+                Clicked="OnAddActionPageClicked" />
+
+                        <!-- Przycisk Wyświetl historie leczeia -->
+                        <Button Text="Pokaż historię leczenia"
+                FontSize="16"
+                BackgroundColor="#007BFF"
+                TextColor="#FFFFFF"
+                CornerRadius="10"
+                HeightRequest="50"
+                Clicked="OnShowPatientHistoryClicked" />
 
                         <!-- Nagłówek ostatnich operacji -->
                         <Label Text="Ostatnie operacje na pacjencie" FontSize="18" TextColor="#FFFFFF" />
@@ -145,7 +166,7 @@
                                                     CommandParameter="{Binding}"
                                                     Clicked="OnEditActionClicked"
                                                     VerticalOptions="Center"
-                                                    HorizontalOptions="End" />
+                                                     HorizontalOptions="End" />
 
                                             <!-- Przycisk Usuń -->
                                             <Button Grid.Column="2" Text="Usuń"

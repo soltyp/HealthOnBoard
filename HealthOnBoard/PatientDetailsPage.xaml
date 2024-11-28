@@ -1,0 +1,147 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.PatientDetailsPage"
+             Title="Dane Pacjenta"
+             BackgroundColor="#1E1E2F">
+
+    <Grid x:Name="MainGrid"
+          Padding="0"
+          RowSpacing="0"
+          ColumnSpacing="0"
+          VerticalOptions="FillAndExpand"
+          HorizontalOptions="FillAndExpand">
+
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnScreenTapped" />
+        </Grid.GestureRecognizers>
+        
+        <!-- Układ siatki -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <!-- Pasek nawigacyjny -->
+            <RowDefinition Height="*" />
+            <!-- Główna zawartość -->
+        </Grid.RowDefinitions>
+
+        <!-- Pasek nawigacyjny -->
+        <Grid Grid.Row="0" BackgroundColor="#292A3A" VerticalOptions="Start">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Image Source="user_icon.png"
+                   HeightRequest="40"
+                   WidthRequest="40"
+                   VerticalOptions="Center" />
+
+            <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                <Label x:Name="UserFirstNameLabel" Text="Jan" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
+                <Label x:Name="RoleLabel" Text="Ordynator" TextColor="#00CCFF" FontSize="14" />
+
+            </HorizontalStackLayout>
+
+            <Frame Grid.Column="2"
+                   Padding="8,2"
+                   BackgroundColor="#1E1E2F"
+                   CornerRadius="15"
+                   VerticalOptions="Center"
+                   HeightRequest="42">
+                <Label x:Name="LogoutTimer"
+                       Text="02:56"
+                       TextColor="#FFCC00"
+                       FontSize="14"
+                       VerticalOptions="Center" />
+            </Frame>
+
+            <Button Grid.Column="3"
+                    Text="Wróć"
+                    FontSize="14"
+                    BackgroundColor="#007BFF"
+                    TextColor="#FFFFFF"
+                    CornerRadius="15"
+                    HeightRequest="34"
+                    VerticalOptions="Center"
+                    Clicked="OnBackButtonClicked" />
+        </Grid>
+
+        <!-- Główna zawartość -->
+        <ScrollView Grid.Row="1" VerticalOptions="FillAndExpand">
+            <VerticalStackLayout Padding="20" Spacing="15">
+                <!-- Imię i nazwisko -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Imię i nazwisko:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientNameLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Wiek -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Wiek:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientAgeLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- PESEL -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="PESEL:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientPESELLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Adres -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Adres:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientAddressLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Numer telefonu -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Numer telefonu:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientPhoneNumberLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- E-mail -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="E-mail:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientEmailLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Data urodzenia -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Data urodzenia:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientDateOfBirthLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Płeć -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Płeć:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientGenderLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Kontakt w nagłych przypadkach -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Kontakt w nagłych przypadkach:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientEmergencyContactLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Grupa krwi -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Grupa krwi:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientBloodTypeLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Alergie -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Alergie:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientAllergiesLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+
+                <!-- Choroby przewlekłe -->
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Choroby przewlekłe:" TextColor="#A0A0A0" FontSize="16" />
+                    <Label x:Name="PatientChronicDiseasesLabel" Text="" TextColor="#FFFFFF" FontSize="18" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
