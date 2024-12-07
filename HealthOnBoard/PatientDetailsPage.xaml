@@ -12,7 +12,7 @@
           HorizontalOptions="FillAndExpand">
 
         <Grid.GestureRecognizers>
-            <TapGestureRecognizer Tapped="OnScreenTapped" />
+            
         </Grid.GestureRecognizers>
         
         <!-- Układ siatki -->

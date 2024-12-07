@@ -60,7 +60,7 @@
                     BackgroundColor="#FF3B30"
                     TextColor="#FFFFFF"
                     CornerRadius="15"
-                    HeightRequest="34"
+                    HeightRequest="44"
                     VerticalOptions="Center"
                     Clicked="OnBackButtonClicked" />
         </Grid>
@@ -70,14 +70,37 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Frame BackgroundColor="#292A3A" CornerRadius="10" Padding="10" Margin="5">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding ActionType}" FontSize="16" TextColor="#FFFFFF" FontAttributes="Bold" />
-                            <Label Text="{Binding ActionDetails}" FontSize="14" TextColor="#A0A0A0" />
-                            <Label Text="{Binding ActionDate, StringFormat='{0:yyyy-MM-dd HH:mm}'}" FontSize="12" TextColor="#888888" />
-                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*, Auto, Auto">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="{Binding ActionType}" FontSize="16" TextColor="#FFFFFF" FontAttributes="Bold" />
+                                <Label Text="{Binding ActionDetails}" FontSize="14" TextColor="#A0A0A0" />
+                                <Label Text="{Binding ActionDate, StringFormat='{0:yyyy-MM-dd HH:mm}'}" FontSize="12" TextColor="#888888" />
+                            </VerticalStackLayout>
+
+                            <HorizontalStackLayout Grid.Column="1" Spacing="10" HorizontalOptions="EndAndExpand">
+                                <!-- Edit Button -->
+                                <Button Text="Edytuj"
+                                FontSize="14"
+                                BackgroundColor="#007BFF"
+                                TextColor="#FFFFFF"
+                                CommandParameter="{Binding}"
+                                Clicked="OnEditActionClicked"
+                                VerticalOptions="Center" />
+
+                                <!-- Delete Button -->
+                                <Button Text="Usuń"
+                                FontSize="14"
+                                BackgroundColor="#FF3B30"
+                                TextColor="#FFFFFF"
+                                CommandParameter="{Binding}"
+                                Clicked="OnDeleteActionClicked"
+                                VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
                     </Frame>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
     </Grid>
 </ContentPage>

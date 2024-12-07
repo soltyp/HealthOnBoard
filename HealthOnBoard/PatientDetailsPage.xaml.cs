@@ -6,49 +6,45 @@ namespace HealthOnBoard
     {
         private readonly DatabaseService _databaseService;
         private readonly int _patientId;
-        private readonly User _user; // Dodano obiekt User
+        private readonly User _user; // User information
         private System.Timers.Timer _logoutTimer;
-        private int _remainingTimeInSeconds = 180; // 3 minuty (180 sekund)
+        private const int LogoutTimeInSeconds = 180; // 3 minutes
+        private int _remainingTimeInSeconds;
 
         public PatientDetailsPage(User user, int patientId, DatabaseService databaseService)
         {
             InitializeComponent();
 
+            // Assign parameters to fields
             _user = user ?? throw new ArgumentNullException(nameof(user), "User cannot be null");
             _patientId = patientId;
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
 
-            // Zaktualizuj navbar na podstawie danych u¿ytkownika
+            // Update UI and initialize components
             UpdateNavbar();
-
-            // Inicjalizacja timera
             InitializeLogoutTimer();
+            AddTapGestureToResetTimer();
 
-            // Dodanie gestu resetowania timera
-            AddTapGestureToMainGrid();
-
-            // £adowanie danych pacjenta
+            // Load patient details
             LoadPatientDetailsAsync();
         }
 
+        // Update navbar information
         private void UpdateNavbar()
         {
             UserFirstNameLabel.Text = _user.FirstName ?? "Brak danych";
             RoleLabel.Text = _user.Role ?? "Brak roli";
         }
 
-        private void AddTapGestureToMainGrid()
+        // Add tap gesture to reset the timer
+        private void AddTapGestureToResetTimer()
         {
             var tapGesture = new TapGestureRecognizer();
-            tapGesture.Tapped += OnScreenTapped;
+            tapGesture.Tapped += (_, _) => ResetLogoutTimer();
             MainGrid.GestureRecognizers.Add(tapGesture);
         }
 
-        private void OnScreenTapped(object sender, EventArgs e)
-        {
-            ResetLogoutTimer();
-        }
-
+        // Async method to load patient details
         private async void LoadPatientDetailsAsync()
         {
             try
@@ -57,6 +53,7 @@ namespace HealthOnBoard
 
                 if (patient != null)
                 {
+                    // Update UI with patient details
                     PatientNameLabel.Text = patient.Name ?? "Brak danych";
                     PatientAgeLabel.Text = $"{patient.Age} lat";
                     PatientPESELLabel.Text = patient.PESEL ?? "Brak danych";
@@ -83,14 +80,18 @@ namespace HealthOnBoard
             }
         }
 
+
+        // Initialize the logout timer
         private void InitializeLogoutTimer()
         {
-            _logoutTimer = new System.Timers.Timer(1000); // 1 sekunda
+            _remainingTimeInSeconds = LogoutTimeInSeconds;
+            _logoutTimer = new System.Timers.Timer(1000); // 1 second interval
             _logoutTimer.Elapsed += UpdateCountdown;
             _logoutTimer.AutoReset = true;
             _logoutTimer.Start();
         }
 
+        // Update the countdown for the logout timer
         private void UpdateCountdown(object sender, System.Timers.ElapsedEventArgs e)
         {
             _remainingTimeInSeconds--;
@@ -109,6 +110,7 @@ namespace HealthOnBoard
             });
         }
 
+        // Handle logout when timer expires
         private async void LogoutUser()
         {
             await Dispatcher.DispatchAsync(async () =>
@@ -118,15 +120,19 @@ namespace HealthOnBoard
             });
         }
 
+        // Reset the logout timer
+        private void ResetLogoutTimer()
+        {
+            _remainingTimeInSeconds = LogoutTimeInSeconds;
+        }
+
+        // Handle back button click
         private async void OnBackButtonClicked(object sender, EventArgs e)
         {
             await Navigation.PopAsync();
         }
 
-        private void ResetLogoutTimer()
-        {
-            _remainingTimeInSeconds = 180; // Resetuje czas do 3 minut
-            _logoutTimer?.Start();
-        }
+
+
     }
 }

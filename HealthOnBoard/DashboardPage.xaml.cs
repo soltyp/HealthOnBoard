@@ -96,6 +96,11 @@ namespace HealthOnBoard
             base.OnAppearing();
             await LoadRecentActivitiesAsync();
             ResetLogoutTimer();
+            // Pobranie temperatury pacjenta
+            await LoadPatientTemperatureAsync();
+
+            await LoadAssignedDrugsAsync(); // Load assigned drugs
+            await LoadPatientNotesAsync(); // Load patient notes
         }
 
 
@@ -282,19 +287,31 @@ namespace HealthOnBoard
         }
         private async void OnMorePatientDataClicked(object sender, EventArgs e)
         {
-            int patientId = _patient.PatientID;
-            await Navigation.PushAsync(new AddActionPage(_patient.PatientID, _user.UserID, _databaseService, async () =>
-            {
-                await LoadRecentActivitiesAsync();
-            }));
-
+            // Pass the required parameters to the PatientDetailsPage
+            await Navigation.PushAsync(new PatientDetailsPage(_user, _patient.PatientID, _databaseService));
         }
+
+
         private async void OnShowPatientHistoryClicked(object sender, EventArgs e)
         {
             await Navigation.PushAsync(new PatientHistoryPage(_user, _patient.PatientID, _databaseService));
         }
 
+        private bool _isListVisible = true;
 
+        private async void ToggleListVisibility(object sender, EventArgs e)
+        {
+            _isListVisible = !_isListVisible;
+            RecentActivitiesList.IsVisible = _isListVisible;
+
+            // Animacja klikniêcia
+            var frame = sender as Frame;
+            await frame.ScaleTo(0.95, 50);
+            await frame.ScaleTo(1, 50);
+
+            // Zmieñ tekst
+            ToggleButtonLabel.Text = _isListVisible ? "Ukryj listê" : "Poka¿ listê";
+        }
 
 
 
@@ -308,6 +325,77 @@ namespace HealthOnBoard
                 await LoadRecentActivitiesAsync();
             }));
         }
+
+        private async Task LoadPatientTemperatureAsync()
+        {
+            try
+            {
+                // Pobierz temperaturê pacjenta z tabeli Patients
+                var temperature = await _databaseService.GetCurrentTemperatureAsync(_patient.PatientID);
+
+                if (temperature.HasValue)
+                {
+                    PatientTemperatureLabel.Text = $"{temperature.Value:F1}°C"; // Formatowanie do 1 miejsca po przecinku
+                }
+                else
+                {
+                    PatientTemperatureLabel.Text = "Brak danych"; // Gdy brak temperatury w bazie
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas pobierania temperatury pacjenta: {ex.Message}");
+                PatientTemperatureLabel.Text = "B³¹d";
+            }
+        }
+
+
+        private async Task LoadAssignedDrugsAsync()
+        {
+            try
+            {
+                // Fetch assigned drugs from the database
+                var assignedDrugs = await _databaseService.GetAssignedDrugsAsync(_patient.PatientID);
+
+                if (!string.IsNullOrEmpty(assignedDrugs))
+                {
+                    AssignedDrugsLabel.Text = assignedDrugs;
+                }
+                else
+                {
+                    AssignedDrugsLabel.Text = "Brak danych"; // Default if no drugs are assigned
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas pobierania przypisanych leków: {ex.Message}");
+                AssignedDrugsLabel.Text = "B³¹d";
+            }
+        }
+
+        private async Task LoadPatientNotesAsync()
+        {
+            try
+            {
+                // Fetch notes from the database
+                var notes = await _databaseService.GetPatientNotesAsync(_patient.PatientID);
+
+                if (!string.IsNullOrEmpty(notes))
+                {
+                    PatientNotesLabel.Text = notes;
+                }
+                else
+                {
+                    PatientNotesLabel.Text = "Brak danych"; // Default if no notes are present
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas pobierania uwag pacjenta: {ex.Message}");
+                PatientNotesLabel.Text = "B³¹d";
+            }
+        }
+
 
 
 

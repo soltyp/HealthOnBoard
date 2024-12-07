@@ -1,5 +1,8 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Timers;
+using HospitalManagementAPI.Models;
+using HospitalManagementData;
 
 namespace HealthOnBoard
 {
@@ -8,8 +11,10 @@ namespace HealthOnBoard
         private readonly DatabaseService _databaseService;
         private readonly int _patientId;
         private readonly User _user;
+        public ObservableCollection<PatientActivity> PatientHistory { get; set; } = new ObservableCollection<PatientActivity>();
+
         private System.Timers.Timer _logoutTimer;
-        private int _remainingTimeInSeconds = 180; // 3 minuty (180 sekund)
+        private int _remainingTimeInSeconds = 180; // 3 minutes
 
         public PatientHistoryPage(User user, int patientId, DatabaseService databaseService)
         {
@@ -19,23 +24,24 @@ namespace HealthOnBoard
             _patientId = patientId;
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService), "DatabaseService cannot be null");
 
-            // Ustaw dane u¿ytkownika w navbarze
+            // Set user data in navigation bar
             UserFirstNameLabel.Text = _user.FirstName ?? "Brak danych";
             RoleLabel.Text = _user.Role ?? "Brak danych";
 
-            // Inicjalizacja timera
+            // Initialize timer
             InitializeLogoutTimer();
 
-            // Dodaj gest dotkniêcia do g³ównego kontenera
+            // Add tap gesture for idle reset
             AddTapGestureToMainGrid();
 
-            // Za³aduj historiê leczenia
+            // Load patient history
             LoadPatientHistoryAsync();
+            BindingContext = this;
         }
 
         private void InitializeLogoutTimer()
         {
-            _logoutTimer = new System.Timers.Timer(1000); // 1 sekunda
+            _logoutTimer = new System.Timers.Timer(1000); // 1 second
             _logoutTimer.Elapsed += UpdateCountdown;
             _logoutTimer.AutoReset = true;
             _logoutTimer.Start();
@@ -72,13 +78,104 @@ namespace HealthOnBoard
         {
             try
             {
-                var history = await _databaseService.GetRecentActivitiesAsync(_patientId, limit: int.MaxValue);
-                PatientHistoryList.ItemsSource = history;
+                var history = await _databaseService.GetFullActivitiesAsync(_patientId);
+                PatientHistory.Clear();
+
+                foreach (var activity in history)
+                {
+                    PatientHistory.Add(activity);
+                }
+
+                PatientHistoryList.ItemsSource = PatientHistory;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"B³¹d podczas ³adowania historii pacjenta: {ex.Message}");
                 await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ historii pacjenta.", "OK");
+            }
+        }
+
+        private async void OnDeleteActionClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PatientActivity activity)
+            {
+                bool confirmDelete = await DisplayAlert("Potwierdzenie", "Czy na pewno chcesz usun¹æ tê czynnoœæ?", "Tak", "Nie");
+                if (!confirmDelete)
+                {
+                    Debug.WriteLine("Usuwanie anulowane przez u¿ytkownika.");
+                    return;
+                }
+
+                try
+                {
+                    bool success = await _databaseService.DeletePatientActionAsync(activity);
+
+                    if (success)
+                    {
+                        PatientHistory.Remove(activity);
+                        await DisplayAlert("Sukces", "Czynnoœæ zosta³a usuniêta.", "OK");
+                    }
+                    else
+                    {
+                        await DisplayAlert("B³¹d", "Nie uda³o siê usun¹æ czynnoœci.", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"B³¹d podczas usuwania czynnoœci: {ex.Message}");
+                    await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas usuwania czynnoœci.", "OK");
+                }
+            }
+        }
+
+        private async void OnEditActionClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PatientActivity activity)
+            {
+                // Prompt user to change the action type
+                string newActionType = await DisplayActionSheet(
+                    "Zmieñ typ akcji",
+                    "Anuluj",
+                    null,
+                    "Dodanie wyników badañ", "Aktualizacja leczenia", "Zmiana danych pacjenta", "Podanie leków", "Dodanie komentarza"
+                );
+
+                if (!string.IsNullOrWhiteSpace(newActionType) && newActionType != "Anuluj")
+                {
+                    activity.ActionType = newActionType;
+                }
+
+                // Prompt user to update action details
+                string newActionDetails = await DisplayPromptAsync(
+                    "Edytuj szczegó³y czynnoœci",
+                    "Zmieñ szczegó³y czynnoœci:",
+                    initialValue: activity.ActionDetails
+                );
+
+                if (!string.IsNullOrWhiteSpace(newActionDetails))
+                {
+                    activity.ActionDetails = newActionDetails;
+
+                    try
+                    {
+                        bool success = await _databaseService.UpdatePatientActionAsync(activity);
+
+                        if (success)
+                        {
+                            await DisplayAlert("Sukces", "Czynnoœæ zosta³a zaktualizowana.", "OK");
+                            LoadPatientHistoryAsync(); // Refresh list
+                        }
+                        else
+                        {
+                            await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ czynnoœci.", "OK");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"B³¹d podczas aktualizacji czynnoœci: {ex.Message}");
+                        await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas aktualizacji czynnoœci.", "OK");
+                    }
+                }
             }
         }
 
@@ -101,7 +198,7 @@ namespace HealthOnBoard
 
         private void ResetLogoutTimer()
         {
-            _remainingTimeInSeconds = 180; // Reset czasu do 3 minut
+            _remainingTimeInSeconds = 180;
             _logoutTimer?.Start();
         }
 

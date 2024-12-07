@@ -17,7 +17,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
+        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
 
 
 
@@ -227,10 +227,28 @@ public class DatabaseService
         using (var connection = new SqlConnection(_connectionString))
         {
             const string query = @"
-            SELECT TOP (@Limit) ActionType, ActionDetails, ActionDate
-            FROM PatientActivityLog
-            WHERE PatientID = @PatientID
-            ORDER BY ActionDate DESC";
+                 SELECT TOP (@Limit) ActionType, ActionDetails, ActionDate
+                 FROM PatientActivityLog
+                 WHERE PatientID = @PatientID
+                   AND ActionDate >= DATEADD(DAY, -3, GETDATE())
+                 ORDER BY ActionDate DESC";
+
+
+            var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId, Limit = limit });
+            return activities.ToList();
+        }
+    }
+
+    public async Task<List<PatientActivity>> GetFullActivitiesAsync(int patientId, int limit = 5)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+                 SELECT TOP (@Limit) ActionType, ActionDetails, ActionDate
+                 FROM PatientActivityLog
+                 WHERE PatientID = @PatientID
+                 ORDER BY ActionDate DESC";
+
 
             var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId, Limit = limit });
             return activities.ToList();
@@ -327,22 +345,23 @@ public class DatabaseService
         }
     }
 
-    
+
 
     public async Task<Patient?> GetPatientDetailsAsync(int patientId)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
             const string query = @"
-        SELECT 
-            PatientID, Name, Age, BedNumber, PESEL, Address, PhoneNumber, Email, 
-            DateOfBirth, Gender, EmergencyContact, BloodType, Allergies, ChronicDiseases
-        FROM dbo.Patients
-        WHERE PatientID = @PatientID";
+            SELECT 
+                PatientID, Name, Age, BedNumber, PESEL, Address, PhoneNumber, Email, 
+                DateOfBirth, Gender, EmergencyContact, BloodType, Allergies, ChronicDiseases
+            FROM dbo.Patients
+            WHERE PatientID = @PatientID";
 
             return await connection.QueryFirstOrDefaultAsync<Patient>(query, new { PatientID = patientId });
         }
     }
+
 
     public async Task<List<PatientActivity>> GetPatientHistoryAsync(int patientId)
     {
@@ -358,6 +377,54 @@ public class DatabaseService
             return activities.ToList();
         }
     }
+
+
+
+    public async Task<double?> GetCurrentTemperatureAsync(int patientId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+            SELECT CurrentTemperature 
+            FROM Patients
+            WHERE PatientID = @PatientID";
+
+            // Pobranie temperatury z tabeli Patients
+            var temperature = await connection.QueryFirstOrDefaultAsync<double?>(query, new { PatientID = patientId });
+            return temperature;
+        }
+    }
+
+    public async Task<string?> GetAssignedDrugsAsync(int patientId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+        SELECT AssignedDrugs 
+        FROM Patients
+        WHERE PatientID = @PatientID";
+
+            // Fetch the AssignedDrugs field
+            var assignedDrugs = await connection.QueryFirstOrDefaultAsync<string?>(query, new { PatientID = patientId });
+            return assignedDrugs;
+        }
+    }
+
+    public async Task<string?> GetPatientNotesAsync(int patientId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+        SELECT Notes 
+        FROM Patients
+        WHERE PatientID = @PatientID";
+
+            // Fetch the Notes field
+            var notes = await connection.QueryFirstOrDefaultAsync<string?>(query, new { PatientID = patientId });
+            return notes;
+        }
+    }
+
 
 
 }

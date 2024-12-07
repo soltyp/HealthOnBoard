@@ -68,45 +68,61 @@
 
                 <!-- Informacje o pacjencie -->
                 <Frame BackgroundColor="#292A3A" CornerRadius="12" Padding="10">
-                    <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Center">
-                        <!-- Ikona pacjenta -->
-                        <Image Source="patient_icon.png"
-               HeightRequest="40"
-               WidthRequest="40"
-               VerticalOptions="Center"
-               HorizontalOptions="Start" />
-
-                        <!-- Dane pacjenta -->
-                        <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                    <Grid ColumnDefinitions="*, *, *, *" VerticalOptions="Center" Padding="10">
+                        <!-- Pierwsza kolumna: Imię, wiek i numer łóżka -->
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <!-- Imię i nazwisko pacjenta -->
                             <Label x:Name="PatientNameLabel"
-                   Text="Jan Kowalski"
+           Text="Jan Kowalski"
+           TextColor="#FFFFFF"
+           FontSize="16"
+           FontAttributes="Bold" />
+
+                            <!-- Wiek i numer łóżka w jednej linii -->
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="Wiek:"
+               TextColor="#FFFFFF"
+               FontSize="14"
+               FontAttributes="Bold" />
+                                <Label x:Name="PatientAgeLabel"
+               Text="35"
+               TextColor="#FFFFFF"
+               FontSize="14" />
+
+                                <Label Text="Numer łóżka:"
+               TextColor="#00CCFF"
+               FontSize="14"
+               FontAttributes="Bold" />
+                                <Label x:Name="BedNumberLabel"
+               Text="101"
+               TextColor="#00CCFF"
+               FontSize="14" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+
+
+                        <!-- Druga kolumna: Temperatura -->
+                        <VerticalStackLayout Grid.Column="1" Spacing="5">
+                            <Label Text="Temperatura" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
+                            <Label x:Name="PatientTemperatureLabel"
+                   Text="36.6°C"
                    TextColor="#FFFFFF"
-                   FontSize="16"
-                   FontAttributes="Bold" />
+                   FontSize="14" />
+                        </VerticalStackLayout>
 
-                            <Label x:Name="PatientAgeLabel"
-                   Text="35 lat"
-                   TextColor="#FFFFFF"
-                   FontSize="16"
-                   FontAttributes="Bold" />
+                        <!-- Trzecia kolumna: Przypisane leki -->
+                        <VerticalStackLayout Grid.Column="2" Spacing="5">
+                            <Label Text="Leki" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
+                            <Label x:Name="AssignedDrugsLabel" Text="Ładowanie..." TextColor="#FFFFFF" FontSize="14" />
+                        </VerticalStackLayout>
 
-                            <Label x:Name="BedNumberLabel"
-                   Text="Łóżko: 101"
-                   TextColor="#00CCFF"
-                   FontSize="16" />
-                        </HorizontalStackLayout>
 
-                        <!-- Przycisk "Więcej danych pacjenta" -->
-                        <Button Grid.Column="2"
-                Text="Więcej danych"
-                FontSize="14"
-                BackgroundColor="#007BFF"
-                TextColor="#FFFFFF"
-                CornerRadius="15"
-                HeightRequest="34"
-                VerticalOptions="Center"
-                HorizontalOptions="End"
-                Clicked="OnMorePatientDataClicked" />
+                        <!-- Czwarta kolumna: Uwagi -->
+                        <VerticalStackLayout Grid.Column="3" Spacing="5">
+                            <Label Text="Uwagi" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
+                            <Label x:Name="PatientNotesLabel" Text="Ładowanie..." TextColor="#FFFFFF" FontSize="14" />
+                        </VerticalStackLayout>
+
                     </Grid>
                 </Frame>
 
@@ -115,41 +131,84 @@
                 <Frame BackgroundColor="#292A3A" CornerRadius="12" Padding="15">
                     <VerticalStackLayout Spacing="10">
                         <!-- Sekcja dodawania akcji -->
-                        <Label Text="Dodaj akcję na pacjencie" FontSize="18" TextColor="#FFFFFF" />
+                        <!--<Label Text="Dodaj akcję na pacjencie" FontSize="18" TextColor="#FFFFFF" /> -->
 
-                        
 
-                        <!-- Przycisk dodania akcji -->
-                        <Button Text="Dodaj akcję"
-                FontSize="18"
-                BackgroundColor="#00CC99"
-                TextColor="#FFFFFF"
-                CornerRadius="10"
-                HeightRequest="50"
-                Clicked="OnAddActionPageClicked" />
+                        <HorizontalStackLayout Spacing="10" Padding="10">
+                            <!-- Przycisk dodania akcji -->
+                            <Button Text="Dodaj akcję"
+                            FontSize="18"
+                            BackgroundColor="#00CC99"
+                            TextColor="#FFFFFF"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            Clicked="OnAddActionPageClicked" />
 
-                        <!-- Przycisk Wyświetl historie leczeia -->
-                        <Button Text="Pokaż historię leczenia"
-                FontSize="16"
-                BackgroundColor="#007BFF"
-                TextColor="#FFFFFF"
-                CornerRadius="10"
-                HeightRequest="50"
-                Clicked="OnShowPatientHistoryClicked" />
+                                            <!-- Przycisk wyświetlenia historii leczenia -->
+                                            <Button Text="Pokaż całą historię leczenia"
+                            FontSize="16"
+                            BackgroundColor="#007BFF"
+                            TextColor="#FFFFFF"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            Clicked="OnShowPatientHistoryClicked" />
+
+                                            <!-- Przycisk więcej danych -->
+                                            <Button Text="Więcej danych"
+                            FontSize="16"
+                            BackgroundColor="#007BFF"
+                            TextColor="#FFFFFF"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            Clicked="OnMorePatientDataClicked" />
+                            </HorizontalStackLayout>
+
 
                         <!-- Nagłówek ostatnich operacji -->
-                        <Label Text="Ostatnie operacje na pacjencie" FontSize="18" TextColor="#FFFFFF" />
+                        <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Fill">
+                            <Label Text="Operacje na pacjencie z ostatnich 3 dni" 
+                               FontSize="18" 
+                               TextColor="#FFFFFF" 
+                               VerticalOptions="Center" />
+
+                                                <Frame BackgroundColor="#007BFF"
+                               CornerRadius="20"
+                               Padding="10"
+                               HasShadow="True"
+                               VerticalOptions="Center"
+                               HorizontalOptions="End">
+                                                    <HorizontalStackLayout>
+                                    <!-- <Image Source="list_icon.png" 
+                                       HeightRequest="20" 
+                                       WidthRequest="20" 
+                                       VerticalOptions="Center" /> -->
+                                                        <Label x:Name="ToggleButtonLabel" 
+                                       Text="Ukryj listę" 
+                                       FontSize="14" 
+                                       TextColor="#FFFFFF" 
+                                       VerticalOptions="Center" 
+                   Margin="5,0,0,0" />
+                                </HorizontalStackLayout>
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="ToggleListVisibility" />
+                                </Frame.GestureRecognizers>
+                            </Frame>
+                        </HorizontalStackLayout>
+
 
                         <!-- Lista operacji -->
-                        <CollectionView x:Name="RecentActivitiesList" ItemsSource="{Binding RecentActivities}" BackgroundColor="Transparent">
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate>
-                                    <Frame BackgroundColor="#1E1E2F" 
+                                                <CollectionView x:Name="RecentActivitiesList" 
+                                        ItemsSource="{Binding RecentActivities}" 
+                                        BackgroundColor="Transparent"
+                                        IsVisible="True">
+                                                    <CollectionView.ItemTemplate>
+                                                        <DataTemplate>
+                                                        <Frame BackgroundColor="#1E1E2F" 
                                            CornerRadius="10" 
                                            Padding="10" 
                                            Margin="5,5,5,5" 
                                            BorderColor="#FFFFFF"
-                                           HasShadow="True">
+                                           HasShadow="True">        
                                         <Grid ColumnDefinitions="*, Auto, Auto">
                                             <!-- Sekcja z etykietami -->
                                             <VerticalStackLayout Grid.Column="0">
@@ -158,30 +217,33 @@
                                                 <Label Text="{Binding ActionDate, StringFormat='{0:dd-MM-yyyy HH:mm}'}" FontSize="12" TextColor="#888888" />
                                             </VerticalStackLayout>
 
-                                            <!-- Przycisk Edytuj -->
-                                            <Button Grid.Column="1" Text="Edytuj"
-                                                    FontSize="14"
-                                                    BackgroundColor="#007BFF"
-                                                    TextColor="#FFFFFF"
-                                                    CommandParameter="{Binding}"
-                                                    Clicked="OnEditActionClicked"
-                                                    VerticalOptions="Center"
-                                                     HorizontalOptions="End" />
+                                            <HorizontalStackLayout Spacing="10" Padding="10" HorizontalOptions="EndAndExpand">
+                                                <!-- Przycisk Edytuj -->
+                                                <Button Grid.Column="1" Text="Edytuj"
+                                                        FontSize="14"
+                                                        BackgroundColor="#007BFF"
+                                                        TextColor="#FFFFFF"
+                                                        CommandParameter="{Binding}"
+                                                        Clicked="OnEditActionClicked"
+                                                        VerticalOptions="Center"
+                                                        HorizontalOptions="End" />
 
-                                            <!-- Przycisk Usuń -->
-                                            <Button Grid.Column="2" Text="Usuń"
-                                                    FontSize="14"
-                                                    BackgroundColor="#FF3B30"
-                                                    TextColor="#FFFFFF"
-                                                    CommandParameter="{Binding}"
-                                                    Clicked="OnDeleteActionClicked"
-                                                    VerticalOptions="Center"
-                                                    HorizontalOptions="End" />
+                                                                            <!-- Przycisk Usuń -->
+                                                                            <Button Grid.Column="2" Text="Usuń"
+                                                        FontSize="14"
+                                                        BackgroundColor="#FF3B30"
+                                                        TextColor="#FFFFFF"
+                                                        CommandParameter="{Binding}"
+                                                        Clicked="OnDeleteActionClicked"
+                                                        VerticalOptions="Center"
+                                                        HorizontalOptions="End" />
+                                            </HorizontalStackLayout>
                                         </Grid>
                                     </Frame>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
+
                     </VerticalStackLayout>
                 </Frame>
             </VerticalStackLayout>
