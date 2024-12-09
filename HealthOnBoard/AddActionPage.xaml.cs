@@ -14,7 +14,8 @@ namespace HealthOnBoard
             "Dodanie wyników badañ",
             "Aktualizacja leczenia",
             "Podanie leków",
-            "Dodanie komentarza"
+            "Dodanie komentarza",
+            "Pomiar temperatury"
         };
 
         public AddActionPage(int patientId, int userId, DatabaseService databaseService, Action onActionAdded)
@@ -38,6 +39,57 @@ namespace HealthOnBoard
                 return;
             }
 
+            if (selectedActionType == "Pomiar temperatury")
+            {
+                if (string.IsNullOrWhiteSpace(TemperatureEntry.Text))
+                {
+                    await DisplayAlert("B³¹d", "Proszê wprowadziæ temperaturê.", "OK");
+                    return;
+                }
+
+                if (!decimal.TryParse(TemperatureEntry.Text, out decimal temperature)) // U¿yj decimal zamiast float
+                {
+                    await DisplayAlert("B³¹d", "Wprowadzona temperatura musi byæ liczb¹.", "OK");
+                    return;
+                }
+
+                // Aktualizacja temperatury w tabeli Patients
+                bool patientUpdateSuccess = await _databaseService.UpdatePatientTemperatureAsync(_patientId, temperature);
+
+                if (patientUpdateSuccess)
+                {
+                    // Dodanie wpisu do tabeli PatientActivityLog
+                    string activityDetails = $"Zmierzono temperaturê: {temperature}°C";
+                    bool logSuccess = await _databaseService.AddPatientActivityLogAsync(
+                        userId: _userId,
+                        patientId: _patientId,
+                        actionType: selectedActionType,
+                        actionDetails: activityDetails,
+                        actionDate: DateTime.Now,
+                        currentTemperature: temperature
+                    );
+
+                    if (logSuccess)
+                    {
+                        await DisplayAlert("Sukces", "Temperatura zosta³a zaktualizowana i zapisano akcjê.", "OK");
+                        _onActionAdded?.Invoke();
+                        await Navigation.PopAsync();
+                    }
+                    else
+                    {
+                        await DisplayAlert("B³¹d", "Nie uda³o siê zapisaæ akcji w logu.", "OK");
+                    }
+                }
+                else
+                {
+                    await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ temperatury pacjenta.", "OK");
+                }
+
+                return;
+            }
+
+
+            // Obs³uga innych typów akcji
             if (string.IsNullOrWhiteSpace(actionDetails))
             {
                 await DisplayAlert("B³¹d", "Proszê wprowadziæ szczegó³y akcji.", "OK");
@@ -64,9 +116,16 @@ namespace HealthOnBoard
             }
         }
 
+
         private async void OnCancelClicked(object sender, EventArgs e)
         {
             await Navigation.PopAsync();
+        }
+
+        private void OnActionTypeChanged(object sender, EventArgs e)
+        {
+            var selectedActionType = ActionTypePicker.SelectedItem as string;
+            TemperatureEntry.IsVisible = selectedActionType == "Pomiar temperatury";
         }
     }
 }

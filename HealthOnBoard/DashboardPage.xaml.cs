@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Timers;
 using HospitalManagementAPI.Models;
 using HospitalManagementData;
+using Microsoft.Maui.Graphics;
+
 
 namespace HealthOnBoard
 {
@@ -101,7 +103,25 @@ namespace HealthOnBoard
 
             await LoadAssignedDrugsAsync(); // Load assigned drugs
             await LoadPatientNotesAsync(); // Load patient notes
+            await LoadTemperatureChartDataAsync(); // Nowa metoda
         }
+
+        private async Task LoadTemperatureChartDataAsync()
+        {
+            try
+            {
+                // Pobierz dane o temperaturze i dacie z bazy danych
+                var temperatureLogs = await _databaseService.GetTemperatureLogsAsync(_patient.PatientID);
+
+                // Przeka¿ dane do metody tworz¹cej wykres
+                BuildTemperatureChart(temperatureLogs);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas ³adowania danych do wykresu: {ex.Message}");
+            }
+        }
+
 
 
         protected override void OnDisappearing()
@@ -326,6 +346,7 @@ namespace HealthOnBoard
             }));
         }
 
+
         private async Task LoadPatientTemperatureAsync()
         {
             try
@@ -397,7 +418,144 @@ namespace HealthOnBoard
         }
 
 
+        private void BuildTemperatureChart(List<(DateTime ActionDate, decimal Temperature)> temperatureLogs)
+        {
+            // Wyczyœæ siatkê wykresu
+            TemperatureChartGrid.Children.Clear();
+            TemperatureChartGrid.ColumnDefinitions.Clear();
 
+            if (temperatureLogs == null || !temperatureLogs.Any())
+            {
+                Debug.WriteLine("Brak danych do wyœwietlenia na wykresie.");
+                return;
+            }
+
+            // Dodaj kolumny dla ka¿dego punktu danych
+            foreach (var _ in temperatureLogs)
+            {
+                TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // Odstêp
+            }
+
+            // ZnajdŸ maksymaln¹ temperaturê
+            decimal maxTemperature = temperatureLogs.Max(t => t.Temperature);
+            if (maxTemperature == 0) maxTemperature = 1; // Uniknij dzielenia przez zero
+
+            int columnIndex = 0;
+
+            foreach (var log in temperatureLogs)
+            {
+                // S³upek na wykresie
+                var bar = new BoxView
+                {
+                    Color = Color.FromHex("#FF5733"),
+                    HeightRequest = (double)(log.Temperature / maxTemperature) * 200, // 200 to maksymalna wysokoœæ
+                    VerticalOptions = LayoutOptions.End,
+                    HorizontalOptions = LayoutOptions.Center,
+                    WidthRequest = 20 // Szerokoœæ s³upka
+                };
+
+                // Data i godzina na osi X
+                var dateLabel = new Label
+                {
+                    Text = log.ActionDate.ToString("dd-MM HH:mm"), // Data i godzina
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalOptions = LayoutOptions.Start,
+                    TextColor = Colors.White,
+                    FontSize = 10
+                };
+
+                // Temperatura nad s³upkiem
+                var tempLabel = new Label
+                {
+                    Text = $"{log.Temperature:F1}°C", // Temperatura
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalOptions = LayoutOptions.End,
+                    TextColor = Colors.White,
+                    FontSize = 12
+                };
+
+                // Dodaj s³upek do siatki
+                TemperatureChartGrid.Children.Add(bar);
+                Grid.SetColumn(bar, columnIndex);
+                Grid.SetRow(bar, 0);
+
+                // Dodaj etykietê temperatury nad s³upkiem
+                TemperatureChartGrid.Children.Add(tempLabel);
+                Grid.SetColumn(tempLabel, columnIndex);
+                Grid.SetRow(tempLabel, 0);
+
+                // Dodaj etykietê daty i godziny pod s³upkiem
+                TemperatureChartGrid.Children.Add(dateLabel);
+                Grid.SetColumn(dateLabel, columnIndex);
+                Grid.SetRow(dateLabel, 1);
+
+                // PrzejdŸ do nastêpnej kolumny
+                columnIndex += 2;
+            }
+        }
+
+
+
+
+
+        private void BuildTemperatureBarChart(Dictionary<string, int> temperatureData)
+        {
+            TemperatureChartGrid.Children.Clear();
+            TemperatureChartGrid.ColumnDefinitions.Clear();
+
+            foreach (var _ in temperatureData)
+            {
+                TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            }
+
+            int maxCount = temperatureData.Values.Max();
+            int columnIndex = 0;
+
+            foreach (var item in temperatureData)
+            {
+                var bar = new BoxView
+                {
+                    Color = GetRandomColor(),
+                    HeightRequest = (item.Value / (double)maxCount) * 200, // Skalowanie wysokoœci
+                    VerticalOptions = LayoutOptions.End
+                };
+
+                var label = new Label
+                {
+                    Text = item.Key, // Temperatura
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalOptions = LayoutOptions.Center
+                };
+
+                var countLabel = new Label
+                {
+                    Text = item.Value.ToString(), // Iloœæ
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalOptions = LayoutOptions.End
+                };
+
+                TemperatureChartGrid.Children.Add(bar);
+                Grid.SetColumn(bar, columnIndex);
+                Grid.SetRow(bar, 0);
+
+                TemperatureChartGrid.Children.Add(label);
+                Grid.SetColumn(label, columnIndex);
+                Grid.SetRow(label, 1);
+
+                TemperatureChartGrid.Children.Add(countLabel);
+                Grid.SetColumn(countLabel, columnIndex);
+                Grid.SetRow(countLabel, 0);
+
+                columnIndex++;
+            }
+        }
+
+        private Color GetRandomColor()
+        {
+            Random random = new Random();
+            return Color.FromRgb(random.Next(50, 200), random.Next(50, 200), random.Next(50, 200));
+        }
 
     }
 }

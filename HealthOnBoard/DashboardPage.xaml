@@ -161,12 +161,48 @@
                             CornerRadius="10"
                             HeightRequest="50"
                             Clicked="OnMorePatientDataClicked" />
-                            </HorizontalStackLayout>
+
+                            
+                        </HorizontalStackLayout>
+
+                        <!-- Temperatura pacjenta - nagłówek i wykres -->
+                        <VerticalStackLayout HorizontalOptions="Start" VerticalOptions="Start" Spacing="10">
+                            <Label Text="Temperatura pacjenta"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="#FFFFFF"
+                                   HorizontalTextAlignment="Start"
+                                   Margin="10,0,0,0" />
+                                                    <!-- Tytuł wykresu -->
+
+                                                    <Frame BackgroundColor="#292A3A"
+                                   CornerRadius="12"
+                                   Padding="10"
+                                   Margin="10,0,0,10"
+                                   HasShadow="True"
+                                   HorizontalOptions="Start"
+                                   WidthRequest="400">
+                                                        <!-- Zwiększenie szerokości wykresu -->
+                                                    <Grid x:Name="TemperatureChartGrid"
+                                      VerticalOptions="FillAndExpand"
+                                      HorizontalOptions="FillAndExpand"
+                                      RowSpacing="5">       
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="3*" />
+                                        <!-- Obszar słupków -->
+                                        <RowDefinition Height="Auto" />
+                                        <!-- Oś X -->
+                                    </Grid.RowDefinitions>
+                                </Grid>
+                            </Frame>
+                        </VerticalStackLayout>
+
+
 
 
                         <!-- Nagłówek ostatnich operacji -->
                         <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Fill">
-                            <Label Text="Operacje na pacjencie z ostatnich 3 dni" 
+                            <Label Text="Operacje na pacjencie z ostatnich 3 dni (Nie wiem czy nie lepeij zmienic an 3 ostatnie operacje na pacjencie)" 
                                FontSize="18" 
                                TextColor="#FFFFFF" 
                                VerticalOptions="Center" />

@@ -1,7 +1,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HealthOnBoard.PatientHistoryPage"
-             Title="Historia Leczenia"
+             Title="Historia Leczenia - poprawic bo z 3 ostatnich dni zczytuje albo cos innego bo nie wyświetla wszystkich opercaji na pacjencie"
              BackgroundColor="#1E1E2F">
 
     <Grid x:Name="MainGrid">

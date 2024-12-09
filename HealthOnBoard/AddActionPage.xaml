@@ -1,4 +1,4 @@
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" 
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HealthOnBoard.AddActionPage"
              Title="Dodaj Akcję"
@@ -10,12 +10,25 @@
                    TextColor="#FFFFFF"
                    HorizontalOptions="Center" />
 
+            <!-- Picker wyboru typu akcji -->
             <Picker x:Name="ActionTypePicker"
                     Title="Wybierz typ akcji"
                     FontSize="18"
                     ItemsSource="{Binding ActionTypes}"
-                    HorizontalOptions="FillAndExpand" />
+                    HorizontalOptions="FillAndExpand"
+                    SelectedIndexChanged="OnActionTypeChanged" />
 
+            <!-- Pole do wpisania temperatury -->
+            <Entry x:Name="TemperatureEntry"
+                   Placeholder="Wprowadź temperaturę (°C)"
+                   Keyboard="Numeric"
+                   FontSize="16"
+                   TextColor="#FFFFFF"
+                   BackgroundColor="#292A3A"
+                   IsVisible="False"
+                   HorizontalOptions="FillAndExpand" />
+
+            <!-- Edytor do wpisania szczegółów akcji -->
             <Editor x:Name="ActionDetailsEditor"
                     Placeholder="Wprowadź szczegóły akcji"
                     FontSize="16"
@@ -24,6 +37,7 @@
                     HeightRequest="100"
                     VerticalOptions="Start" />
 
+            <!-- Przycisk dodania akcji -->
             <Button Text="Dodaj akcję"
                     FontSize="18"
                     BackgroundColor="#00CC99"
@@ -32,6 +46,7 @@
                     HeightRequest="50"
                     Clicked="OnSaveActionClicked" />
 
+            <!-- Przycisk anulowania -->
             <Button Text="Anuluj"
                     FontSize="18"
                     BackgroundColor="#FF3B30"

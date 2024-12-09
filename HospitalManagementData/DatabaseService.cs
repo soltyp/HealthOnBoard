@@ -222,6 +222,32 @@ public class DatabaseService
             return false;
         }
     }
+
+    public async Task<bool> AddPatientActivityLogAsync(int userId, int patientId, string actionType, string actionDetails, DateTime actionDate, decimal currentTemperature)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var query = @"
+        INSERT INTO PatientActivityLog (UserID, PatientID, ActionType, ActionDetails, ActionDate, CurrentTemperature)
+        VALUES (@UserID, @PatientID, @ActionType, @ActionDetails, @ActionDate, @CurrentTemperature)";
+
+            var parameters = new
+            {
+                UserID = userId,
+                PatientID = patientId,
+                ActionType = actionType,
+                ActionDetails = actionDetails,
+                ActionDate = actionDate,
+                CurrentTemperature = currentTemperature
+            };
+
+            int rowsAffected = await connection.ExecuteAsync(query, parameters);
+            return rowsAffected > 0;
+        }
+    }
+
+
+
     public async Task<List<PatientActivity>> GetRecentActivitiesAsync(int patientId, int limit = 5)
     {
         using (var connection = new SqlConnection(_connectionString))
@@ -425,6 +451,63 @@ public class DatabaseService
         }
     }
 
+    public Dictionary<string, int> GetTemperatureStatistics()
+    {
+        var temperatureCounts = new Dictionary<string, int>();
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            var query = "SELECT CurrentTemperature, COUNT(*) AS Count FROM Patients GROUP BY CurrentTemperature";
+            using (var command = new SqlCommand(query, connection))
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var temperature = reader["CurrentTemperature"].ToString();
+                        var count = Convert.ToInt32(reader["Count"]);
+                        temperatureCounts[temperature] = count;
+                    }
+                }
+            }
+        }
+
+        return temperatureCounts;
+    }
+
+    public async Task<bool> UpdatePatientTemperatureAsync(int patientId, decimal temperature)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var query = "UPDATE Patients SET CurrentTemperature = @Temperature WHERE PatientID = @PatientID";
+
+            var parameters = new
+            {
+                Temperature = temperature,
+                PatientID = patientId
+            };
+
+            int rowsAffected = await connection.ExecuteAsync(query, parameters);
+            return rowsAffected > 0;
+        }
+    }
+
+    public async Task<List<(DateTime ActionDate, decimal Temperature)>> GetTemperatureLogsAsync(int patientId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var query = @"
+            SELECT ActionDate, CurrentTemperature
+            FROM PatientActivityLog
+            WHERE PatientID = @PatientID AND CurrentTemperature IS NOT NULL
+            ORDER BY ActionDate ASC";
+
+            var logs = await connection.QueryAsync<(DateTime ActionDate, decimal Temperature)>(query, new { PatientID = patientId });
+            return logs.ToList();
+        }
+    }
 
 
 }
