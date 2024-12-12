@@ -1,7 +1,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HealthOnBoard.PatientHistoryPage"
-             Title="Historia Leczenia - poprawic bo z 3 ostatnich dni zczytuje albo cos innego bo nie wyświetla wszystkich opercaji na pacjencie"
+             Title="Historia Leczenia"
              BackgroundColor="#1E1E2F">
 
     <Grid x:Name="MainGrid">
@@ -66,7 +66,11 @@
         </Grid>
 
         <!-- Lista historii leczenia -->
-        <CollectionView Grid.Row="1" x:Name="PatientHistoryList" BackgroundColor="Transparent" Margin="10">
+        <CollectionView Grid.Row="1"
+                        x:Name="PatientHistoryList"
+                        ItemsSource="{Binding PatientHistory}"
+                        BackgroundColor="Transparent"
+                        Margin="10">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Frame BackgroundColor="#292A3A" CornerRadius="10" Padding="10" Margin="5">
@@ -80,21 +84,21 @@
                             <HorizontalStackLayout Grid.Column="1" Spacing="10" HorizontalOptions="EndAndExpand">
                                 <!-- Edit Button -->
                                 <Button Text="Edytuj"
-                                FontSize="14"
-                                BackgroundColor="#007BFF"
-                                TextColor="#FFFFFF"
-                                CommandParameter="{Binding}"
-                                Clicked="OnEditActionClicked"
-                                VerticalOptions="Center" />
+                                        FontSize="14"
+                                        BackgroundColor="#007BFF"
+                                        TextColor="#FFFFFF"
+                                        CommandParameter="{Binding}"
+                                        Clicked="OnEditActionClicked"
+                                        VerticalOptions="Center" />
 
                                 <!-- Delete Button -->
                                 <Button Text="Usuń"
-                                FontSize="14"
-                                BackgroundColor="#FF3B30"
-                                TextColor="#FFFFFF"
-                                CommandParameter="{Binding}"
-                                Clicked="OnDeleteActionClicked"
-                                VerticalOptions="Center" />
+                                        FontSize="14"
+                                        BackgroundColor="#FF3B30"
+                                        TextColor="#FFFFFF"
+                                        CommandParameter="{Binding}"
+                                        Clicked="OnDeleteActionClicked"
+                                        VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </Grid>
                     </Frame>

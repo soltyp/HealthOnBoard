@@ -17,7 +17,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
+        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
 
 
 
@@ -265,19 +265,33 @@ public class DatabaseService
         }
     }
 
-    public async Task<List<PatientActivity>> GetFullActivitiesAsync(int patientId, int limit = 5)
+    public async Task<List<PatientActivity>> GetFullActivitiesAsync(int patientId, int limit = 5000)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
             const string query = @"
-                 SELECT TOP (@Limit) ActionType, ActionDetails, ActionDate
-                 FROM PatientActivityLog
-                 WHERE PatientID = @PatientID
-                 ORDER BY ActionDate DESC";
+                SELECT TOP (@Limit) PatientID, ActionType, ActionDetails, ActionDate
+                FROM PatientActivityLog
+                WHERE PatientID = @PatientID
+                ORDER BY ActionDate DESC";
 
 
-            var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId, Limit = limit });
-            return activities.ToList();
+            try
+            {
+                Debug.WriteLine("Wykonuję zapytanie SQL w GetFullActivitiesAsync:");
+                Debug.WriteLine(query);
+                Debug.WriteLine($"Parametry: PatientID = {patientId}, Limit = {limit}");
+
+                var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId, Limit = limit });
+                Debug.WriteLine($"Pobrano {activities.Count()} rekordów z tabeli PatientActivityLog.");
+
+                return activities.ToList();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Błąd w GetFullActivitiesAsync: {ex.Message}");
+                throw;
+            }
         }
     }
 
@@ -389,20 +403,20 @@ public class DatabaseService
     }
 
 
-    public async Task<List<PatientActivity>> GetPatientHistoryAsync(int patientId)
-    {
-        using (var connection = new SqlConnection(_connectionString))
-        {
-            const string query = @"
-            SELECT *
-            FROM PatientActivity
-            WHERE PatientID = @PatientID
-            ORDER BY ActionDate DESC";
+    //public async Task<List<PatientActivity>> GetPatientHistoryAsync(int patientId)
+    //{
+    //    using (var connection = new SqlConnection(_connectionString))
+    //    {
+    //        const string query = @"
+    //        SELECT *
+    //        FROM PatientActivity
+    //        WHERE PatientID = @PatientID
+    //        ORDER BY ActionDate DESC";
 
-            var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId });
-            return activities.ToList();
-        }
-    }
+    //        var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId });
+    //        return activities.ToList();
+    //    }
+    //}
 
 
 
