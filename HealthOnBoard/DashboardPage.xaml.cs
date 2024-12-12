@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Timers;
 using HospitalManagementAPI.Models;
 using HospitalManagementData;
+using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics;
 
 
@@ -430,6 +431,8 @@ namespace HealthOnBoard
                 return;
             }
 
+            decimal minTemperature = temperatureLogs.Min(t => t.Temperature);
+            decimal maxTemperature = temperatureLogs.Max(t => t.Temperature);
             // Dodaj kolumny dla ka¿dego punktu danych
             foreach (var _ in temperatureLogs)
             {
@@ -437,23 +440,27 @@ namespace HealthOnBoard
                 TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // Odstêp
             }
 
-            // ZnajdŸ maksymaln¹ temperaturê
-            decimal maxTemperature = temperatureLogs.Max(t => t.Temperature);
+            
+            
             if (maxTemperature == 0) maxTemperature = 1; // Uniknij dzielenia przez zero
 
             int columnIndex = 0;
 
             foreach (var log in temperatureLogs)
             {
-                // S³upek na wykresie
-                var bar = new BoxView
+                // Punkt na wykresie
+                var point = new Ellipse
                 {
-                    Color = Color.FromHex("#FF5733"),
-                    HeightRequest = (double)(log.Temperature / maxTemperature) * 200, // 200 to maksymalna wysokoœæ
+                    Fill = new SolidColorBrush(Color.FromHex("#FF5733")),
+                    HeightRequest = 10, // Sta³a wysokoœæ punktu
+                    WidthRequest = 10, // Sta³a szerokoœæ punktu
                     VerticalOptions = LayoutOptions.End,
-                    HorizontalOptions = LayoutOptions.Center,
-                    WidthRequest = 20 // Szerokoœæ s³upka
+                    HorizontalOptions = LayoutOptions.Center
                 };
+
+                // Pozycjonowanie punktu na podstawie wartoœci temperatury
+                double verticalPosition = (double)(log.Temperature / maxTemperature) * 200; // 200 to maksymalna wysokoœæ
+                point.Margin = new Thickness(0, 200 - verticalPosition, 0, verticalPosition); // Wyrównanie wzglêdem osi Y
 
                 // Data i godzina na osi X
                 var dateLabel = new Label
@@ -465,7 +472,7 @@ namespace HealthOnBoard
                     FontSize = 10
                 };
 
-                // Temperatura nad s³upkiem
+                // Temperatura nad punktem
                 var tempLabel = new Label
                 {
                     Text = $"{log.Temperature:F1}°C", // Temperatura
@@ -475,17 +482,17 @@ namespace HealthOnBoard
                     FontSize = 12
                 };
 
-                // Dodaj s³upek do siatki
-                TemperatureChartGrid.Children.Add(bar);
-                Grid.SetColumn(bar, columnIndex);
-                Grid.SetRow(bar, 0);
+                // Dodaj punkt do siatki
+                TemperatureChartGrid.Children.Add(point);
+                Grid.SetColumn(point, columnIndex);
+                Grid.SetRow(point, 0);
 
-                // Dodaj etykietê temperatury nad s³upkiem
+                // Dodaj etykietê temperatury nad punktem
                 TemperatureChartGrid.Children.Add(tempLabel);
                 Grid.SetColumn(tempLabel, columnIndex);
                 Grid.SetRow(tempLabel, 0);
 
-                // Dodaj etykietê daty i godziny pod s³upkiem
+                // Dodaj etykietê daty i godziny pod punktem
                 TemperatureChartGrid.Children.Add(dateLabel);
                 Grid.SetColumn(dateLabel, columnIndex);
                 Grid.SetRow(dateLabel, 1);

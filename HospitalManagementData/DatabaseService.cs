@@ -17,7 +17,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
+        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
 
 
 
