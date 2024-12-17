@@ -111,17 +111,26 @@ namespace HealthOnBoard
         {
             try
             {
-                // Pobierz dane o temperaturze i dacie z bazy danych
+                // Pobierz dane o temperaturze z bazy danych
                 var temperatureLogs = await _databaseService.GetTemperatureLogsAsync(_patient.PatientID);
 
-                // Przeka¿ dane do metody tworz¹cej wykres
-                BuildTemperatureChart(temperatureLogs);
+                // Wybierz ostatnie 5 wartoœci temperatury, posortowane rosn¹co po dacie
+                var lastFiveTemperatures = temperatureLogs
+                                           .OrderByDescending(t => t.ActionDate)
+                                           .Take(5) // Pobierz 5 najnowszych
+                                           .OrderBy(t => t.ActionDate) // Posortuj od najstarszej do najnowszej
+                                           .ToList();
+
+                // Przeka¿ te dane do metody tworz¹cej wykres
+                BuildTemperatureChart(lastFiveTemperatures);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"B³¹d podczas ³adowania danych do wykresu: {ex.Message}");
+                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ wykresu temperatury.", "OK");
             }
         }
+
 
 
 
@@ -313,10 +322,6 @@ namespace HealthOnBoard
         }
 
 
-        private async void OnShowPatientHistoryClicked(object sender, EventArgs e)
-        {
-            await Navigation.PushAsync(new PatientHistoryPage(_user, _patient.PatientID, _databaseService));
-        }
 
         private bool _isListVisible = true;
 
@@ -421,7 +426,7 @@ namespace HealthOnBoard
 
         private void BuildTemperatureChart(List<(DateTime ActionDate, decimal Temperature)> temperatureLogs)
         {
-            // Wyczyœæ siatkê wykresu
+            // Wyczyœæ istniej¹c¹ siatkê
             TemperatureChartGrid.Children.Clear();
             TemperatureChartGrid.ColumnDefinitions.Clear();
 
@@ -431,76 +436,79 @@ namespace HealthOnBoard
                 return;
             }
 
+            // Oblicz minimaln¹ i maksymaln¹ temperaturê do proporcjonalnego skalowania
             decimal minTemperature = temperatureLogs.Min(t => t.Temperature);
             decimal maxTemperature = temperatureLogs.Max(t => t.Temperature);
-            // Dodaj kolumny dla ka¿dego punktu danych
+
+            // Zabezpieczenie przed dzieleniem przez zero
+            if (maxTemperature == minTemperature)
+                maxTemperature = minTemperature + 1;
+
+            // Dodanie kolumn do siatki dla ka¿dego punktu (i odstêpów)
             foreach (var _ in temperatureLogs)
             {
                 TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // Odstêp
+                TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // Odstêp miêdzy punktami
             }
 
-            
-            
-            if (maxTemperature == 0) maxTemperature = 1; // Uniknij dzielenia przez zero
-
             int columnIndex = 0;
+            double maxChartHeight = 250; // Zwiêkszona wysokoœæ obszaru dla punktów
 
             foreach (var log in temperatureLogs)
             {
+                // Obliczenie proporcjonalnej wysokoœci punktu
+                double verticalPosition = (double)((log.Temperature - minTemperature) / (maxTemperature - minTemperature)) * maxChartHeight;
+
                 // Punkt na wykresie
                 var point = new Ellipse
                 {
                     Fill = new SolidColorBrush(Color.FromHex("#FF5733")),
-                    HeightRequest = 10, // Sta³a wysokoœæ punktu
-                    WidthRequest = 10, // Sta³a szerokoœæ punktu
-                    VerticalOptions = LayoutOptions.End,
-                    HorizontalOptions = LayoutOptions.Center
+                    HeightRequest = 12,
+                    WidthRequest = 12,
+                    VerticalOptions = LayoutOptions.Start,
+                    HorizontalOptions = LayoutOptions.Center,
+                    Margin = new Thickness(0, maxChartHeight - verticalPosition + 20, 0, 0) // Przesuniêcie o dodatkowe 20 jednostek w górê
                 };
 
-                // Pozycjonowanie punktu na podstawie wartoœci temperatury
-                double verticalPosition = (double)(log.Temperature / maxTemperature) * 200; // 200 to maksymalna wysokoœæ
-                point.Margin = new Thickness(0, 200 - verticalPosition, 0, verticalPosition); // Wyrównanie wzglêdem osi Y
-
-                // Data i godzina na osi X
-                var dateLabel = new Label
+                // Etykieta temperatury nad punktem
+                var tempLabel = new Label
                 {
-                    Text = log.ActionDate.ToString("dd-MM HH:mm"), // Data i godzina
+                    Text = $"{log.Temperature:F1}°C",
                     HorizontalTextAlignment = TextAlignment.Center,
                     VerticalOptions = LayoutOptions.Start,
                     TextColor = Colors.White,
-                    FontSize = 10
+                    FontSize = 12,
+                    Margin = new Thickness(0, maxChartHeight - verticalPosition - 10, 0, 0) // Przesuniêcie nad punkt
                 };
 
-                // Temperatura nad punktem
-                var tempLabel = new Label
+                // Etykieta daty i godziny pod punktem
+                var dateLabel = new Label
                 {
-                    Text = $"{log.Temperature:F1}°C", // Temperatura
+                    Text = log.ActionDate.ToString("dd-MM HH:mm"),
                     HorizontalTextAlignment = TextAlignment.Center,
                     VerticalOptions = LayoutOptions.End,
-                    TextColor = Colors.White,
-                    FontSize = 12
+                    TextColor = Colors.Gray,
+                    FontSize = 10,
+                    Margin = new Thickness(0, 5, 0, 0)
                 };
 
-                // Dodaj punkt do siatki
-                TemperatureChartGrid.Children.Add(point);
-                Grid.SetColumn(point, columnIndex);
-                Grid.SetRow(point, 0);
-
-                // Dodaj etykietê temperatury nad punktem
+                // Dodanie elementów do siatki
                 TemperatureChartGrid.Children.Add(tempLabel);
                 Grid.SetColumn(tempLabel, columnIndex);
                 Grid.SetRow(tempLabel, 0);
 
-                // Dodaj etykietê daty i godziny pod punktem
+                TemperatureChartGrid.Children.Add(point);
+                Grid.SetColumn(point, columnIndex);
+                Grid.SetRow(point, 0);
+
                 TemperatureChartGrid.Children.Add(dateLabel);
                 Grid.SetColumn(dateLabel, columnIndex);
                 Grid.SetRow(dateLabel, 1);
 
-                // PrzejdŸ do nastêpnej kolumny
-                columnIndex += 2;
+                columnIndex += 2; // Przeskok o dwie kolumny
             }
         }
+
 
 
 
@@ -557,6 +565,20 @@ namespace HealthOnBoard
                 columnIndex++;
             }
         }
+
+        private async void OnShowTemperatureChartClicked(object sender, EventArgs e)
+        {
+            // Pobierz ID pacjenta i przeka¿ us³ugê bazy danych
+            int patientId = _patient.PatientID;
+            await Navigation.PushAsync(new TemperatureChartPage(patientId, _databaseService));
+        }
+
+        private async void OnShowPatientHistoryClicked(object sender, EventArgs e)
+        {
+            // Przyk³ad nawigacji do nowej strony z histori¹ pacjenta
+            await Navigation.PushAsync(new PatientHistoryPage(_user, _patient.PatientID, _databaseService));
+        }
+
 
         private Color GetRandomColor()
         {

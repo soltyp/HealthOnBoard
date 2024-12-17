@@ -1,0 +1,35 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.TemperatureChartPage"
+             Title="Wykres Temperatury"
+             BackgroundColor="#1E1E2F">
+
+    <VerticalStackLayout Padding="20" Spacing="20">
+        <!-- Nagłówek -->
+        <Label Text="Wszystkie wartości temperatury" 
+               FontSize="20" 
+               FontAttributes="Bold" 
+               TextColor="White" 
+               HorizontalOptions="Center" />
+
+        <!-- Siatka wykresu temperatury -->
+        <Frame BackgroundColor="#292A3A"
+               CornerRadius="12"
+               Padding="10,30,10,10"
+               Margin="10,0,10,10"
+               HasShadow="True"
+               HorizontalOptions="FillAndExpand"
+               VerticalOptions="FillAndExpand">
+
+            <Grid x:Name="TemperatureChartGrid"
+                  VerticalOptions="FillAndExpand"
+                  HorizontalOptions="FillAndExpand"
+                  RowSpacing="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="3*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+            </Grid>
+        </Frame>
+    </VerticalStackLayout>
+</ContentPage>

@@ -153,7 +153,16 @@
                             HeightRequest="50"
                             Clicked="OnShowPatientHistoryClicked" />
 
-                                            <!-- Przycisk więcej danych -->
+                            <Button Text="Pokaż wykres temperatury"
+                            FontSize="16"
+                            BackgroundColor="#007BFF"
+                            TextColor="#FFFFFF"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            Clicked="OnShowTemperatureChartClicked" />
+
+                            
+                            <!-- Przycisk więcej danych -->
                                             <Button Text="Więcej danych"
                             FontSize="16"
                             BackgroundColor="#007BFF"
@@ -168,33 +177,31 @@
                         <!-- Temperatura pacjenta - nagłówek i wykres -->
                         <VerticalStackLayout HorizontalOptions="Start" VerticalOptions="Start" Spacing="10">
                             <Label Text="Temperatura pacjenta"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#FFFFFF"
-                                   HorizontalTextAlignment="Start"
-                                   Margin="10,0,0,0" />
-                                                    <!-- Tytuł wykresu -->
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#FFFFFF"
+                               HorizontalTextAlignment="Start"
+                               Margin="10,0,0,0" />
+                                                <!-- Tytuł wykresu -->
 
-                                                    <Frame BackgroundColor="#292A3A"
-                                   CornerRadius="12"
-                                   Padding="10"
-                                   Margin="10,0,0,10"
-                                   HasShadow="True"
-                                   HorizontalOptions="Start"
-                                   WidthRequest="400">
-                                                        <!-- Zwiększenie szerokości wykresu -->
-                                                    <Grid x:Name="TemperatureChartGrid"
-                                      VerticalOptions="FillAndExpand"
-                                      HorizontalOptions="FillAndExpand"
-                                      RowSpacing="5">       
+                            <Frame BackgroundColor="#292A3A"
+                               CornerRadius="12"
+                               Padding="10,30,10,10"
+                               Margin="10,0,0,10"
+                               HasShadow="True"
+                               HorizontalOptions="Start"
+                               WidthRequest="400">
+                                <Grid x:Name="TemperatureChartGrid"
+                                  VerticalOptions="FillAndExpand"
+                                  HorizontalOptions="FillAndExpand"
+                                  RowSpacing="5">           
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="3*" />
-                                        <!-- Obszar słupków -->
                                         <RowDefinition Height="Auto" />
-                                        <!-- Oś X -->
                                     </Grid.RowDefinitions>
                                 </Grid>
                             </Frame>
+
                         </VerticalStackLayout>
 
 
