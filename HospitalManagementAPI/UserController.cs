@@ -1,4 +1,4 @@
-﻿using HospitalManagementAPI.Models;
+﻿
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagementAPI.Controllers

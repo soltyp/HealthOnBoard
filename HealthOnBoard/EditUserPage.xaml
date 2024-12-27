@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.EditUserPage"
+             Title="Edytuj użytkownika">
+    <ContentPage.Content>
+        <VerticalStackLayout Padding="10" Spacing="15">
+
+            <!-- Nagłówek -->
+            <Label Text="Edytuj użytkownika" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
+
+            <!-- Imię i nazwisko -->
+            <Entry Placeholder="Imię i nazwisko" Text="{Binding SelectedUser.FirstName, Mode=TwoWay}" FontSize="14" />
+
+
+            <!-- PIN -->
+            <Entry Placeholder="PIN" Text="{Binding SelectedUser.Pin}" FontSize="14" />
+
+            <!-- Rola -->
+            <Picker Title="Rola"
+                    ItemsSource="{Binding Roles}"
+                    ItemDisplayBinding="{Binding RoleName}"
+                    SelectedItem="{Binding SelectedRole}"
+                    FontSize="14" />
+
+            <!-- Status aktywności -->
+            <HorizontalStackLayout>
+                <Switch IsToggled="{Binding SelectedUser.ActiveStatus}" />
+                <Label Text="Aktywny użytkownik" VerticalOptions="Center" FontSize="14" />
+            </HorizontalStackLayout>
+
+            <!-- Przyciski zapisu i anulowania -->
+            <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
+                <Button Text="Zapisz" Clicked="OnSaveClicked" BackgroundColor="LightGreen" FontSize="14" />
+                <Button Text="Anuluj" Clicked="OnCancelClicked" BackgroundColor="LightGray" FontSize="14" />
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ContentPage.Content>
+</ContentPage>

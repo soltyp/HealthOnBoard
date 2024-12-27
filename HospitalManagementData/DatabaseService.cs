@@ -1,32 +1,36 @@
 ﻿using System.Data.SqlClient;
 using System.Threading.Tasks;
-using HospitalManagementAPI.Models;
 using Microsoft.Extensions.Configuration;
 using Dapper;
 using System.Diagnostics;
 using HospitalManagementAPI;
 using HospitalManagementData;
 using HealthOnBoard;
+using System.Data;
+using System.Data.Common;
 
 
 public class DatabaseService
 {
     private readonly IConfiguration _configuration;
     private readonly string _connectionString;
+    private readonly IDbConnection _dbConnection;
 
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;\r\n";
-
-
+        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;";
 
         if (string.IsNullOrEmpty(_connectionString))
         {
             Debug.WriteLine("Błąd: Connection string jest pusty lub niezdefiniowany.");
             throw new InvalidOperationException("Connection string is not configured.");
         }
+
+        // Inicjalizuj _dbConnection
+        _dbConnection = new SqlConnection(_connectionString);
     }
+
 
     public async Task<Patient?> GetPatientByBedNumberAsync(int bedNumber)
     {
@@ -522,6 +526,171 @@ public class DatabaseService
             return logs.ToList();
         }
     }
+
+    public async Task<List<User>> GetUsersAsync()
+    {
+        var users = new List<User>();
+
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                var query = "SELECT UserID, Name, RoleID, PIN, SafetyPIN, ActiveStatus FROM dbo.Users";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            Debug.WriteLine($"Pobieranie użytkownika: {reader.GetString(1)}"); // Dodaj debugowanie
+                            users.Add(new User
+                            {
+                                UserID = reader.GetInt32(0),
+                                FirstName = reader.GetString(1),
+                                Role = reader.GetInt32(2) == 4 ? "Admin" : "User",
+                                ActiveStatus = reader.GetBoolean(5)
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas ładowania użytkowników: {ex.Message}");
+        }
+
+        return users;
+    }
+
+    public async Task SaveUserAsync(User user)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            if (user.UserID == 0) // Dodawanie nowego użytkownika
+            {
+                var query = @"
+                INSERT INTO Users (Name, PIN, SafetyPIN, RoleID, ActiveStatus)
+                VALUES (@Name, @Pin, @SafetyPIN, @RoleID, @ActiveStatus)";
+                await connection.ExecuteAsync(query, new
+                {
+                    Name = user.FirstName,
+                    Pin = user.Pin,
+                    SafetyPIN = user.SafetyPIN,
+                    RoleID = user.RoleID,
+                    ActiveStatus = user.ActiveStatus
+                });
+            }
+            else // Aktualizacja istniejącego użytkownika
+            {
+                var query = @"
+                UPDATE Users
+                SET Name = @Name,
+                    PIN = @Pin,
+                    SafetyPIN = @SafetyPIN,
+                    RoleID = @RoleID,
+                    ActiveStatus = @ActiveStatus
+                WHERE UserID = @UserID";
+                await connection.ExecuteAsync(query, new
+                {
+                    Name = user.FirstName,
+                    Pin = user.Pin,
+                    SafetyPIN = user.SafetyPIN,
+                    RoleID = user.RoleID,
+                    ActiveStatus = user.ActiveStatus,
+                    UserID = user.UserID
+                });
+            }
+        }
+    }
+
+
+
+    public async Task DeleteUserAsync(int userId)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                string query = "DELETE FROM dbo.Users WHERE UserID = @UserID";
+                await connection.ExecuteAsync(query, new { UserID = userId });
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error deleting user: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<List<Role>> GetRolesAsync()
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = "SELECT RoleID, RoleName FROM Roles";
+            var roles = await connection.QueryAsync<Role>(query);
+            return roles.ToList();
+        }
+    }
+
+    public async Task<bool> IsPinUniqueAsync(string pin, int? userId = null)
+    {
+        try
+        {
+            var query = userId.HasValue
+                ? "SELECT COUNT(1) FROM Users WHERE PIN = @Pin AND UserID != @UserID"
+                : "SELECT COUNT(1) FROM Users WHERE PIN = @Pin";
+
+            object parameters;
+            if (userId.HasValue)
+            {
+                parameters = new { Pin = pin, UserID = userId.Value };
+            }
+            else
+            {
+                parameters = new { Pin = pin };
+            }
+
+            var count = await _dbConnection.ExecuteScalarAsync<int>(query, parameters);
+            return count == 0; // True, jeśli PIN jest unikalny
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas sprawdzania unikalności PIN-u: {ex.Message}");
+            throw;
+        }
+    }
+
+
+    public async Task<User> GetUserByIdAsync(int userId)
+    {
+        try
+        {
+            var query = "SELECT UserID, Name AS FirstName, PIN, RoleID, ActiveStatus FROM Users WHERE UserID = @UserID";
+
+            var user = await _dbConnection.QueryFirstOrDefaultAsync<User>(query, new { UserID = userId });
+
+            if (user != null)
+            {
+                Debug.WriteLine($"Pobrano użytkownika: UserID={user.UserID}, Name={user.FirstName}, PIN={user.Pin}, RoleID={user.RoleID}");
+            }
+            else
+            {
+                Debug.WriteLine("Nie znaleziono użytkownika w bazie danych.");
+            }
+
+            return user;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas pobierania użytkownika: {ex.Message}");
+            throw;
+        }
+    }
+
 
 
 }

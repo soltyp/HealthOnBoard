@@ -4,34 +4,85 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Microsoft.Data.SqlClient;
 
 public class LoginService
 {
-    private readonly HttpClient _httpClient;
+    private readonly string _connectionString;
 
     public LoginService()
     {
-        _httpClient = new HttpClient
-        {
-            BaseAddress = new Uri("https://localhost:7229/api/") // Ustaw URL API
-        };
+        // Zaktualizowany connection string z TrustServerCertificate
+        _connectionString = "Server=LAPTOP-72SPAJ8D;Database=HospitalManagement;Trusted_Connection=True;TrustServerCertificate=True;";
     }
 
     public async Task<User?> AuthenticateUserAsync(string pin)
     {
-        var content = new StringContent(JsonSerializer.Serialize(pin), Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync("User/Authenticate", content);
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var json = await response.Content.ReadAsStringAsync();
-            Debug.WriteLine($"Odpowiedź JSON z serwera: {json}");
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
 
-            return JsonSerializer.Deserialize<User>(json);
+                var query = "SELECT UserID, Name, RoleID, PIN, ActiveStatus FROM dbo.Users WHERE PIN = @PIN";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@PIN", pin);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.Read())
+                        {
+                            return new User
+                            {
+                                UserID = reader.GetInt32(0),
+                                FirstName = reader.GetString(1),
+                                Role = reader.GetInt32(2) == 4 ? "Admin" : "User",
+                                ActiveStatus = reader.GetBoolean(4)
+                            };
+                        }
+                    }
+                }
+            }
+
+            Debug.WriteLine("Nie znaleziono użytkownika z podanym PIN-em.");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas łączenia z bazą danych: {ex.Message}");
         }
 
         return null;
     }
 
+    public async Task<bool> AuthenticateSecurityPinAsync(string securityPin)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
 
+                var query = "SELECT COUNT(*) FROM dbo.Users WHERE SafetyPIN = @SafetyPIN";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@SafetyPIN", securityPin);
+
+                    var count = (int)await command.ExecuteScalarAsync();
+                    return count > 0;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas łączenia z bazą danych: {ex.Message}");
+        }
+
+        return false;
+    }
+
+    public bool IsAdmin(User user)
+    {
+        return user?.Role != null && user.Role.ToLower() == "admin";
+    }
 }

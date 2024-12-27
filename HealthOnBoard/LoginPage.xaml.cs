@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using HospitalManagementAPI;
-using HospitalManagementAPI.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
@@ -46,7 +45,7 @@ namespace HealthOnBoard
         public LoginPage(IConfiguration configuration)
         {
             InitializeComponent();
-            _loginService = new LoginService();
+            _loginService = new LoginService(); // Inicjalizacja usługi logowania
             _databaseService = new DatabaseService(configuration);
             BindingContext = this; // Powiązanie z kontekstem danych
         }
@@ -61,7 +60,6 @@ namespace HealthOnBoard
 
             var pin = PINEntry.Text;
             Debug.WriteLine($"PIN przed autoryzacją: {pin}");
-            Debug.WriteLine($"Wybrany numer łóżka: {SelectedBedNumber}");
 
             if (string.IsNullOrWhiteSpace(pin))
             {
@@ -73,7 +71,18 @@ namespace HealthOnBoard
             if (user != null)
             {
                 Debug.WriteLine($"Uwierzytelniono użytkownika: {user.FirstName}");
-                await NavigateToDashboard(user);
+
+                // Sprawdź, czy użytkownik to administrator
+                if (_loginService.IsAdmin(user))
+                {
+                    await Navigation.PushAsync(new AdminPanelPage(_databaseService));
+                }
+
+                else
+                {
+                    await NavigateToDashboard(user);
+                }
+
                 _failedAttempts = 0; // Reset liczby nieudanych prób po sukcesie
             }
             else
@@ -140,10 +149,12 @@ namespace HealthOnBoard
 
         private async Task NavigateToDashboard(User user)
         {
+            // Pobierz pacjenta przypisanego do wybranego numeru łóżka
             var patient = await _databaseService.GetPatientByBedNumberAsync(SelectedBedNumber);
 
             if (patient != null)
             {
+                // Przekazujemy User, Patient oraz DatabaseService do DashboardPage
                 await Navigation.PushAsync(new DashboardPage(user, patient, _databaseService));
                 await DisplayAlert("Sukces", $"Witaj, {user.FirstName}! Pacjent: {patient.Name}, Łóżko: {SelectedBedNumber}", "OK");
             }
@@ -152,6 +163,7 @@ namespace HealthOnBoard
                 await DisplayAlert("Uwaga", $"Brak pacjenta przypisanego do łóżka {SelectedBedNumber}.", "OK");
             }
         }
+
 
         private async void OnSecurityPinUnlockClicked(object sender, EventArgs e)
         {
@@ -163,7 +175,7 @@ namespace HealthOnBoard
                 return;
             }
 
-            var success = await _databaseService.AuthenticateSecurityPinAsync(securityPin);
+            var success = await _loginService.AuthenticateSecurityPinAsync(securityPin);
             if (success)
             {
                 await DisplayAlert("Sukces", "Odblokowano możliwość logowania", "OK");
