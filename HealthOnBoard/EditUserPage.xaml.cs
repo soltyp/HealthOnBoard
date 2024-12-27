@@ -101,10 +101,11 @@ namespace HealthOnBoard
         {
             try
             {
-                // Sprawdzenie unikalnoœci PIN-u
-                if (!await _databaseService.IsPinUniqueAsync(SelectedUser.Pin, SelectedUser.UserID))
+                // Sprawdzenie unikalnoœci PIN-u dla edytowanego u¿ytkownika
+                bool isPinUnique = await _databaseService.IsPinUniqueAsync(SelectedUser.Pin, SelectedUser.UserID);
+                if (!isPinUnique)
                 {
-                    await DisplayAlert("B³¹d", "Podany PIN ju¿ istnieje. WprowadŸ inny PIN.", "OK");
+                    await DisplayAlert("B³¹d", "Podany PIN ju¿ istnieje i nale¿y do innego u¿ytkownika. WprowadŸ inny PIN.", "OK");
                     return;
                 }
 
@@ -123,6 +124,8 @@ namespace HealthOnBoard
                 await DisplayAlert("B³¹d", "Nie uda³o siê zapisaæ danych u¿ytkownika.", "OK");
             }
         }
+
+
 
 
         private async void OnCancelClicked(object sender, EventArgs e)

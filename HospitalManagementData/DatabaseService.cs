@@ -41,6 +41,30 @@ public class DatabaseService
         }
     }
 
+    public async Task<Patient?> GetPatientByIdAsync(int patientId)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                const string query = @"
+                SELECT 
+                    PatientID, Name, Age, BedNumber, CurrentTemperature, AssignedDrugs, Notes, 
+                    PESEL, Address, PhoneNumber, Email, DateOfBirth, Gender, EmergencyContact, 
+                    BloodType, Allergies, ChronicDiseases
+                FROM dbo.Patients
+                WHERE PatientID = @PatientID";
+
+                var patient = await connection.QueryFirstOrDefaultAsync<Patient>(query, new { PatientID = patientId });
+                return patient;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error retrieving patient: {ex.Message}");
+            throw;
+        }
+    }
 
     public async Task<bool> IsLockedOutAsync()
     {
@@ -640,22 +664,29 @@ public class DatabaseService
     {
         try
         {
-            var query = userId.HasValue
-                ? "SELECT COUNT(1) FROM Users WHERE PIN = @Pin AND UserID != @UserID"
-                : "SELECT COUNT(1) FROM Users WHERE PIN = @Pin";
-
+            string query;
             object parameters;
+
             if (userId.HasValue)
             {
+                // Sprawdzenie unikalności PIN-u, z wykluczeniem użytkownika, którego aktualnie edytujemy
+                query = "SELECT COUNT(1) FROM Users WHERE PIN = @Pin AND UserID != @UserID";
                 parameters = new { Pin = pin, UserID = userId.Value };
             }
             else
             {
+                // Sprawdzenie unikalności PIN-u dla nowego użytkownika
+                query = "SELECT COUNT(1) FROM Users WHERE PIN = @Pin";
                 parameters = new { Pin = pin };
             }
 
-            var count = await _dbConnection.ExecuteScalarAsync<int>(query, parameters);
-            return count == 0; // True, jeśli PIN jest unikalny
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var count = await connection.ExecuteScalarAsync<int>(query, parameters);
+
+                // True, jeśli PIN jest unikalny lub należy do użytkownika, którego edytujemy
+                return count == 0;
+            }
         }
         catch (Exception ex)
         {
@@ -663,6 +694,7 @@ public class DatabaseService
             throw;
         }
     }
+
 
 
     public async Task<User> GetUserByIdAsync(int userId)
@@ -691,6 +723,136 @@ public class DatabaseService
         }
     }
 
+    public async Task<List<Patient>> GetPatientsAsync()
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = "SELECT * FROM dbo.Patients";
+            return (await connection.QueryAsync<Patient>(query)).ToList();
+        }
+    }
+
+    public async Task SavePatientAsync(Patient patient)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Sprawdź, czy numer łóżka jest zajęty przez innego pacjenta
+                var checkBedNumberQuery = "SELECT COUNT(1) FROM Patients WHERE BedNumber = @BedNumber AND PatientID != @PatientID";
+                int existingBedCount = await connection.ExecuteScalarAsync<int>(checkBedNumberQuery, new { BedNumber = patient.BedNumber, PatientID = patient.PatientID });
+
+                if (existingBedCount > 0)
+                {
+                    throw new InvalidOperationException($"Numer łóżka {patient.BedNumber} jest już zajęty przez innego pacjenta.");
+                }
+
+                if (patient.PatientID == 0) // Nowy pacjent
+                {
+                    // Pobierz najwyższe PatientID
+                    var maxPatientIdQuery = "SELECT ISNULL(MAX(PatientID), 0) FROM Patients";
+                    int maxPatientId = await connection.ExecuteScalarAsync<int>(maxPatientIdQuery);
+
+                    // Ustaw PatientID
+                    patient.PatientID = maxPatientId + 1;
+
+                    // Dodaj nowego pacjenta
+                    var insertQuery = @"
+                    INSERT INTO Patients (
+                        PatientID, Name, Age, BedNumber, CurrentTemperature, AssignedDrugs, Notes, PESEL, Address, PhoneNumber,
+                        Email, DateOfBirth, Gender, EmergencyContact, BloodType, Allergies, ChronicDiseases
+                    ) VALUES (
+                        @PatientID, @Name, @Age, @BedNumber, @CurrentTemperature, @AssignedDrugs, @Notes, @PESEL, @Address, 
+                        @PhoneNumber, @Email, @DateOfBirth, @Gender, @EmergencyContact, @BloodType, @Allergies, @ChronicDiseases
+                    )";
+
+                    await connection.ExecuteAsync(insertQuery, patient);
+                }
+                else // Aktualizacja istniejącego pacjenta
+                {
+                    // Zaktualizuj dane pacjenta
+                    var updateQuery = @"
+                    UPDATE Patients
+                    SET Name = @Name,
+                        Age = @Age,
+                        BedNumber = @BedNumber,
+                        CurrentTemperature = @CurrentTemperature,
+                        AssignedDrugs = @AssignedDrugs,
+                        Notes = @Notes,
+                        PESEL = @PESEL,
+                        Address = @Address,
+                        PhoneNumber = @PhoneNumber,
+                        Email = @Email,
+                        DateOfBirth = @DateOfBirth,
+                        Gender = @Gender,
+                        EmergencyContact = @EmergencyContact,
+                        BloodType = @BloodType,
+                        Allergies = @Allergies,
+                        ChronicDiseases = @ChronicDiseases
+                    WHERE PatientID = @PatientID";
+
+                    await connection.ExecuteAsync(updateQuery, patient);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error saving patient: {ex.Message}");
+            throw;
+        }
+    }
+
+
+    public async Task DeletePatientAsync(int patientId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = "DELETE FROM dbo.Patients WHERE PatientID = @PatientID";
+            await connection.ExecuteAsync(query, new { PatientID = patientId });
+        }
+    }
+
+    public async Task AddPatientAsync(Patient patient)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Sprawdź, czy numer łóżka już istnieje
+                var checkBedNumberQuery = "SELECT COUNT(1) FROM Patients WHERE BedNumber = @BedNumber";
+                int existingBedCount = await connection.ExecuteScalarAsync<int>(checkBedNumberQuery, new { BedNumber = patient.BedNumber });
+
+                if (existingBedCount > 0)
+                {
+                    throw new InvalidOperationException($"Numer łóżka {patient.BedNumber} jest już zajęty przez innego pacjenta.");
+                }
+
+                // Pobierz najwyższe PatientID
+                var maxPatientIdQuery = "SELECT ISNULL(MAX(PatientID), 0) FROM Patients";
+                int maxPatientId = await connection.ExecuteScalarAsync<int>(maxPatientIdQuery);
+
+                // Ustaw PatientID na wartość o jeden większą
+                patient.PatientID = maxPatientId + 1;
+
+                // Wstaw pacjenta
+                var query = @"
+                INSERT INTO Patients (
+                    PatientID, Name, Age, BedNumber, CurrentTemperature, AssignedDrugs, Notes, PESEL, Address, PhoneNumber,
+                    Email, DateOfBirth, Gender, EmergencyContact, BloodType, Allergies, ChronicDiseases
+                ) VALUES (
+                    @PatientID, @Name, @Age, @BedNumber, @CurrentTemperature, @AssignedDrugs, @Notes, @PESEL, @Address, 
+                    @PhoneNumber, @Email, @DateOfBirth, @Gender, @EmergencyContact, @BloodType, @Allergies, @ChronicDiseases
+                )";
+
+                await connection.ExecuteAsync(query, patient);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error adding patient: {ex.Message}");
+            throw;
+        }
+    }
 
 
 }

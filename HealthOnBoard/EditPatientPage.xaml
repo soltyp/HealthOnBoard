@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.EditPatientPage"
+             Title="Edytuj pacjenta">
+    <ContentPage.Content>
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="15">
+                <Label Text="Edytuj pacjenta" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
+                <Entry Placeholder="Imię i nazwisko" Text="{Binding SelectedPatient.Name}" />
+                <Entry Placeholder="Wiek" Text="{Binding SelectedPatient.Age}" Keyboard="Numeric" />
+                <Entry Placeholder="Numer łóżka" Text="{Binding SelectedPatient.BedNumber}" Keyboard="Numeric" />
+                <Entry Placeholder="Temperatura" Text="{Binding SelectedPatient.CurrentTemperature}" Keyboard="Numeric" />
+                <Entry Placeholder="Leki przepisane" Text="{Binding SelectedPatient.AssignedDrugs}" />
+                <Editor Placeholder="Notatki" Text="{Binding SelectedPatient.Notes}" HeightRequest="80" />
+                <Entry Placeholder="PESEL" Text="{Binding SelectedPatient.PESEL}" />
+                <Entry Placeholder="Adres" Text="{Binding SelectedPatient.Address}" />
+                <Entry Placeholder="Numer telefonu" Text="{Binding SelectedPatient.PhoneNumber}" Keyboard="Telephone" />
+                <Entry Placeholder="Email" Text="{Binding SelectedPatient.Email}" Keyboard="Email" />
+                <Entry Placeholder="Data urodzenia (YYYY-MM-DD)" Text="{Binding SelectedPatient.DateOfBirth}" />
+                <Entry Placeholder="Płeć" Text="{Binding SelectedPatient.Gender}" />
+                <Entry Placeholder="Kontakt w nagłych wypadkach" Text="{Binding SelectedPatient.EmergencyContact}" />
+                <Entry Placeholder="Grupa krwi" Text="{Binding SelectedPatient.BloodType}" />
+                <Entry Placeholder="Alergie" Text="{Binding SelectedPatient.Allergies}" />
+                <Entry Placeholder="Choroby przewlekłe" Text="{Binding SelectedPatient.ChronicDiseases}" />
+
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Button Text="Zapisz" Clicked="OnSaveClicked" BackgroundColor="LightGreen" />
+                    <Button Text="Anuluj" Clicked="OnCancelClicked" BackgroundColor="LightGray" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>

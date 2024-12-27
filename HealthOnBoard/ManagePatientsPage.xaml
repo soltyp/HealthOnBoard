@@ -3,10 +3,70 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HealthOnBoard.ManagePatientsPage"
              Title="Zarządzanie pacjentami">
-    <StackLayout Padding="20">
-        <Label Text="Zarządzanie pacjentami"
-               FontSize="24"
-               HorizontalOptions="Center" />
-        <!-- Dodaj tutaj elementy UI -->
-    </StackLayout>
+    <ContentPage.Content>
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="15">
+
+                <!-- Nagłówek -->
+                <Label Text="Zarządzanie pacjentami" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
+
+                <!-- Przycisk do pokazywania/ukrywania sekcji dodawania pacjenta -->
+                <Button Text="{Binding ToggleAddSectionText}" Clicked="OnToggleAddSectionClicked" />
+
+                <!-- Sekcja dodawania pacjenta -->
+                <StackLayout IsVisible="{Binding IsAddSectionVisible}" Spacing="10">
+                    <Label Text="Dodaj Pacjenta" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
+                    <Entry Placeholder="Imię i nazwisko" Text="{Binding NewPatient.Name}" />
+                    <Entry Placeholder="Wiek" Text="{Binding NewPatient.Age}" Keyboard="Numeric" />
+                    <Entry Placeholder="Numer łóżka" Text="{Binding NewPatient.BedNumber}" Keyboard="Numeric" />
+                    <Entry Placeholder="Temperatura" Text="{Binding NewPatient.CurrentTemperature}" Keyboard="Numeric" />
+                    <Entry Placeholder="Leki przepisane" Text="{Binding NewPatient.AssignedDrugs}" />
+                    <Editor Placeholder="Notatki" Text="{Binding NewPatient.Notes}" HeightRequest="80" />
+                    <Entry Placeholder="PESEL" Text="{Binding NewPatient.PESEL}" />
+                    <Entry Placeholder="Adres" Text="{Binding NewPatient.Address}" />
+                    <Entry Placeholder="Numer telefonu" Text="{Binding NewPatient.PhoneNumber}" Keyboard="Telephone" />
+                    <Entry Placeholder="Email" Text="{Binding NewPatient.Email}" Keyboard="Email" />
+                    <Entry Placeholder="Data urodzenia (YYYY-MM-DD)" Text="{Binding NewPatient.DateOfBirth}" />
+                    <Entry Placeholder="Płeć" Text="{Binding NewPatient.Gender}" />
+                    <Entry Placeholder="Kontakt w nagłych wypadkach" Text="{Binding NewPatient.EmergencyContact}" />
+                    <Entry Placeholder="Grupa krwi" Text="{Binding NewPatient.BloodType}" />
+                    <Entry Placeholder="Alergie" Text="{Binding NewPatient.Allergies}" />
+                    <Entry Placeholder="Choroby przewlekłe" Text="{Binding NewPatient.ChronicDiseases}" />
+                    <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                        <Button Text="Dodaj Pacjenta" Clicked="OnAddPatientClicked" BackgroundColor="LightGreen" />
+                    </HorizontalStackLayout>
+                </StackLayout>
+
+                <!-- Lista pacjentów -->
+                <Label Text="Lista pacjentów" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" Margin="20,10" />
+                <CollectionView ItemsSource="{Binding Patients}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="10" ColumnDefinitions="3*,auto,auto" ColumnSpacing="10">
+                                <!-- Imię i nazwisko pacjenta -->
+                                <Label Text="{Binding Name}" VerticalOptions="Center" HorizontalOptions="Start" Grid.Column="0" FontSize="16" />
+
+                                <!-- Przycisk Edytuj -->
+                                <Button Text="Edytuj" CommandParameter="{Binding .}" 
+                                        Clicked="OnEditPatientClicked" 
+                                        Grid.Column="1" 
+                                        BackgroundColor="LightBlue" 
+                                        TextColor="White" 
+                                        WidthRequest="70" />
+
+                                <!-- Przycisk Usuń -->
+                                <Button Text="Usuń" CommandParameter="{Binding .}" 
+                                        Clicked="OnDeletePatientClicked" 
+                                        Grid.Column="2" 
+                                        BackgroundColor="LightCoral" 
+                                        TextColor="White" 
+                                        WidthRequest="70" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </ContentPage.Content>
 </ContentPage>

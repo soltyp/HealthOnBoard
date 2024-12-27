@@ -4,65 +4,69 @@
              x:Class="HealthOnBoard.ManageUsersPage"
              Title="Zarządzanie użytkownikami">
     <ContentPage.Content>
-        <VerticalStackLayout Padding="10" Spacing="15">
+        <!-- ScrollView umożliwia przewijanie zawartości -->
+        <ScrollView>
+            <VerticalStackLayout Padding="10" Spacing="15">
 
-            <!-- Nagłówek -->
-            <Label Text="Lista użytkowników" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
+                <!-- Sekcja dodawania użytkownika -->
+                <Label Text="Dodaj Użytkownika" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" Margin="10" />
 
-            <!-- Lista użytkowników -->
-            <CollectionView ItemsSource="{Binding Users}" Margin="0,10,0,0">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Padding="10" ColumnDefinitions="*,auto,auto" ColumnSpacing="10">
-                            <!-- Imię i nazwisko -->
-                            <Label Text="{Binding FirstName}" VerticalOptions="Center" HorizontalOptions="Start" FontSize="16" />
+                <VerticalStackLayout Padding="10" Spacing="10">
+                    <Entry Placeholder="Imię i nazwisko" Text="{Binding EditingUser.FirstName}" FontSize="14" />
+                    <Entry Placeholder="PIN" Text="{Binding EditingUser.Pin}" FontSize="14" />
+                    <Picker Title="Rola"
+                            ItemsSource="{Binding Roles}"
+                            ItemDisplayBinding="{Binding RoleName}"
+                            SelectedItem="{Binding SelectedRole, Mode=TwoWay}"
+                            FontSize="14" />
 
-                            <!-- Przyciski Edytuj i Usuń -->
-                            <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="End">
-                                <Button Text="Edytuj"
-                                        BackgroundColor="LightBlue"
-                                        TextColor="White"
-                                        CornerRadius="5"
-                                        CommandParameter="{Binding .}"
-                                        Clicked="OnEditUserClicked"
-                                        WidthRequest="70" />
+                    <HorizontalStackLayout>
+                        <Switch IsToggled="{Binding EditingUser.ActiveStatus}" />
+                        <Label Text="Aktywny użytkownik" VerticalOptions="Center" FontSize="14" />
+                    </HorizontalStackLayout>
 
-                                <Button Text="Usuń"
-                                        BackgroundColor="LightCoral"
-                                        TextColor="White"
-                                        CornerRadius="5"
-                                        CommandParameter="{Binding .}"
-                                        Clicked="OnDeleteUserClicked"
-                                        WidthRequest="70" />
-                            </HorizontalStackLayout>
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                    <!-- Przyciski akcji -->
+                    <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
+                        <Button Text="Zapisz" Clicked="OnSaveClicked" BackgroundColor="LightGreen" FontSize="14" />
+                        <Button Text="Anuluj" Clicked="OnCancelClicked" BackgroundColor="LightGray" FontSize="14" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
 
-            <!-- Sekcja dodawania użytkownika -->
-            <Label Text="Dodaj Użytkownika" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" Margin="10" />
+                <!-- Nagłówek listy użytkowników -->
+                <Label Text="Lista użytkowników" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" Margin="20,10,20,0" />
 
-            <VerticalStackLayout Padding="10" Spacing="10">
-                <Entry Placeholder="Imię i nazwisko" Text="{Binding EditingUser.FirstName}" FontSize="14" />
-                <Entry Placeholder="PIN" Text="{Binding EditingUser.Pin}" FontSize="14" />
-                <Picker Title="Rola"
-                        ItemsSource="{Binding Roles}"
-                        ItemDisplayBinding="{Binding RoleName}"
-                        SelectedItem="{Binding SelectedRole, Mode=TwoWay}"
-                        FontSize="14" />
+                <!-- Lista użytkowników -->
+                <CollectionView ItemsSource="{Binding Users}" Margin="0,10,0,0">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="10" ColumnDefinitions="*,auto,auto" ColumnSpacing="10">
+                                <!-- Imię i nazwisko -->
+                                <Label Text="{Binding FirstName}" VerticalOptions="Center" HorizontalOptions="Start" FontSize="16" />
 
-                <HorizontalStackLayout>
-                    <Switch IsToggled="{Binding EditingUser.ActiveStatus}" />
-                    <Label Text="Aktywny użytkownik" VerticalOptions="Center" FontSize="14" />
-                </HorizontalStackLayout>
+                                <!-- Przyciski Edytuj i Usuń -->
+                                <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="End">
+                                    <Button Text="Edytuj"
+                                            BackgroundColor="LightBlue"
+                                            TextColor="White"
+                                            CornerRadius="5"
+                                            CommandParameter="{Binding .}"
+                                            Clicked="OnEditUserClicked"
+                                            WidthRequest="70" />
 
-                <!-- Przyciski akcji -->
-                <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
-                    <Button Text="Zapisz" Clicked="OnSaveClicked" BackgroundColor="LightGreen" FontSize="14" />
-                    <Button Text="Anuluj" Clicked="OnCancelClicked" BackgroundColor="LightGray" FontSize="14" />
-                </HorizontalStackLayout>
+                                    <Button Text="Usuń"
+                                            BackgroundColor="LightCoral"
+                                            TextColor="White"
+                                            CornerRadius="5"
+                                            CommandParameter="{Binding .}"
+                                            Clicked="OnDeleteUserClicked"
+                                            WidthRequest="70" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
             </VerticalStackLayout>
-        </VerticalStackLayout>
+        </ScrollView>
     </ContentPage.Content>
 </ContentPage>
