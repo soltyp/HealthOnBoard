@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.PatientStatisticsPage"
+             Title="Statystyki pacjentów">
+    <ContentPage.Content>
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="15">
+
+                <!-- Nagłówek strony -->
+                <Label Text="Statystyki pacjentów" 
+                       FontSize="24" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center"
+                       TextColor="White" />
+
+                <!-- Wykres kołowy grupy krwi -->
+                <Label Text="Podział według grupy krwi" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center" 
+                       Margin="10,20"
+                       TextColor="White" />
+                <Grid x:Name="BloodTypePieChartGrid"
+                      WidthRequest="300"
+                      HeightRequest="300"
+                      HorizontalOptions="Center"
+                      VerticalOptions="Center" />
+
+                <!-- Wykres słupkowy według wieku -->
+                <Label Text="Ilość pacjentów w danym wieku" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center" 
+                       Margin="10,20"
+                       TextColor="White" />
+                <Grid x:Name="AgeBarChartGrid"
+                      HorizontalOptions="FillAndExpand"
+                      VerticalOptions="FillAndExpand" />
+
+                <!-- Wykres kołowy zajętości łóżek -->
+                <Label Text="Stosunek zajętych do wolnych łóżek" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center" 
+                       Margin="10,20"
+                       TextColor="White" />
+                <Grid x:Name="BedOccupancyPieChartGrid"
+                      WidthRequest="300"
+                      HeightRequest="300"
+                      HorizontalOptions="Center"
+                      VerticalOptions="Center" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>

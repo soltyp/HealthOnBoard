@@ -24,5 +24,10 @@ namespace HealthOnBoard
             // Przejœcie do strony zarz¹dzania pacjentami z przekazaniem DatabaseService
             await Navigation.PushAsync(new ManagePatientsPage(_databaseService));
         }
+        private async void OnStatisticsButtonClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new PatientStatisticsPage(_databaseService));
+        }
+
     }
 }

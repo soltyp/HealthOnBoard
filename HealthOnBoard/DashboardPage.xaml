@@ -144,8 +144,8 @@
                             HeightRequest="50"
                             Clicked="OnAddActionPageClicked" />
 
-                                            <!-- Przycisk wyświetlenia historii leczenia -->
-                                            <Button Text="Pokaż całą historię leczenia"
+                            <!-- Przycisk wyświetlenia historii leczenia -->
+                            <Button Text="Pokaż całą historię leczenia"
                             FontSize="16"
                             BackgroundColor="#007BFF"
                             TextColor="#FFFFFF"
@@ -161,9 +161,9 @@
                             HeightRequest="50"
                             Clicked="OnShowTemperatureChartClicked" />
 
-                            
+
                             <!-- Przycisk więcej danych -->
-                                            <Button Text="Więcej danych"
+                            <Button Text="Więcej danych"
                             FontSize="16"
                             BackgroundColor="#007BFF"
                             TextColor="#FFFFFF"
@@ -171,7 +171,7 @@
                             HeightRequest="50"
                             Clicked="OnMorePatientDataClicked" />
 
-                            
+
                         </HorizontalStackLayout>
 
                         <!-- Temperatura pacjenta - nagłówek i wykres -->
@@ -182,7 +182,7 @@
                                TextColor="#FFFFFF"
                                HorizontalTextAlignment="Start"
                                Margin="10,0,0,0" />
-                                                <!-- Tytuł wykresu -->
+                            <!-- Tytuł wykresu -->
 
                             <Frame BackgroundColor="#292A3A"
                                CornerRadius="12"
@@ -194,7 +194,7 @@
                                 <Grid x:Name="TemperatureChartGrid"
                                   VerticalOptions="FillAndExpand"
                                   HorizontalOptions="FillAndExpand"
-                                  RowSpacing="5">           
+                                  RowSpacing="5">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="3*" />
                                         <RowDefinition Height="Auto" />
@@ -214,18 +214,18 @@
                                TextColor="#FFFFFF" 
                                VerticalOptions="Center" />
 
-                                                <Frame BackgroundColor="#007BFF"
+                            <Frame BackgroundColor="#007BFF"
                                CornerRadius="20"
                                Padding="10"
                                HasShadow="True"
                                VerticalOptions="Center"
                                HorizontalOptions="End">
-                                                    <HorizontalStackLayout>
+                                <HorizontalStackLayout>
                                     <!-- <Image Source="list_icon.png" 
                                        HeightRequest="20" 
                                        WidthRequest="20" 
                                        VerticalOptions="Center" /> -->
-                                                        <Label x:Name="ToggleButtonLabel" 
+                                    <Label x:Name="ToggleButtonLabel" 
                                        Text="Ukryj listę" 
                                        FontSize="14" 
                                        TextColor="#FFFFFF" 
@@ -240,18 +240,18 @@
 
 
                         <!-- Lista operacji -->
-                                                <CollectionView x:Name="RecentActivitiesList" 
+                        <CollectionView x:Name="RecentActivitiesList" 
                                         ItemsSource="{Binding RecentActivities}" 
                                         BackgroundColor="Transparent"
                                         IsVisible="True">
-                                                    <CollectionView.ItemTemplate>
-                                                        <DataTemplate>
-                                                        <Frame BackgroundColor="#1E1E2F" 
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="#1E1E2F" 
                                            CornerRadius="10" 
                                            Padding="10" 
                                            Margin="5,5,5,5" 
                                            BorderColor="#FFFFFF"
-                                           HasShadow="True">        
+                                           HasShadow="True">
                                         <Grid ColumnDefinitions="*, Auto, Auto">
                                             <!-- Sekcja z etykietami -->
                                             <VerticalStackLayout Grid.Column="0">
@@ -271,8 +271,8 @@
                                                         VerticalOptions="Center"
                                                         HorizontalOptions="End" />
 
-                                                                            <!-- Przycisk Usuń -->
-                                                                            <Button Grid.Column="2" Text="Usuń"
+                                                <!-- Przycisk Usuń -->
+                                                <Button Grid.Column="2" Text="Usuń"
                                                         FontSize="14"
                                                         BackgroundColor="#FF3B30"
                                                         TextColor="#FFFFFF"

@@ -37,8 +37,8 @@ namespace HealthOnBoard
                 RecentActivities.Clear();
                 foreach (var activity in activities)
                 {
-                    // Upewnij siê, ¿e PatientID jest poprawnie przypisane
-                    activity.PatientID = _patient.PatientID;
+                    Debug.WriteLine($"Wczytano aktywnoœæ: LogID={activity.LogID}, ActionType={activity.ActionType}");
+                    activity.PatientID = _patient.PatientID; // Upewnij siê, ¿e PatientID jest poprawnie przypisane
                     RecentActivities.Add(activity);
                 }
             }
@@ -48,6 +48,7 @@ namespace HealthOnBoard
                 await DisplayAlert("B³¹d", "Nie uda³o siê pobraæ operacji pacjenta.", "OK");
             }
         }
+
 
 
 
@@ -240,6 +241,13 @@ namespace HealthOnBoard
                     {
                         Debug.WriteLine("Czynnoœæ zosta³a usuniêta z bazy danych.");
                         RecentActivities.Remove(activity);
+
+                        // Odœwie¿ wykres temperatury, jeœli usuniêto wiersz zwi¹zany z temperatur¹
+                        if (activity.ActionType == "Pomiar temperatury")
+                        {
+                            await LoadTemperatureChartDataAsync();
+                        }
+
                         await DisplayAlert("Sukces", "Czynnoœæ zosta³a usuniêta.", "OK");
                     }
                     else
@@ -261,59 +269,111 @@ namespace HealthOnBoard
             }
         }
 
+
         private async void OnEditActionClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is PatientActivity activity)
             {
-                // Wyœwietl Picker do wyboru nowego typu akcji
-                string newActionType = await DisplayActionSheet(
-                    "Zmieñ typ akcji",
-                    "Anuluj",
-                    null,
-                    ActionTypes.ToArray() // Zamieniamy ObservableCollection na tablicê stringów
-                );
-
-                // SprawdŸ, czy u¿ytkownik wybra³ nowy typ akcji (anulowanie zwraca null)
-                if (!string.IsNullOrWhiteSpace(newActionType) && newActionType != "Anuluj")
-                {
-                    activity.ActionType = newActionType;
-                }
-
-                // Wyœwietl dialog do edycji szczegó³ów akcji
-                string newActionDetails = await DisplayPromptAsync(
-                    "Edytuj szczegó³y czynnoœci",
-                    "Zmieñ szczegó³y czynnoœci:",
-                    initialValue: activity.ActionDetails
-                );
-
-                if (!string.IsNullOrWhiteSpace(newActionDetails))
+                // Rozpoznaj, czy akcja dotyczy pomiaru temperatury
+                if (activity.ActionType == "Pomiar temperatury")
                 {
                     try
                     {
-                        // Aktualizuj szczegó³y i typ akcji
-                        activity.ActionDetails = newActionDetails;
+                        // Pobierz wartoœæ temperatury z kolumny CurrentTemperature
+                        decimal? currentTemperature = activity.CurrentTemperature;
 
-                        // Wywo³aj metodê aktualizacji w bazie
-                        bool success = await _databaseService.UpdatePatientActionAsync(activity);
-
-                        if (success)
+                        if (currentTemperature == null)
                         {
-                            await DisplayAlert("Sukces", "Czynnoœæ zosta³a zaktualizowana.", "OK");
-                            await LoadRecentActivitiesAsync(); // Odœwie¿ listê czynnoœci
+                            await DisplayAlert("B³¹d", "Nie znaleziono wartoœci temperatury w bazie danych.", "OK");
+                            return;
+                        }
+
+                        // Wyœwietl dialog do edycji temperatury
+                        string newTemperature = await DisplayPromptAsync(
+                            "Edytuj pomiar temperatury",
+                            "WprowadŸ now¹ wartoœæ temperatury (w °C):",
+                            keyboard: Keyboard.Numeric,
+                            initialValue: currentTemperature.Value.ToString("F1") // Formatowanie do 1 miejsca po przecinku
+                        );
+
+                        // Walidacja nowej temperatury
+                        if (decimal.TryParse(newTemperature, out decimal temperatureValue) && temperatureValue >= 35 && temperatureValue <= 42)
+                        {
+                            activity.ActionDetails = $"Zmieniono temperaturê na: {temperatureValue:F1}°C";
+
+                            // Zaktualizuj temperaturê w bazie danych
+                            bool tempUpdateSuccess = await _databaseService.UpdatePatientTemperatureAsync(activity.PatientID, temperatureValue);
+                            bool activityUpdateSuccess = await _databaseService.UpdatePatientActionAsync(activity);
+                            bool logUpdateSuccess = await _databaseService.UpdateActivityLogTemperatureAsync(activity.LogID, temperatureValue);
+
+                            if (tempUpdateSuccess && activityUpdateSuccess && logUpdateSuccess)
+                            {
+                                await DisplayAlert("Sukces", "Pomiar temperatury zosta³ zaktualizowany.", "OK");
+
+                                // Odœwie¿ listê aktywnoœci
+                                await LoadRecentActivitiesAsync();
+
+                                // Odœwie¿ wykres
+                                await LoadTemperatureChartDataAsync();
+                            }
+                            else
+                            {
+                                string errorDetails = $"tempUpdate: {tempUpdateSuccess}, activityUpdate: {activityUpdateSuccess}, logUpdate: {logUpdateSuccess}";
+                                Debug.WriteLine($"Nie uda³o siê w pe³ni zaktualizowaæ danych. Szczegó³y: {errorDetails}");
+                                await DisplayAlert("B³¹d", $"Nie uda³o siê w pe³ni zaktualizowaæ danych. Szczegó³y: {errorDetails}", "OK");
+                            }
                         }
                         else
                         {
-                            await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ czynnoœci.", "OK");
+                            await DisplayAlert("B³¹d", "WprowadŸ poprawn¹ wartoœæ temperatury (35-42°C).", "OK");
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"B³¹d podczas edytowania czynnoœci: {ex.Message}");
-                        await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji czynnoœci.", "OK");
+                        Debug.WriteLine($"B³¹d podczas edycji temperatury: {ex.Message}");
+                        await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji pomiaru temperatury.", "OK");
+                    }
+                }
+                else
+                {
+                    // Dla innych typów akcji
+                    string newActionDetails = await DisplayPromptAsync(
+                        "Edytuj szczegó³y czynnoœci",
+                        "Zmieñ szczegó³y czynnoœci:",
+                        initialValue: activity.ActionDetails
+                    );
+
+                    if (!string.IsNullOrWhiteSpace(newActionDetails))
+                    {
+                        activity.ActionDetails = newActionDetails;
+
+                        try
+                        {
+                            // Aktualizuj w bazie danych
+                            bool success = await _databaseService.UpdatePatientActionAsync(activity);
+
+                            if (success)
+                            {
+                                await DisplayAlert("Sukces", "Czynnoœæ zosta³a zaktualizowana.", "OK");
+                                await LoadRecentActivitiesAsync(); // Odœwie¿ listê czynnoœci
+                            }
+                            else
+                            {
+                                await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ czynnoœci.", "OK");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"B³¹d podczas edytowania czynnoœci: {ex.Message}");
+                            await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji czynnoœci.", "OK");
+                        }
                     }
                 }
             }
         }
+
+
+
         private async void OnMorePatientDataClicked(object sender, EventArgs e)
         {
             // Pass the required parameters to the PatientDetailsPage

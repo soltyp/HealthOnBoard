@@ -281,12 +281,17 @@ public class DatabaseService
         using (var connection = new SqlConnection(_connectionString))
         {
             const string query = @"
-                 SELECT TOP (@Limit) ActionType, ActionDetails, ActionDate
-                 FROM PatientActivityLog
-                 WHERE PatientID = @PatientID
-                   AND ActionDate >= DATEADD(DAY, -3, GETDATE())
-                 ORDER BY ActionDate DESC";
-
+            SELECT TOP (@Limit) 
+                LogID, 
+                PatientID, 
+                ActionType, 
+                ActionDetails, 
+                ActionDate, 
+                CurrentTemperature
+            FROM PatientActivityLog
+            WHERE PatientID = @PatientID
+              AND ActionDate >= DATEADD(DAY, -3, GETDATE())
+            ORDER BY ActionDate DESC";
 
             var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId, Limit = limit });
             return activities.ToList();
@@ -853,6 +858,57 @@ public class DatabaseService
             throw;
         }
     }
+
+    public async Task<bool> UpdateCurrentTemperatureFromDetailsAsync()
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var query = @"
+        UPDATE PatientActivityLog
+        SET CurrentTemperature = 
+            CAST(
+                SUBSTRING(
+                    ActionDetails, 
+                    CHARINDEX(':', ActionDetails) + 2, 
+                    CHARINDEX('°', ActionDetails) - CHARINDEX(':', ActionDetails) - 2
+                ) AS DECIMAL(5, 2)
+            )
+        WHERE ActionType = 'Pomiar temperatury'
+          AND ActionDetails LIKE '%°C';";
+
+            var rowsAffected = await connection.ExecuteAsync(query);
+            return rowsAffected > 0;
+        }
+    }
+    public async Task<bool> UpdateActivityLogTemperatureAsync(int logId, decimal temperature)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var query = @"
+        UPDATE PatientActivityLog
+        SET CurrentTemperature = @CurrentTemperature
+        WHERE LogID = @LogID";
+
+            var parameters = new
+            {
+                CurrentTemperature = temperature,
+                LogID = logId
+            };
+
+            try
+            {
+                int rowsAffected = await connection.ExecuteAsync(query, parameters);
+                Debug.WriteLine($"UpdateActivityLogTemperatureAsync: rowsAffected={rowsAffected}, LogID={logId}");
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Błąd w UpdateActivityLogTemperatureAsync: {ex.Message}");
+                return false;
+            }
+        }
+    }
+
 
 
 }
