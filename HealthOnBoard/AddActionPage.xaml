@@ -6,53 +6,90 @@
     <Grid Padding="20">
         <VerticalStackLayout Spacing="20">
             <Label Text="Dodaj nową akcję"
-                   FontSize="24"
+                   FontSize="32"
                    TextColor="#FFFFFF"
                    HorizontalOptions="Center" />
 
-            <!-- Picker wyboru typu akcji -->
             <Picker x:Name="ActionTypePicker"
                     Title="Wybierz typ akcji"
-                    FontSize="18"
+                    FontSize="24"
                     ItemsSource="{Binding ActionTypes}"
                     HorizontalOptions="FillAndExpand"
                     SelectedIndexChanged="OnActionTypeChanged" />
 
-            <!-- Pole do wpisania temperatury -->
             <Entry x:Name="TemperatureEntry"
                    Placeholder="Wprowadź temperaturę (°C)"
-                   Keyboard="Numeric"
-                   FontSize="16"
+                   FontSize="22"
                    TextColor="#FFFFFF"
                    BackgroundColor="#292A3A"
                    IsVisible="False"
                    HorizontalOptions="FillAndExpand" />
 
-            <!-- Edytor do wpisania szczegółów akcji -->
+            <StackLayout x:Name="MedicationControls" IsVisible="False" Spacing="20">
+                <Picker x:Name="MedicationPicker"
+                        Title="Wybierz lek"
+                        FontSize="24"
+                        ItemsSource="{Binding Medications}"
+                        ItemDisplayBinding="{Binding Name}"
+                        HorizontalOptions="FillAndExpand" />
+
+                <!-- Custom Increment/Decrement Buttons -->
+                <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="20">
+                    <Button Text="-" 
+                            FontSize="36" 
+                            WidthRequest="80" 
+                            HeightRequest="80" 
+                            BackgroundColor="#8854D0"
+                            TextColor="#FFFFFF"
+                            Clicked="OnDecreaseQuantityClicked" />
+                    <Label x:Name="QuantityLabel"
+                           Text="Ilość: 1"
+                           FontSize="36"
+                           TextColor="#FFFFFF"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+                    <Button Text="+" 
+                            FontSize="36" 
+                            WidthRequest="80" 
+                            HeightRequest="80" 
+                            BackgroundColor="#8854D0"
+                            TextColor="#FFFFFF"
+                            Clicked="OnIncreaseQuantityClicked" />
+                </StackLayout>
+
+                <Picker x:Name="UnitPicker"
+                        Title="Wybierz jednostkę"
+                        FontSize="24"
+                        ItemsSource="{Binding Units}"
+                        HorizontalOptions="FillAndExpand" />
+            </StackLayout>
+
             <Editor x:Name="ActionDetailsEditor"
                     Placeholder="Wprowadź szczegóły akcji"
-                    FontSize="16"
+                    FontSize="22"
                     TextColor="#FFFFFF"
                     BackgroundColor="#292A3A"
-                    HeightRequest="100"
+                    HeightRequest="150"
                     VerticalOptions="Start" />
 
-            <!-- Przycisk dodania akcji -->
             <Button Text="Dodaj akcję"
-                    FontSize="18"
+                    FontSize="24"
                     BackgroundColor="#00CC99"
                     TextColor="#FFFFFF"
-                    CornerRadius="10"
-                    HeightRequest="50"
+                    CornerRadius="15"
+                    WidthRequest="200"
+                    HeightRequest="70"
+                    HorizontalOptions="Center"
                     Clicked="OnSaveActionClicked" />
 
-            <!-- Przycisk anulowania -->
             <Button Text="Anuluj"
-                    FontSize="18"
+                    FontSize="24"
                     BackgroundColor="#FF3B30"
                     TextColor="#FFFFFF"
-                    CornerRadius="10"
-                    HeightRequest="50"
+                    CornerRadius="15"
+                    WidthRequest="200"
+                    HeightRequest="70"
+                    HorizontalOptions="Center"
                     Clicked="OnCancelClicked" />
         </VerticalStackLayout>
     </Grid>

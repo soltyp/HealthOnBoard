@@ -909,6 +909,14 @@ public class DatabaseService
         }
     }
 
+    public async Task<List<Medication>> GetMedicationsAsync()
+    {
+        var query = "SELECT MedicationID, Name, Unit FROM Medications";
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        var medications = await connection.QueryAsync<Medication>(query);
+        return medications.ToList();
+    }
 
 
 }
