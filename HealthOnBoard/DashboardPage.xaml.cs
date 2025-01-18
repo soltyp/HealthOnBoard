@@ -28,7 +28,7 @@ namespace HealthOnBoard
             _logoutTimer.Start();
         }
 
-        private async Task LoadRecentActivitiesAsync()
+        public async Task LoadRecentActivitiesAsync()
         {
             try
             {
@@ -107,21 +107,27 @@ namespace HealthOnBoard
             await LoadTemperatureChartDataAsync(); // Nowa metoda
         }
 
-        private async Task LoadTemperatureChartDataAsync()
+        public async Task LoadTemperatureChartDataAsync()
         {
             try
             {
-                // Pobierz dane o temperaturze z bazy danych
                 var temperatureLogs = await _databaseService.GetTemperatureLogsAsync(_patient.PatientID);
 
-                // Wybierz ostatnie 5 wartoœci temperatury, posortowane rosn¹co po dacie
-                var lastFiveTemperatures = temperatureLogs
-                                           .OrderByDescending(t => t.ActionDate)
-                                           .Take(5) // Pobierz 5 najnowszych
-                                           .OrderBy(t => t.ActionDate) // Posortuj od najstarszej do najnowszej
-                                           .ToList();
+                // Logowanie pobranych danych
+                Debug.WriteLine("Budowanie wykresu temperatury...");
+                Debug.WriteLine($"Iloœæ punktów do wykresu: {temperatureLogs.Count}");
 
-                // Przeka¿ te dane do metody tworz¹cej wykres
+                foreach (var log in temperatureLogs)
+                {
+                    Debug.WriteLine($"Data: {log.ActionDate}, Temperatura: {log.Temperature}");
+                }
+
+                var lastFiveTemperatures = temperatureLogs
+                    .OrderByDescending(t => t.ActionDate)
+                    .Take(5)
+                    .OrderBy(t => t.ActionDate)
+                    .ToList();
+
                 BuildTemperatureChart(lastFiveTemperatures);
             }
             catch (Exception ex)
@@ -130,6 +136,7 @@ namespace HealthOnBoard
                 await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ wykresu temperatury.", "OK");
             }
         }
+
 
 
 
@@ -315,6 +322,7 @@ namespace HealthOnBoard
 
                                 // Odœwie¿ wykres
                                 await LoadTemperatureChartDataAsync();
+                                await LoadPatientTemperatureAsync();
                             }
                             else
                             {
@@ -412,7 +420,7 @@ namespace HealthOnBoard
         }
 
 
-        private async Task LoadPatientTemperatureAsync()
+        public async Task LoadPatientTemperatureAsync()
         {
             try
             {
@@ -485,6 +493,14 @@ namespace HealthOnBoard
 
         private void BuildTemperatureChart(List<(DateTime ActionDate, decimal Temperature)> temperatureLogs)
         {
+            Debug.WriteLine("Budowanie wykresu temperatury...");
+            Debug.WriteLine($"Iloœæ punktów do wykresu: {temperatureLogs.Count}");
+
+            foreach (var log in temperatureLogs)
+            {
+                Debug.WriteLine($"Data: {log.ActionDate}, Temperatura: {log.Temperature}");
+            }
+
             // Wyczyœæ istniej¹c¹ siatkê
             TemperatureChartGrid.Children.Clear();
             TemperatureChartGrid.ColumnDefinitions.Clear();
@@ -635,7 +651,7 @@ namespace HealthOnBoard
         private async void OnShowPatientHistoryClicked(object sender, EventArgs e)
         {
             // Przyk³ad nawigacji do nowej strony z histori¹ pacjenta
-            await Navigation.PushAsync(new PatientHistoryPage(_user, _patient.PatientID, _databaseService));
+            await Navigation.PushAsync(new PatientHistoryPage(this, _user, _patient.PatientID, _databaseService));
         }
 
 

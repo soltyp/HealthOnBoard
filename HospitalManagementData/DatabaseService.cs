@@ -19,16 +19,38 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;";
+        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;";
 
-        if (string.IsNullOrEmpty(_connectionString))
+        try
         {
-            Debug.WriteLine("Błąd: Connection string jest pusty lub niezdefiniowany.");
-            throw new InvalidOperationException("Connection string is not configured.");
-        }
+            if (string.IsNullOrEmpty(_connectionString))
+            {
+                Debug.WriteLine("Błąd: Connection string jest pusty lub niezdefiniowany.");
+                throw new InvalidOperationException("Connection string is not configured.");
+            }
 
-        // Inicjalizuj _dbConnection
-        _dbConnection = new SqlConnection(_connectionString);
+            // Próba utworzenia połączenia z bazą danych
+            _dbConnection = new SqlConnection(_connectionString);
+            _dbConnection.Open(); // Przetestowanie połączenia podczas inicjalizacji
+
+            Debug.WriteLine("Połączenie z bazą danych zostało pomyślnie nawiązane.");
+        }
+        catch (SqlException sqlEx)
+        {
+            // Log szczegółów błędu SQL
+            Debug.WriteLine($"SQL Error: {sqlEx.Message}");
+            Debug.WriteLine($"SQL Error Code: {sqlEx.Number}");
+            Debug.WriteLine($"SQL Server: {sqlEx.Server}");
+            Debug.WriteLine($"Stack Trace: {sqlEx.StackTrace}");
+            throw; // Ponowne zgłoszenie wyjątku, jeśli potrzebne
+        }
+        catch (Exception ex)
+        {
+            // Log innych wyjątków
+            Debug.WriteLine($"General Error: {ex.Message}");
+            Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+            throw; // Ponowne zgłoszenie wyjątku, jeśli potrzebne
+        }
     }
 
 
@@ -451,7 +473,30 @@ public class DatabaseService
     //    }
     //}
 
+    public async Task<decimal?> GetTemperatureByLogIdAsync(int logId)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                const string query = "SELECT  FROM PatientActivityLog WHERE LogID = @LogID";
 
+                // Wykonanie zapytania z parametrem logId
+                var result = await connection.QueryFirstOrDefaultAsync<decimal?>(query, new { LogID = logId });
+
+                Debug.WriteLine(result.HasValue
+                    ? $"Znaleziono temperaturę: {result.Value}"
+                    : "Nie znaleziono temperatury dla podanego LogID");
+
+                return result;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd w GetTemperatureByLogIdAsync: {ex.Message}");
+            throw;
+        }
+    }
 
     public async Task<double?> GetCurrentTemperatureAsync(int patientId)
     {
@@ -524,22 +569,36 @@ public class DatabaseService
         return temperatureCounts;
     }
 
-    public async Task<bool> UpdatePatientTemperatureAsync(int patientId, decimal temperature)
+    public async Task<bool> UpdatePatientTemperatureAsync(int patientId, decimal newTemperature)
     {
-        using (var connection = new SqlConnection(_connectionString))
+        try
         {
-            var query = "UPDATE Patients SET CurrentTemperature = @Temperature WHERE PatientID = @PatientID";
-
-            var parameters = new
+            using (var connection = new SqlConnection(_connectionString))
             {
-                Temperature = temperature,
-                PatientID = patientId
-            };
+                await connection.OpenAsync();
 
-            int rowsAffected = await connection.ExecuteAsync(query, parameters);
-            return rowsAffected > 0;
+                var query = @"
+                UPDATE Patients
+                SET CurrentTemperature = @newTemperature
+                WHERE PatientID = @patientId";
+
+                var command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@newTemperature", newTemperature);
+                command.Parameters.AddWithValue("@patientId", patientId);
+
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+                Debug.WriteLine($"Rows affected: {rowsAffected}");
+                return rowsAffected > 0; // Zwraca true, jeśli zmieniono co najmniej jeden wiersz
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd podczas aktualizacji temperatury pacjenta: {ex.Message}");
+            return false;
         }
     }
+
+
 
     public async Task<List<(DateTime ActionDate, decimal Temperature)>> GetTemperatureLogsAsync(int patientId)
     {
@@ -882,32 +941,34 @@ public class DatabaseService
     }
     public async Task<bool> UpdateActivityLogTemperatureAsync(int logId, decimal temperature)
     {
-        using (var connection = new SqlConnection(_connectionString))
+        try
         {
-            var query = @"
-        UPDATE PatientActivityLog
-        SET CurrentTemperature = @CurrentTemperature
-        WHERE LogID = @LogID";
-
-            var parameters = new
+            using (var connection = new SqlConnection(_connectionString))
             {
-                CurrentTemperature = temperature,
-                LogID = logId
-            };
+                await connection.OpenAsync();
 
-            try
-            {
-                int rowsAffected = await connection.ExecuteAsync(query, parameters);
-                Debug.WriteLine($"UpdateActivityLogTemperatureAsync: rowsAffected={rowsAffected}, LogID={logId}");
+                var query = @"
+            UPDATE PatientActivityLog
+            SET CurrentTemperature = @CurrentTemperature
+            WHERE LogID = @LogID";
+
+                var command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@CurrentTemperature", temperature); // Poprawna nazwa parametru
+                command.Parameters.AddWithValue("@LogID", logId);
+
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+                Debug.WriteLine($"Rows affected: {rowsAffected}");
                 return rowsAffected > 0;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Błąd w UpdateActivityLogTemperatureAsync: {ex.Message}");
-                return false;
+                Debug.WriteLine($"Executing SQL: {query} with LogID={logId}, CurrentTemperature={temperature}");
             }
         }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd w UpdateActivityLogTemperatureAsync: {ex.Message}");
+            return false;
+        }
     }
+
 
     public async Task<List<Medication>> GetMedicationsAsync()
     {
