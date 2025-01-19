@@ -956,14 +956,16 @@ public class DatabaseService
                     }
                     else if (actionType == "Podanie leków")
                     {
-                        formattedActionDetails = $"Podano lek: {actionDetails}";
+                        formattedActionDetails = $"{actionDetails}";
                     }
                     else if (actionType == "Dodanie wyników badań")
                     {
                         formattedActionDetails = $"Dodano wyniki: {actionDetails}";
                     }
 
-                    Debug.WriteLine($"Executing SQL for LogID: {logId} with formatted ActionDetails: {formattedActionDetails}");
+                    Debug.WriteLine($"Executing SQL for LogID: {logId}");
+                    Debug.WriteLine($"Formatted ActionDetails: {formattedActionDetails}");
+                    Debug.WriteLine($"NewTemperature: {newTemperature?.ToString("F1") ?? "null"}");
 
                     var logParameters = new
                     {
@@ -990,6 +992,7 @@ public class DatabaseService
 
                     int patientId = await connection.ExecuteScalarAsync<int>(getPatientIdQuery, new { LogID = logId }, transaction);
 
+                    Debug.WriteLine($"Fetched PatientID: {patientId}");
                     if (patientId <= 0)
                     {
                         Debug.WriteLine("Nie znaleziono PatientID dla podanego LogID.");
@@ -1009,7 +1012,7 @@ public class DatabaseService
                     WHERE PatientID = @PatientID
                       AND ActionType = 'Pomiar temperatury'";
 
-                        Debug.WriteLine($"SQL do sprawdzania największego LogID: {isLatestLogQuery} | LogID: {logId}, PatientID: {patientId}");
+                        Debug.WriteLine($"SQL to check latest LogID: {isLatestLogQuery} | LogID: {logId}, PatientID: {patientId}");
 
                         int isLatestLogResult = await connection.ExecuteScalarAsync<int>(
                             isLatestLogQuery,
@@ -1029,12 +1032,13 @@ public class DatabaseService
                         SET CurrentTemperature = @CurrentTemperature
                         WHERE PatientID = @PatientID";
 
-                            Debug.WriteLine($"SQL do aktualizacji tabeli Patients: {updatePatientQuery} | PatientID: {patientId}, NewTemperature: {newTemperature}");
+                            Debug.WriteLine($"SQL to update Patients table: {updatePatientQuery}");
+                            Debug.WriteLine($"Updating CurrentTemperature: {newTemperature?.ToString("F1") ?? "null"} for PatientID: {patientId}");
 
                             var patientParameters = new { CurrentTemperature = newTemperature, PatientID = patientId };
                             int patientRowsAffected = await connection.ExecuteAsync(updatePatientQuery, patientParameters, transaction);
 
-                            Debug.WriteLine($"Wiersze zaktualizowane w Patients: {patientRowsAffected}");
+                            Debug.WriteLine($"Rows affected in Patients table: {patientRowsAffected}");
                         }
                         else
                         {
@@ -1057,7 +1061,6 @@ public class DatabaseService
             }
         }
     }
-
 
     public async Task<bool> UpdateActivityLogTemperatureAsync(int logId, decimal newTemperature)
     {

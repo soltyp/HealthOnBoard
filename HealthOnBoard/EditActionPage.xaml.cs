@@ -1,6 +1,7 @@
 using HospitalManagementData;
 using Microsoft.Maui.Controls;
 using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 
 namespace HealthOnBoard
@@ -15,6 +16,43 @@ namespace HealthOnBoard
         public bool IsTemperatureInputVisible { get; set; }
         public bool IsDetailsInputVisible { get; set; }
         public string CurrentTemperature { get; set; }
+        public bool IsDrugAdministrationVisible { get; set; }
+
+        public ObservableCollection<Medication> Medications { get; set; } = new ObservableCollection<Medication>();
+        public ObservableCollection<string> MedicationUnits { get; set; } = new ObservableCollection<string> { "sztuka", "ml", "mg" };
+
+        private Medication _selectedMedication;
+        public Medication SelectedMedication
+        {
+            get => _selectedMedication;
+            set
+            {
+                _selectedMedication = value;
+                OnPropertyChanged(nameof(SelectedMedication));
+            }
+        }
+
+        private string _selectedUnit = "sztuka";
+        public string SelectedUnit
+        {
+            get => _selectedUnit;
+            set
+            {
+                _selectedUnit = value;
+                OnPropertyChanged(nameof(SelectedUnit));
+            }
+        }
+
+        private int _selectedQuantity = 1;
+        public int SelectedQuantity
+        {
+            get => _selectedQuantity;
+            set
+            {
+                _selectedQuantity = value;
+                OnPropertyChanged(nameof(SelectedQuantity));
+            }
+        }
 
         public EditActionPage(PatientActivity activity, DatabaseService databaseService)
         {
@@ -23,57 +61,114 @@ namespace HealthOnBoard
             _activity = activity ?? throw new ArgumentNullException(nameof(activity));
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
 
-            if (_activity.LogID == 0)
-            {
-                DisplayAlert("B³¹d", "Nieprawid³owy LogID. Nie mo¿na edytowaæ tej akcji.", "OK");
-                Navigation.PopAsync();
-                return;
-            }
+            // Ustaw widocznoœæ sekcji
+            IsDrugAdministrationVisible = _activity.ActionType == "Podanie leków";
+            IsTemperatureInputVisible = _activity.ActionType == "Pomiar temperatury";
+            IsDetailsInputVisible = !_activity.ActionType.Contains("Pomiar temperatury") && !_activity.ActionType.Contains("Podanie leków");
 
-            // Inicjalizacja danych
+            // Ustaw wartoœci pocz¹tkowe
             ActionType = _activity.ActionType;
             ActionDetails = _activity.ActionDetails;
             CurrentTemperature = _activity.CurrentTemperature?.ToString("F1") ?? string.Empty;
 
-            // Ustawienie widocznoœci pól
-            IsTemperatureInputVisible = _activity.ActionType == "Pomiar temperatury";
-            IsDetailsInputVisible = !IsTemperatureInputVisible;
+            if (IsDrugAdministrationVisible)
+            {
+                LoadMedicationsAsync();
+                PopulateMedicationFields();
+            }
 
             BindingContext = this;
+        }
+
+        
+
+        private void PopulateMedicationFields()
+        {
+            if (string.IsNullOrEmpty(_activity.ActionDetails))
+            {
+                Debug.WriteLine("Brak szczegó³ów dla Podania Leków.");
+                return;
+            }
+
+            try
+            {
+                var actionDetails = _activity.ActionDetails.Split(',');
+                if (actionDetails.Length > 1)
+                {
+                    var medicationName = actionDetails[0].Replace("Podano lek:", "").Trim();
+                    var quantityUnit = actionDetails[1].Split(':');
+
+                    // Przypisz wybrany lek na podstawie nazwy
+                    SelectedMedication = Medications.FirstOrDefault(m => m.Name.Equals(medicationName, StringComparison.OrdinalIgnoreCase));
+
+                    // Przypisz iloœæ i jednostkê
+                    SelectedQuantity = int.TryParse(quantityUnit[1].Split(' ')[1], out var quantity) ? quantity : 1;
+                    SelectedUnit = quantityUnit[1].Split(' ')[2];
+
+                    Debug.WriteLine($"Lek: {SelectedMedication?.Name}, Iloœæ: {SelectedQuantity}, Jednostka: {SelectedUnit}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas wype³niania pól Podania Leków: {ex.Message}");
+            }
+        }
+
+        private async void LoadMedicationsAsync()
+        {
+            try
+            {
+                var medications = await _databaseService.GetMedicationsAsync();
+                foreach (var medication in medications)
+                {
+                    Medications.Add(medication);
+                }
+
+                // Po za³adowaniu listy leków, spróbuj ustawiæ pocz¹tkowe wartoœci
+                PopulateMedicationFields();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas ³adowania leków: {ex.Message}");
+                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ listy leków.", "OK");
+            }
         }
 
         private async void OnSaveClicked(object sender, EventArgs e)
         {
             try
             {
-                if (_activity.LogID <= 0)
+                // Przypisz odpowiednie wartoœci na podstawie typu akcji
+                if (_activity.ActionType == "Pomiar temperatury" && decimal.TryParse(TemperatureEntry.Text, out var temperature))
                 {
-                    await DisplayAlert("B³¹d", "LogID jest nieprawid³owy. Nie mo¿na zapisaæ zmian.", "OK");
-                    return;
+                    _activity.CurrentTemperature = temperature;
+                }
+                else if (_activity.ActionType == "Podanie leków" && SelectedMedication != null)
+                {
+                    _activity.ActionDetails = $"Podano lek: {SelectedMedication.Name}, iloœæ: {SelectedQuantity} {SelectedUnit}";
+                }
+                else
+                {
+                    _activity.ActionDetails = ActionDetails;
                 }
 
-                // Przygotowanie danych do aktualizacji
-                string updatedActionDetails = DetailsEntry.Text; // Szczegó³y wprowadzone przez u¿ytkownika
-                decimal? updatedTemperature = null;
-
-                // Jeœli to jest akcja "Pomiar temperatury", pobierz now¹ temperaturê
-                if (IsTemperatureInputVisible && decimal.TryParse(TemperatureEntry.Text, out var newTemperature))
-                {
-                    updatedTemperature = newTemperature;
-                }
-
-                // Wywo³anie funkcji aktualizuj¹cej
-                bool success = await _databaseService.UpdateActivityLogAsync(
+                // Zaktualizuj w bazie danych
+                var success = await _databaseService.UpdateActivityLogAsync(
                     _activity.LogID,
                     _activity.ActionType,
-                    updatedActionDetails,
-                    updatedTemperature
+                    _activity.ActionDetails,
+                    _activity.CurrentTemperature
                 );
 
                 if (success)
                 {
+                    Debug.WriteLine("Zapisano zmiany, wysy³anie powiadomienia o aktualizacji historii...");
+
+                    // Wys³anie komunikatu o aktualizacji
+                    MessagingCenter.Send(this, "RefreshPatientActivityHistory");
+
                     await DisplayAlert("Sukces", "Dane zosta³y zapisane.", "OK");
-                    await Navigation.PopAsync(); // Powrót do poprzedniej strony
+                    await Navigation.PopAsync();
                 }
                 else
                 {
@@ -87,6 +182,19 @@ namespace HealthOnBoard
             }
         }
 
+
+        private void DecreaseQuantity_Clicked(object sender, EventArgs e)
+        {
+            if (SelectedQuantity > 1)
+            {
+                SelectedQuantity--;
+            }
+        }
+
+        private void IncreaseQuantity_Clicked(object sender, EventArgs e)
+        {
+            SelectedQuantity++;
+        }
 
         private async void OnCancelClicked(object sender, EventArgs e)
         {

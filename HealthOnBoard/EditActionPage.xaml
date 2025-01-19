@@ -22,32 +22,59 @@
         <!-- Formularz -->
         <VerticalStackLayout Grid.Row="1" Padding="20" Spacing="15">
 
-            <!-- Szczegóły akcji -->
-            <Label Text="Szczegóły akcji:"
-                   FontSize="14"
-                   TextColor="#FFFFFF"
-                   IsVisible="{Binding IsDetailsInputVisible}" />
-            <Entry x:Name="DetailsEntry"
-                   Text="{Binding ActionDetails}"
-                   FontSize="14"
-                   BackgroundColor="#292A3A"
-                   TextColor="#FFFFFF"
-                   Margin="0,5"
-                   IsVisible="{Binding IsDetailsInputVisible}" />
+            <!-- Sekcja dla Podanie leków -->
+            <StackLayout IsVisible="{Binding IsDrugAdministrationVisible}">
+                <Label Text="Wybierz lek:" FontSize="14" TextColor="#FFFFFF" />
+                <Picker ItemsSource="{Binding Medications}"
+                        SelectedItem="{Binding SelectedMedication}"
+                        ItemDisplayBinding="{Binding Name}"
+                        BackgroundColor="#292A3A"
+                        TextColor="#FFFFFF" />
 
-            <!-- Temperatura -->
-            <Label Text="Temperatura (°C):"
-                   FontSize="14"
-                   TextColor="#FFFFFF"
-                   IsVisible="{Binding IsTemperatureInputVisible}" />
-            <Entry x:Name="TemperatureEntry"
-                   Text="{Binding CurrentTemperature}"
-                   FontSize="14"
-                   Keyboard="Numeric"
-                   BackgroundColor="#292A3A"
-                   TextColor="#FFFFFF"
-                   Margin="0,5"
-                   IsVisible="{Binding IsTemperatureInputVisible}" />
+                <Label Text="Wybierz jednostkę:" FontSize="14" TextColor="#FFFFFF" />
+                <Picker ItemsSource="{Binding MedicationUnits}"
+                        SelectedItem="{Binding SelectedUnit}"
+                        BackgroundColor="#292A3A"
+                        TextColor="#FFFFFF" />
+
+                <Label Text="Ilość:" FontSize="14" TextColor="#FFFFFF" />
+                <HorizontalStackLayout>
+                    <Button Text="-" Clicked="DecreaseQuantity_Clicked"
+                            BackgroundColor="#444" TextColor="White" WidthRequest="50" />
+                    <Label Text="{Binding SelectedQuantity}" FontSize="14"
+                           HorizontalOptions="Center" VerticalOptions="Center"
+                           TextColor="#FFFFFF" />
+                    <Button Text="+" Clicked="IncreaseQuantity_Clicked"
+                            BackgroundColor="#444" TextColor="White" WidthRequest="50" />
+                </HorizontalStackLayout>
+            </StackLayout>
+
+            <!-- Sekcja dla innych akcji -->
+            <StackLayout IsVisible="{Binding IsDetailsInputVisible}">
+                <Label Text="Szczegóły akcji:"
+                       FontSize="14"
+                       TextColor="#FFFFFF" />
+                <Entry x:Name="DetailsEntry"
+                       Text="{Binding ActionDetails}"
+                       FontSize="14"
+                       BackgroundColor="#292A3A"
+                       TextColor="#FFFFFF"
+                       Margin="0,5" />
+            </StackLayout>
+
+            <!-- Sekcja dla Pomiar temperatury -->
+            <StackLayout IsVisible="{Binding IsTemperatureInputVisible}">
+                <Label Text="Temperatura (°C):"
+                       FontSize="14"
+                       TextColor="#FFFFFF" />
+                <Entry x:Name="TemperatureEntry"
+                       Text="{Binding CurrentTemperature}"
+                       FontSize="14"
+                       Keyboard="Numeric"
+                       BackgroundColor="#292A3A"
+                       TextColor="#FFFFFF"
+                       Margin="0,5" />
+            </StackLayout>
 
             <!-- Przyciski -->
             <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
