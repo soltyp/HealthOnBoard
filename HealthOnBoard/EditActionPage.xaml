@@ -4,41 +4,81 @@
              Title="Edytuj Akcję"
              BackgroundColor="#1E1E2F">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
 
-        <!-- Nagłówek -->
-        <Label Grid.Row="0"
-               Text="{Binding ActionType, StringFormat='Edytujesz: {0}'}"
-               FontSize="20"
-               FontAttributes="Bold"
-               TextColor="#FFFFFF"
-               HorizontalOptions="Center"
-               Margin="10" />
-
-        <!-- Formularz -->
-        <VerticalStackLayout Grid.Row="1" Padding="20" Spacing="15">
+            <!-- Nagłówek -->
+            <Label Text="{Binding ActionType, StringFormat='Edytujesz: {0}'}"
+                   FontSize="32"
+                   TextColor="#FFFFFF"
+                   HorizontalOptions="Center" />
 
             <!-- Sekcja dla Podanie leków -->
-            <StackLayout IsVisible="{Binding IsDrugAdministrationVisible}">
-                <Label Text="Wybierz lek:" FontSize="14" TextColor="#FFFFFF" />
-                <Picker ItemsSource="{Binding Medications}"
+            <StackLayout IsVisible="{Binding IsDrugAdministrationVisible}" Spacing="10">
+
+                <!-- Etykieta z istniejącym lekiem -->
+                <Label Text="{Binding PreviousMedication, StringFormat='Istniejący lek ( w literke w alfabecie trzeba kliknąć 2 razy szybko): {0}'}"
+                       FontSize="16"
+                       TextColor="#FFFFFF"
+                       HorizontalOptions="Start" />
+
+                <!-- Pasek z literami alfabetu -->
+                <ScrollView Orientation="Horizontal" HeightRequest="50">
+                    <StackLayout Orientation="Horizontal" Spacing="5">
+                        <!-- Generowanie przycisków dla liter alfabetu -->
+                        <Button Text="A" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="B" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="C" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="D" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="E" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="F" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="G" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="H" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="I" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="J" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="K" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="L" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="M" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="N" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="O" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="P" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="Q" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="R" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="S" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="T" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="U" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="V" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="W" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="X" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="Y" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                        <Button Text="Z" FontSize="20" WidthRequest="40" Clicked="OnAlphabetFilterClicked" />
+                    </StackLayout>
+                </ScrollView>
+
+                <!-- Picker do wyboru leku -->
+                <Picker ItemsSource="{Binding FilteredMedications}"
                         SelectedItem="{Binding SelectedMedication}"
                         ItemDisplayBinding="{Binding Name}"
+                        Title="Wybierz lek"
+                        FontSize="24"
                         BackgroundColor="#292A3A"
-                        TextColor="#FFFFFF" />
+                        TextColor="#FFFFFF"
+                        HorizontalOptions="FillAndExpand" />
 
-                <Label Text="Wybierz jednostkę:" FontSize="14" TextColor="#FFFFFF" />
+                <!-- Jednostka -->
+                <Label Text="Wybierz jednostkę:"
+                       FontSize="14"
+                       TextColor="#FFFFFF" />
                 <Picker ItemsSource="{Binding MedicationUnits}"
                         SelectedItem="{Binding SelectedUnit}"
+                        FontSize="24"
                         BackgroundColor="#292A3A"
-                        TextColor="#FFFFFF" />
+                        TextColor="#FFFFFF"
+                        HorizontalOptions="FillAndExpand" />
 
+                <!-- Ilość -->
                 <Label Text="Ilość:" FontSize="14" TextColor="#FFFFFF" />
-                <HorizontalStackLayout>
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="20">
                     <Button Text="-" Clicked="DecreaseQuantity_Clicked"
                             BackgroundColor="#444" TextColor="White" WidthRequest="50" />
                     <Label Text="{Binding SelectedQuantity}" FontSize="14"
@@ -90,5 +130,5 @@
                         WidthRequest="100" />
             </HorizontalStackLayout>
         </VerticalStackLayout>
-    </Grid>
+    </ScrollView>
 </ContentPage>

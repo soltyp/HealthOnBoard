@@ -1,5 +1,6 @@
 using HospitalManagementData;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace HealthOnBoard
 {
@@ -13,6 +14,7 @@ namespace HealthOnBoard
 
         public ObservableCollection<Medication> Medications { get; set; } = new ObservableCollection<Medication>();
         public ObservableCollection<string> Units { get; set; } = new ObservableCollection<string> { "mg", "sztuka", "tablet" };
+        public ObservableCollection<Medication> FilteredMedications { get; set; } = new ObservableCollection<Medication>();
         public ObservableCollection<string> ActionTypes { get; set; } = new ObservableCollection<string>
         {
             "Dodanie wyników badañ",
@@ -31,7 +33,8 @@ namespace HealthOnBoard
             _onActionAdded = onActionAdded;
             BindingContext = this;
 
-            LoadMedications();
+           // LoadAlphabetButtons(); // Generowanie przycisków alfabetu
+            LoadMedications();     // £adowanie leków
         }
 
         private async void LoadMedications()
@@ -40,8 +43,80 @@ namespace HealthOnBoard
             foreach (var medication in medications)
             {
                 Medications.Add(medication);
+                FilteredMedications.Add(medication); // Kopia dla filtrowania
             }
         }
+        private void OnAlphabetFilterClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button)
+            {
+                string letter = button.Text.ToUpper();
+
+                // Filtruj leki zaczynaj¹ce siê na klikniêt¹ literê
+                var filtered = Medications.Where(m => m.Name.StartsWith(letter, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                FilteredMedications.Clear();
+                foreach (var med in filtered)
+                {
+                    FilteredMedications.Add(med);
+                }
+
+                Debug.WriteLine($"Wyfiltrowano leki dla litery: {letter}. Liczba wyników: {FilteredMedications.Count}");
+            }
+        }
+
+        private void LoadAlphabetButtons()
+        {
+            string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            int maxPerRow = 5; // Maksymalna liczba przycisków w jednym wierszu
+
+            // Tymczasowy stos do przechowywania liter w rzêdzie
+            StackLayout currentRow = new StackLayout
+            {
+                Orientation = StackOrientation.Horizontal,
+                Spacing = 10,
+                HorizontalOptions = LayoutOptions.Center
+            };
+
+            for (int i = 0; i < alphabet.Length; i++)
+            {
+                char letter = alphabet[i];
+
+                // Tworzenie przycisku dla litery
+                Button button = new Button
+                {
+                    Text = letter.ToString(),
+                    FontSize = 20,
+                    BackgroundColor = Color.FromArgb("#8854D0"),
+                    TextColor = Colors.White,
+                    WidthRequest = 50,
+                    HeightRequest = 50,
+                    Margin = new Thickness(5, 0)
+                };
+
+                // Obs³uga klikniêcia przycisku
+                button.Clicked += OnAlphabetFilterClicked;
+
+                // Dodawanie przycisku do bie¿¹cego wiersza
+                currentRow.Children.Add(button);
+
+                // Jeœli osi¹gnêliœmy maksymaln¹ liczbê przycisków w rzêdzie lub koniec alfabetu
+                if (currentRow.Children.Count == maxPerRow || i == alphabet.Length - 1)
+                {
+                    // Dodajemy wiersz do kontenera i tworzymy nowy wiersz
+                    AlphabetButtonsContainer.Children.Add(currentRow);
+
+                    // Nowy wiersz na kolejne litery
+                    currentRow = new StackLayout
+                    {
+                        Orientation = StackOrientation.Horizontal,
+                        Spacing = 10,
+                        HorizontalOptions = LayoutOptions.Center
+                    };
+                }
+            }
+        }
+
 
         private void OnIncreaseQuantityClicked(object sender, EventArgs e)
         {

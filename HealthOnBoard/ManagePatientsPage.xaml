@@ -16,22 +16,55 @@
                 <!-- Sekcja dodawania pacjenta -->
                 <StackLayout IsVisible="{Binding IsAddSectionVisible}" Spacing="10">
                     <Label Text="Dodaj Pacjenta" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
+
+                    <Label Text="Imię i nazwisko:" />
                     <Entry Placeholder="Imię i nazwisko" Text="{Binding NewPatient.Name}" />
+
+                    <Label Text="Wiek:" />
                     <Entry Placeholder="Wiek" Text="{Binding NewPatient.Age}" Keyboard="Numeric" />
+
+                    <Label Text="Numer łóżka:" />
                     <Entry Placeholder="Numer łóżka" Text="{Binding NewPatient.BedNumber}" Keyboard="Numeric" />
+
+                    <Label Text="Temperatura:" />
                     <Entry Placeholder="Temperatura" Text="{Binding NewPatient.CurrentTemperature}" Keyboard="Numeric" />
+
+                    <Label Text="Leki przepisane:" />
                     <Entry Placeholder="Leki przepisane" Text="{Binding NewPatient.AssignedDrugs}" />
+
+                    <Label Text="Notatki:" />
                     <Editor Placeholder="Notatki" Text="{Binding NewPatient.Notes}" HeightRequest="80" />
+
+                    <Label Text="PESEL:" />
                     <Entry Placeholder="PESEL" Text="{Binding NewPatient.PESEL}" />
+
+                    <Label Text="Adres:" />
                     <Entry Placeholder="Adres" Text="{Binding NewPatient.Address}" />
+
+                    <Label Text="Numer telefonu:" />
                     <Entry Placeholder="Numer telefonu" Text="{Binding NewPatient.PhoneNumber}" Keyboard="Telephone" />
+
+                    <Label Text="Email:" />
                     <Entry Placeholder="Email" Text="{Binding NewPatient.Email}" Keyboard="Email" />
+
+                    <Label Text="Data urodzenia (YYYY-MM-DD):" />
                     <Entry Placeholder="Data urodzenia (YYYY-MM-DD)" Text="{Binding NewPatient.DateOfBirth}" />
+
+                    <Label Text="Płeć:" />
                     <Entry Placeholder="Płeć" Text="{Binding NewPatient.Gender}" />
+
+                    <Label Text="Kontakt w nagłych wypadkach:" />
                     <Entry Placeholder="Kontakt w nagłych wypadkach" Text="{Binding NewPatient.EmergencyContact}" />
+
+                    <Label Text="Grupa krwi:" />
                     <Entry Placeholder="Grupa krwi" Text="{Binding NewPatient.BloodType}" />
+
+                    <Label Text="Alergie:" />
                     <Entry Placeholder="Alergie" Text="{Binding NewPatient.Allergies}" />
+
+                    <Label Text="Choroby przewlekłe:" />
                     <Entry Placeholder="Choroby przewlekłe" Text="{Binding NewPatient.ChronicDiseases}" />
+
                     <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
                         <Button Text="Dodaj Pacjenta" Clicked="OnAddPatientClicked" BackgroundColor="LightGreen" />
                     </HorizontalStackLayout>

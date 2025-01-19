@@ -10,13 +10,15 @@
             <Label Text="Edytuj użytkownika" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
 
             <!-- Imię i nazwisko -->
+            <Label Text="Imię i nazwisko:" FontSize="14" />
             <Entry Placeholder="Imię i nazwisko" Text="{Binding SelectedUser.FirstName, Mode=TwoWay}" FontSize="14" />
 
-
             <!-- PIN -->
-            <Entry Placeholder="PIN" Text="{Binding SelectedUser.Pin}" FontSize="14" />
+            <Label Text="PIN:" FontSize="14" />
+            <Entry Placeholder="PIN" Text="{Binding SelectedUser.Pin}" FontSize="14" Keyboard="Numeric" />
 
             <!-- Rola -->
+            <Label Text="Rola:" FontSize="14" />
             <Picker Title="Rola"
                     ItemsSource="{Binding Roles}"
                     ItemDisplayBinding="{Binding RoleName}"
@@ -24,6 +26,7 @@
                     FontSize="14" />
 
             <!-- Status aktywności -->
+            <Label Text="Status aktywności:" FontSize="14" />
             <HorizontalStackLayout>
                 <Switch IsToggled="{Binding SelectedUser.ActiveStatus}" />
                 <Label Text="Aktywny użytkownik" VerticalOptions="Center" FontSize="14" />

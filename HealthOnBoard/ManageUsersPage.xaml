@@ -12,17 +12,24 @@
                 <Label Text="Dodaj Użytkownika" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" Margin="10" />
 
                 <VerticalStackLayout Padding="10" Spacing="10">
+
+                    <Label Text="Imię i nazwisko:" />
                     <Entry Placeholder="Imię i nazwisko" Text="{Binding EditingUser.FirstName}" FontSize="14" />
+
+                    <Label Text="PIN:" />
                     <Entry Placeholder="PIN" Text="{Binding EditingUser.Pin}" FontSize="14" />
+
+                    <Label Text="Rola:" />
                     <Picker Title="Rola"
                             ItemsSource="{Binding Roles}"
                             ItemDisplayBinding="{Binding RoleName}"
                             SelectedItem="{Binding SelectedRole, Mode=TwoWay}"
                             FontSize="14" />
 
+                    <Label Text="Aktywny użytkownik:" />
                     <HorizontalStackLayout>
                         <Switch IsToggled="{Binding EditingUser.ActiveStatus}" />
-                        <Label Text="Aktywny użytkownik" VerticalOptions="Center" FontSize="14" />
+                        <Label Text="Tak" VerticalOptions="Center" FontSize="14" />
                     </HorizontalStackLayout>
 
                     <!-- Przyciski akcji -->

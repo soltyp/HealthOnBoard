@@ -12,6 +12,7 @@ namespace HealthOnBoard
         private readonly DatabaseService _databaseService;
 
         public string ActionDetails { get; set; }
+
         public string ActionType { get; set; }
         public bool IsTemperatureInputVisible { get; set; }
         public bool IsDetailsInputVisible { get; set; }
@@ -20,6 +21,8 @@ namespace HealthOnBoard
 
         public ObservableCollection<Medication> Medications { get; set; } = new ObservableCollection<Medication>();
         public ObservableCollection<string> MedicationUnits { get; set; } = new ObservableCollection<string> { "sztuka", "ml", "mg" };
+        public ObservableCollection<Medication> FilteredMedications { get; set; } = new ObservableCollection<Medication>();
+
 
         private Medication _selectedMedication;
         public Medication SelectedMedication
@@ -80,7 +83,9 @@ namespace HealthOnBoard
             BindingContext = this;
         }
 
-        
+
+
+        public string PreviousMedication { get; set; } = "Brak"; // Domyœlnie "Brak"
 
         private void PopulateMedicationFields()
         {
@@ -98,6 +103,9 @@ namespace HealthOnBoard
                     var medicationName = actionDetails[0].Replace("Podano lek:", "").Trim();
                     var quantityUnit = actionDetails[1].Split(':');
 
+                    // Przypisz nazwê istniej¹cego leku do w³aœciwoœci
+                    PreviousMedication = medicationName;
+
                     // Przypisz wybrany lek na podstawie nazwy
                     SelectedMedication = Medications.FirstOrDefault(m => m.Name.Equals(medicationName, StringComparison.OrdinalIgnoreCase));
 
@@ -105,7 +113,7 @@ namespace HealthOnBoard
                     SelectedQuantity = int.TryParse(quantityUnit[1].Split(' ')[1], out var quantity) ? quantity : 1;
                     SelectedUnit = quantityUnit[1].Split(' ')[2];
 
-                    Debug.WriteLine($"Lek: {SelectedMedication?.Name}, Iloœæ: {SelectedQuantity}, Jednostka: {SelectedUnit}");
+                    Debug.WriteLine($"Lek: {PreviousMedication}, Iloœæ: {SelectedQuantity}, Jednostka: {SelectedUnit}");
                 }
             }
             catch (Exception ex)
@@ -179,6 +187,25 @@ namespace HealthOnBoard
             {
                 Debug.WriteLine($"B³¹d podczas zapisu: {ex.Message}");
                 await DisplayAlert("B³¹d", $"Wyst¹pi³ problem: {ex.Message}", "OK");
+            }
+        }
+        private void OnAlphabetFilterClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.Text is not null)
+            {
+                string selectedLetter = button.Text;
+
+                // Filtrowanie leków na podstawie wybranej litery
+                FilteredMedications.Clear();
+                foreach (var medication in Medications)
+                {
+                    if (medication.Name.StartsWith(selectedLetter, StringComparison.OrdinalIgnoreCase))
+                    {
+                        FilteredMedications.Add(medication);
+                    }
+                }
+
+                Debug.WriteLine($"Filtered medications by letter: {selectedLetter}. Found {FilteredMedications.Count} medications.");
             }
         }
 
