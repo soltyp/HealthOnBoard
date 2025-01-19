@@ -1,0 +1,67 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.EditActionPage"
+             Title="Edytuj Akcję"
+             BackgroundColor="#1E1E2F">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Nagłówek -->
+        <Label Grid.Row="0"
+               Text="{Binding ActionType, StringFormat='Edytujesz: {0}'}"
+               FontSize="20"
+               FontAttributes="Bold"
+               TextColor="#FFFFFF"
+               HorizontalOptions="Center"
+               Margin="10" />
+
+        <!-- Formularz -->
+        <VerticalStackLayout Grid.Row="1" Padding="20" Spacing="15">
+
+            <!-- Szczegóły akcji -->
+            <Label Text="Szczegóły akcji:"
+                   FontSize="14"
+                   TextColor="#FFFFFF"
+                   IsVisible="{Binding IsDetailsInputVisible}" />
+            <Entry x:Name="DetailsEntry"
+                   Text="{Binding ActionDetails}"
+                   FontSize="14"
+                   BackgroundColor="#292A3A"
+                   TextColor="#FFFFFF"
+                   Margin="0,5"
+                   IsVisible="{Binding IsDetailsInputVisible}" />
+
+            <!-- Temperatura -->
+            <Label Text="Temperatura (°C):"
+                   FontSize="14"
+                   TextColor="#FFFFFF"
+                   IsVisible="{Binding IsTemperatureInputVisible}" />
+            <Entry x:Name="TemperatureEntry"
+                   Text="{Binding CurrentTemperature}"
+                   FontSize="14"
+                   Keyboard="Numeric"
+                   BackgroundColor="#292A3A"
+                   TextColor="#FFFFFF"
+                   Margin="0,5"
+                   IsVisible="{Binding IsTemperatureInputVisible}" />
+
+            <!-- Przyciski -->
+            <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
+                <Button Text="Zapisz"
+                        BackgroundColor="Green"
+                        TextColor="White"
+                        Clicked="OnSaveClicked"
+                        WidthRequest="100" />
+                <Button Text="Anuluj"
+                        BackgroundColor="Red"
+                        TextColor="White"
+                        Clicked="OnCancelClicked"
+                        WidthRequest="100" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

@@ -19,7 +19,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;";
+        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;";
 
         try
         {
@@ -320,35 +320,18 @@ public class DatabaseService
         }
     }
 
-    public async Task<List<PatientActivity>> GetFullActivitiesAsync(int patientId, int limit = 5000)
+    public async Task<List<PatientActivity>> GetFullActivitiesAsync(int patientId)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            const string query = @"
-                SELECT TOP (@Limit) PatientID, ActionType, ActionDetails, ActionDate
-                FROM PatientActivityLog
-                WHERE PatientID = @PatientID
-                ORDER BY ActionDate DESC";
+            string query = @"SELECT LogID, PatientID, ActionType, ActionDetails, CurrentTemperature, ActionDate
+                         FROM PatientActivityLog
+                         WHERE PatientID = @PatientID";
 
-
-            try
-            {
-                Debug.WriteLine("Wykonuję zapytanie SQL w GetFullActivitiesAsync:");
-                Debug.WriteLine(query);
-                Debug.WriteLine($"Parametry: PatientID = {patientId}, Limit = {limit}");
-
-                var activities = await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId, Limit = limit });
-                Debug.WriteLine($"Pobrano {activities.Count()} rekordów z tabeli PatientActivityLog.");
-
-                return activities.ToList();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Błąd w GetFullActivitiesAsync: {ex.Message}");
-                throw;
-            }
+            return (await connection.QueryAsync<PatientActivity>(query, new { PatientID = patientId })).ToList();
         }
     }
+
 
     public async Task<bool> DeletePatientActionAsync(PatientActivity activity)
     {
@@ -939,35 +922,266 @@ public class DatabaseService
             return rowsAffected > 0;
         }
     }
-    public async Task<bool> UpdateActivityLogTemperatureAsync(int logId, decimal temperature)
+
+    public async Task<bool> UpdateActivityLogAsync(int logId, string actionType, string actionDetails, decimal? newTemperature = null)
     {
-        try
+        if (logId <= 0)
         {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync();
-
-                var query = @"
-            UPDATE PatientActivityLog
-            SET CurrentTemperature = @CurrentTemperature
-            WHERE LogID = @LogID";
-
-                var command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@CurrentTemperature", temperature); // Poprawna nazwa parametru
-                command.Parameters.AddWithValue("@LogID", logId);
-
-                var rowsAffected = await command.ExecuteNonQueryAsync();
-                Debug.WriteLine($"Rows affected: {rowsAffected}");
-                return rowsAffected > 0;
-                Debug.WriteLine($"Executing SQL: {query} with LogID={logId}, CurrentTemperature={temperature}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Błąd w UpdateActivityLogTemperatureAsync: {ex.Message}");
+            Debug.WriteLine("LogID jest nieprawidłowy. Aktualizacja przerwana.");
             return false;
         }
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync(); // Otwórz połączenie
+
+            using (var transaction = await connection.BeginTransactionAsync())
+            {
+                try
+                {
+                    // 1. Aktualizacja ActionDetails i (opcjonalnie) CurrentTemperature w PatientActivityLog
+                    string updateLogQuery = @"
+                UPDATE PatientActivityLog
+                SET 
+                    ActionDetails = @ActionDetails,
+                    CurrentTemperature = CASE WHEN @CurrentTemperature IS NOT NULL THEN @CurrentTemperature ELSE CurrentTemperature END
+                WHERE LogID = @LogID";
+
+                    // Formatowanie ActionDetails na podstawie typu akcji
+                    string formattedActionDetails = actionDetails;
+
+                    if (actionType == "Pomiar temperatury" && newTemperature.HasValue)
+                    {
+                        formattedActionDetails = $"Zmierzono temperaturę: {newTemperature:F1}°C";
+                    }
+                    else if (actionType == "Podanie leków")
+                    {
+                        formattedActionDetails = $"Podano lek: {actionDetails}";
+                    }
+                    else if (actionType == "Dodanie wyników badań")
+                    {
+                        formattedActionDetails = $"Dodano wyniki: {actionDetails}";
+                    }
+
+                    Debug.WriteLine($"Executing SQL for LogID: {logId} with formatted ActionDetails: {formattedActionDetails}");
+
+                    var logParameters = new
+                    {
+                        ActionDetails = formattedActionDetails,
+                        CurrentTemperature = newTemperature,
+                        LogID = logId
+                    };
+
+                    int rowsAffected = await connection.ExecuteAsync(updateLogQuery, logParameters, transaction);
+
+                    Debug.WriteLine($"Rows affected in PatientActivityLog: {rowsAffected}");
+                    if (rowsAffected == 0)
+                    {
+                        Debug.WriteLine("Nie udało się zaktualizować PatientActivityLog.");
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+
+                    // 2. Pobranie PatientID dla LogID
+                    string getPatientIdQuery = @"
+                SELECT PatientID
+                FROM PatientActivityLog
+                WHERE LogID = @LogID";
+
+                    int patientId = await connection.ExecuteScalarAsync<int>(getPatientIdQuery, new { LogID = logId }, transaction);
+
+                    if (patientId <= 0)
+                    {
+                        Debug.WriteLine("Nie znaleziono PatientID dla podanego LogID.");
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+
+                    // 3. Sprawdzenie, czy LogID jest największy dla PatientID i ActionType = 'Pomiar temperatury'
+                    if (actionType == "Pomiar temperatury" && newTemperature.HasValue)
+                    {
+                        string isLatestLogQuery = @"
+                    SELECT CASE 
+                        WHEN MAX(LogID) = @LogID THEN 1
+                        ELSE 0
+                    END AS IsLatestLog
+                    FROM PatientActivityLog
+                    WHERE PatientID = @PatientID
+                      AND ActionType = 'Pomiar temperatury'";
+
+                        Debug.WriteLine($"SQL do sprawdzania największego LogID: {isLatestLogQuery} | LogID: {logId}, PatientID: {patientId}");
+
+                        int isLatestLogResult = await connection.ExecuteScalarAsync<int>(
+                            isLatestLogQuery,
+                            new { LogID = logId, PatientID = patientId },
+                            transaction
+                        );
+
+                        bool isLatestLog = isLatestLogResult == 1; // Konwersja 1 -> true, 0 -> false
+
+                        Debug.WriteLine($"Czy aktualizowany LogID jest największy? {isLatestLog}");
+
+                        // 4. Jeśli bieżący LogID jest największy, aktualizuj tabelę Patients
+                        if (isLatestLog)
+                        {
+                            string updatePatientQuery = @"
+                        UPDATE Patients
+                        SET CurrentTemperature = @CurrentTemperature
+                        WHERE PatientID = @PatientID";
+
+                            Debug.WriteLine($"SQL do aktualizacji tabeli Patients: {updatePatientQuery} | PatientID: {patientId}, NewTemperature: {newTemperature}");
+
+                            var patientParameters = new { CurrentTemperature = newTemperature, PatientID = patientId };
+                            int patientRowsAffected = await connection.ExecuteAsync(updatePatientQuery, patientParameters, transaction);
+
+                            Debug.WriteLine($"Wiersze zaktualizowane w Patients: {patientRowsAffected}");
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Aktualizowany LogID nie jest największym dla PatientID i ActionType = 'Pomiar temperatury'.");
+                        }
+                    }
+
+                    // 5. Zatwierdzenie transakcji
+                    await transaction.CommitAsync();
+                    Debug.WriteLine("Aktualizacja zakończona sukcesem.");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Wystąpił błąd podczas aktualizacji: {ex.Message}");
+                    Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+            }
+        }
     }
+
+
+    public async Task<bool> UpdateActivityLogTemperatureAsync(int logId, decimal newTemperature)
+    {
+        if (logId <= 0)
+        {
+            Debug.WriteLine("LogID jest nieprawidłowy. Aktualizacja przerwana.");
+            return false;
+        }
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync(); // Otwórz połączenie
+
+            using (var transaction = await connection.BeginTransactionAsync())
+            {
+                try
+                {
+                    Debug.WriteLine("Rozpoczynam aktualizację PatientActivityLog...");
+
+                    // 1. Aktualizacja CurrentTemperature i ActionDetails w PatientActivityLog
+                    string updateLogQuery = @"
+                UPDATE PatientActivityLog
+                SET 
+                    CurrentTemperature = @CurrentTemperature,
+                    ActionDetails = CONCAT('Zmierzono temperaturę: ', @CurrentTemperature, '°C')
+                WHERE LogID = @LogID";
+
+                    Debug.WriteLine($"SQL do aktualizacji logu: {updateLogQuery} | LogID: {logId}, NewTemperature: {newTemperature}");
+
+                    var logParameters = new { CurrentTemperature = newTemperature, LogID = logId };
+                    int rowsAffected = await connection.ExecuteAsync(updateLogQuery, logParameters, transaction);
+
+                    Debug.WriteLine($"Wiersze zaktualizowane w PatientActivityLog: {rowsAffected}");
+
+                    if (rowsAffected == 0)
+                    {
+                        Debug.WriteLine("Nie udało się zaktualizować PatientActivityLog. Rolback transakcji.");
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+
+                    // 2. Pobranie PatientID dla LogID
+                    string getPatientIdQuery = @"
+                SELECT PatientID
+                FROM PatientActivityLog
+                WHERE LogID = @LogID";
+
+                    Debug.WriteLine($"SQL do pobrania PatientID: {getPatientIdQuery} | LogID: {logId}");
+
+                    int patientId = await connection.ExecuteScalarAsync<int>(getPatientIdQuery, new { LogID = logId }, transaction);
+
+                    Debug.WriteLine($"Pobrane PatientID: {patientId}");
+
+                    if (patientId <= 0)
+                    {
+                        Debug.WriteLine("Nie znaleziono PatientID dla podanego LogID. Rolback transakcji.");
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+
+                    // 3. Sprawdzenie, czy LogID jest największy dla PatientID i ActionType = 'Pomiar temperatury'
+                    string isLatestLogQuery = @"
+SELECT CASE 
+    WHEN MAX(LogID) = @LogID THEN 1
+    ELSE 0
+END AS IsLatestLog
+FROM PatientActivityLog
+WHERE PatientID = @PatientID
+  AND ActionType = 'Pomiar temperatury'";
+
+                    Debug.WriteLine($"SQL do sprawdzania największego LogID: {isLatestLogQuery} | LogID: {logId}, PatientID: {patientId}");
+
+                    // Pobieramy wartość int (1 lub 0) i konwertujemy ją na bool
+                    int isLatestLogResult = await connection.ExecuteScalarAsync<int>(
+                        isLatestLogQuery,
+                        new { LogID = logId, PatientID = patientId },
+                        transaction
+                    );
+
+                    bool isLatestLog = isLatestLogResult == 1; // Konwersja 1 -> true, 0 -> false
+
+                    Debug.WriteLine($"Czy aktualizowany LogID jest największy? {isLatestLog}");
+
+
+                    Debug.WriteLine($"Czy aktualizowany LogID jest największy? {isLatestLog}");
+
+                    // 4. Jeśli bieżący LogID jest największy, aktualizuj tabelę Patients
+                    if (isLatestLog)
+                    {
+                        string updatePatientQuery = @"
+                    UPDATE Patients
+                    SET CurrentTemperature = @CurrentTemperature
+                    WHERE PatientID = @PatientID";
+
+                        Debug.WriteLine($"SQL do aktualizacji tabeli Patients: {updatePatientQuery} | PatientID: {patientId}, NewTemperature: {newTemperature}");
+
+                        var patientParameters = new { CurrentTemperature = newTemperature, PatientID = patientId };
+                        int patientRowsAffected = await connection.ExecuteAsync(updatePatientQuery, patientParameters, transaction);
+
+                        Debug.WriteLine($"Wiersze zaktualizowane w Patients: {patientRowsAffected}");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Aktualizowany LogID nie jest największym dla PatientID i ActionType = 'Pomiar temperatury'.");
+                    }
+
+                    // 5. Zatwierdzenie transakcji
+                    await transaction.CommitAsync();
+                    Debug.WriteLine("Aktualizacja zakończona sukcesem.");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Wystąpił błąd podczas aktualizacji: {ex.Message}");
+                    Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+            }
+        }
+    }
+
+
+
 
 
     public async Task<List<Medication>> GetMedicationsAsync()
@@ -979,5 +1193,55 @@ public class DatabaseService
         return medications.ToList();
     }
 
+    public async Task<bool> UpdateActivityDetailsAsync(PatientActivity activity)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                string query = @"
+            UPDATE PatientActivityLog
+            SET ActionType = @ActionType, 
+                ActionDetails = @ActionDetails
+            WHERE LogID = @LogID";
+
+                // Wykonanie zapytania z parametrami
+                int rowsAffected = await connection.ExecuteAsync(query, new
+                {
+                    ActionType = activity.ActionType,
+                    ActionDetails = activity.ActionDetails,
+                    LogID = activity.LogID
+                });
+
+                // Zwróć true, jeśli aktualizacja powiodła się
+                return rowsAffected > 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd w UpdateActivityDetailsAsync: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> IsLatestActivityLogAsync(int patientId, int logId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+            SELECT CASE 
+                WHEN LogID = @LogID THEN 1 
+                ELSE 0 
+            END AS IsLatest
+            FROM PatientActivityLog
+            WHERE PatientID = @PatientID
+            ORDER BY ActionDate DESC
+            OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY";
+
+            return await connection.QuerySingleOrDefaultAsync<bool>(query, new { PatientID = patientId, LogID = logId });
+        }
+    }
+
+   
 
 }

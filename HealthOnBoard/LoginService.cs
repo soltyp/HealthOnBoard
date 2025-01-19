@@ -13,7 +13,7 @@ public class LoginService
     public LoginService()
     {
         // Zaktualizowany connection string z TrustServerCertificate
-        _connectionString = "Server=TUF15;Database=HospitalManagement;Trusted_Connection=True;TrustServerCertificate=True;";
+        _connectionString = "Server=LAPTOP-72SPAJ8D;Database=HospitalManagement;Trusted_Connection=True;TrustServerCertificate=True;";
     }
 
     public async Task<User?> AuthenticateUserAsync(string pin)

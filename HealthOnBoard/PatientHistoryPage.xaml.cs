@@ -7,6 +7,37 @@ namespace HealthOnBoard
 {
     public partial class PatientHistoryPage : ContentPage
     {
+        // Lista dostêpnych leków
+        public ObservableCollection<Medication> Medications { get; set; } = new ObservableCollection<Medication>();
+
+        // Wybrany lek
+        private Medication _selectedMedication;
+        public Medication SelectedMedication
+        {
+            get => _selectedMedication;
+            set
+            {
+                _selectedMedication = value;
+                OnPropertyChanged(nameof(SelectedMedication));
+            }
+        }
+
+        // Temperatura do wprowadzenia
+        private string _currentTemperature;
+        public string CurrentTemperature
+        {
+            get => _currentTemperature;
+            set
+            {
+                _currentTemperature = value;
+                OnPropertyChanged(nameof(CurrentTemperature));
+            }
+        }
+
+        // Dodaj pola dla userId i patientId, jeœli ich brakuje
+        private readonly int userId;
+        private readonly int patientId;
+
         private readonly User _user;
         private readonly int _patientId;
         private readonly DatabaseService _databaseService;
@@ -17,9 +48,22 @@ namespace HealthOnBoard
 
 
         private readonly DashboardPage _dashboardPage;
+        private string _selectedActionType;
+        public string SelectedActionType
+        {
+            get => _selectedActionType;
+            set
+            {
+                _selectedActionType = value;
+                OnPropertyChanged(nameof(SelectedActionType));
+                UpdateViewForSelectedAction();
+            }
+        }
+        public bool IsTemperatureInputVisible { get; set; }
+        public bool IsMedicationInputVisible { get; set; }
 
-    
-       public PatientHistoryPage(DashboardPage dashboardPage, User user, int patientId, DatabaseService databaseService)
+
+        public PatientHistoryPage(DashboardPage dashboardPage, User user, int patientId, DatabaseService databaseService)
 {
     InitializeComponent();
             _dashboardPage = dashboardPage; // Przechowujemy instancjê DashboardPage
@@ -38,14 +82,22 @@ namespace HealthOnBoard
             try
             {
                 Debug.WriteLine("Rozpoczynam ³adowanie historii pacjenta...");
-                var activities = await _databaseService.GetFullActivitiesAsync(_patientId);
-                Debug.WriteLine($"Pobrano {activities.Count} rekordów historii pacjenta.");
 
+                // Pobierz dane z bazy danych
+                var activities = await _databaseService.GetFullActivitiesAsync(_patientId);
+
+                // Posortuj dane wed³ug ActionDate malej¹co
+                var sortedActivities = activities.OrderByDescending(activity => activity.ActionDate);
+
+                // Wyczyœæ istniej¹c¹ listê i za³aduj nowe dane
                 PatientHistory.Clear();
-                foreach (var activity in activities)
+                foreach (var activity in sortedActivities)
                 {
-                    activity.PatientID = _patientId; // Ustawienie PatientID
-                    Debug.WriteLine($"Dodawanie czynnoœci: {activity.ActionType}, {activity.ActionDetails}, {activity.ActionDate}, PatientID: {activity.PatientID}");
+                    if (activity.LogID == 0)
+                    {
+                        Debug.WriteLine($"B³¹d: LogID jest równy 0 dla czynnoœci: {activity.ActionType}");
+                        continue;
+                    }
                     PatientHistory.Add(activity);
                 }
             }
@@ -58,69 +110,124 @@ namespace HealthOnBoard
 
 
 
+        private void UpdateViewForSelectedAction()
+        {
+            switch (SelectedActionType)
+            {
+                case "Pomiar temperatury":
+                    IsTemperatureInputVisible = true;
+                    IsMedicationInputVisible = false;
+                    break;
+                case "Podanie leków":
+                    IsMedicationInputVisible = true;
+                    IsTemperatureInputVisible = false;
+                    break;
+                default:
+                    IsTemperatureInputVisible = false;
+                    IsMedicationInputVisible = false;
+                    break;
+            }
 
+            OnPropertyChanged(nameof(IsTemperatureInputVisible));
+            OnPropertyChanged(nameof(IsMedicationInputVisible));
+        }
+
+        private void LoadActivityDetails(PatientActivity activity)
+        {
+            SelectedActionType = activity.ActionType;
+
+            switch (activity.ActionType)
+            {
+                case "Pomiar temperatury":
+                    CurrentTemperature = activity.CurrentTemperature?.ToString("F1") ?? "";
+                    break;
+                case "Podanie leków":
+                    SelectedMedication = Medications.FirstOrDefault(m => m.Name == activity.ActionDetails);
+                    break;
+                    // Dodaj inne przypadki w zale¿noœci od potrzeb
+            }
+        }
+
+        private async Task SaveActivityAsync()
+        {
+            var newActivity = new PatientActivity
+            {
+                ActionType = SelectedActionType,
+                ActionDetails = SelectedActionType == "Podanie leków" ? SelectedMedication.Name : null,
+                CurrentTemperature = SelectedActionType == "Pomiar temperatury" ? decimal.Parse(CurrentTemperature) : null,
+                ActionDate = DateTime.Now
+            };
+
+            // Zapisz do bazy danych
+            var success = await _databaseService.AddPatientActionAsync(userId, patientId, newActivity.ActionType, newActivity.ActionDetails, newActivity.ActionDate);
+            if (success)
+            {
+                await DisplayAlert("Sukces", "Akcja zosta³a zapisana.", "OK");
+            }
+            else
+            {
+                await DisplayAlert("B³¹d", "Nie uda³o siê zapisaæ akcji.", "OK");
+            }
+        }
         private async void OnEditActionClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is PatientActivity activity)
             {
-                if (activity.ActionType == "Pomiar temperatury")
-                {
-                    try
-                    {
-                        // Pobierz bie¿¹c¹ temperaturê z logu
-                        var existingTemperature = await _databaseService.GetCurrentTemperatureAsync(activity.PatientID);
-
-                        if (existingTemperature == null)
-                        {
-                            await DisplayAlert("B³¹d", "Nie znaleziono wartoœci temperatury w logu bazy danych.", "OK");
-                            return;
-                        }
-
-                        // Wyœwietl dialog do edycji temperatury
-                        string newTemperature = await DisplayPromptAsync(
-                            "Edytuj pomiar temperatury",
-                            "WprowadŸ now¹ wartoœæ temperatury (w °C):",
-                            keyboard: Keyboard.Numeric,
-                            initialValue: existingTemperature.Value.ToString("F1")
-                        );
-
-                        // Walidacja temperatury
-                        if (decimal.TryParse(newTemperature, out decimal CurrentTemperature) && CurrentTemperature >= 35 && CurrentTemperature <= 42)
-                        {
-                            // Zaktualizuj temperaturê w bazie
-                            bool updateSuccess = await _databaseService.UpdateActivityLogTemperatureAsync(activity.LogID, CurrentTemperature);
-
-                            if (updateSuccess)
-                            {
-                                await DisplayAlert("Sukces", "Pomiar temperatury zosta³ zaktualizowany.", "OK");
-
-                                // Odœwie¿ dane w widoku
-                                await LoadPatientHistoryAsync();
-                                await _dashboardPage.LoadRecentActivitiesAsync();
-
-                                // Odœwie¿ wykres
-                                await _dashboardPage.LoadTemperatureChartDataAsync();
-                                await _dashboardPage.LoadPatientTemperatureAsync();
-                            }
-                            else
-                            {
-                                Debug.WriteLine($"Nie uda³o siê zaktualizowaæ danych logu dla LogID={activity.LogID}.");
-                                await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ danych w logu.", "OK");
-                            }
-                        }
-                        else
-                        {
-                            await DisplayAlert("B³¹d", "WprowadŸ poprawn¹ wartoœæ temperatury (35-42°C).", "OK");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"B³¹d podczas edycji temperatury: {ex.Message}");
-                        await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji temperatury.", "OK");
-                    }
-                }
+                Debug.WriteLine($"Editing Action - LogID: {activity.LogID}, PatientID: {activity.PatientID}, ActionType: {activity.ActionType}");
+                await Navigation.PushAsync(new EditActionPage(activity, _databaseService));
+            }
+            else
+            {
+                Debug.WriteLine("Invalid CommandParameter or sender.");
+                await DisplayAlert("B³¹d", "Nie uda³o siê pobraæ danych do edycji.", "OK");
             }
         }
+
+
+
+
+
+        //private async void OnEditActionClicked(object sender, EventArgs e)
+        //{
+        //    if (sender is Button button && button.CommandParameter is PatientActivity activity)
+        //    {
+        //        // Obs³uga edycji na podstawie typu akcji
+        //        string newValue = await DisplayPromptAsync(
+        //            $"Edytuj {activity.ActionType}",
+        //            $"WprowadŸ now¹ wartoœæ dla: {activity.ActionDetails}",
+        //            initialValue: activity.ActionDetails
+        //        );
+
+        //        if (!string.IsNullOrEmpty(newValue))
+        //        {
+        //            try
+        //            {
+        //                activity.ActionDetails = newValue; // Zaktualizuj lokaln¹ wartoœæ
+        //                bool success = await _databaseService.UpdateActivityDetailsAsync(activity);
+
+        //                if (success)
+        //                {
+        //                    await DisplayAlert("Sukces", "Dane zosta³y zaktualizowane.", "OK");
+        //                    await RefreshPatientHistoryAsync();
+        //                }
+        //                else
+        //                {
+        //                    await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ danych w bazie.", "OK");
+        //                }
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Debug.WriteLine($"B³¹d podczas aktualizacji danych: {ex.Message}");
+        //                await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas aktualizacji danych.", "OK");
+        //            }
+        //        }
+        //        else
+        //        {
+        //            await DisplayAlert("Anulowano", "Edycja zosta³a anulowana.", "OK");
+        //        }
+        //    }
+        //}
+
 
 
 
@@ -219,7 +326,7 @@ namespace HealthOnBoard
             {
                 int minutes = _remainingTimeInSeconds / 60;
                 int seconds = _remainingTimeInSeconds % 60;
-                LogoutTimer.Text = $"{minutes:D2}:{seconds:D2}";
+            //    LogoutTimer.Text = $"{minutes:D2}:{seconds:D2}";
 
                 if (_remainingTimeInSeconds <= 0)
                 {

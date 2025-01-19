@@ -5,64 +5,32 @@
              BackgroundColor="#1E1E2F">
 
     <Grid x:Name="MainGrid">
-        <!-- Dodaj gest dotknięcia do głównego kontenera -->
-        <Grid.GestureRecognizers>
-            <TapGestureRecognizer Tapped="OnScreenTapped" />
-        </Grid.GestureRecognizers>
-
-        <!-- Definicja wierszy siatki -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="50" />
-            <!-- Pasek nawigacyjny -->
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <!-- Zawartość -->
         </Grid.RowDefinitions>
 
         <!-- Pasek nawigacyjny -->
         <Grid Grid.Row="0" BackgroundColor="#292A3A" Padding="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Ikona użytkownika -->
-            <Image Source="user_icon.png"
-                   HeightRequest="40"
-                   WidthRequest="40"
-                   VerticalOptions="Center" />
-
-            <!-- Informacje o zalogowanym użytkowniku -->
-            <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
-                <Label x:Name="UserFirstNameLabel" Text="Jan" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
-                <Label x:Name="RoleLabel" Text="Ordynator" TextColor="#00CCFF" FontSize="14" />
-            </HorizontalStackLayout>
-
-            <!-- Licznik czasu -->
-            <Frame Grid.Column="2"
-                   Padding="8,2"
-                   BackgroundColor="#1E1E2F"
-                   CornerRadius="15"
+            <Label Text="Historia Leczenia"
+                   FontSize="18"
+                   TextColor="#FFFFFF"
+                   HorizontalOptions="Center"
                    VerticalOptions="Center"
-                   HeightRequest="42">
-                <Label x:Name="LogoutTimer"
-                       Text="02:56"
-                       TextColor="#FFCC00"
-                       FontSize="14"
-                       VerticalOptions="Center" />
-            </Frame>
+                   Grid.Column="0" />
 
-            <!-- Przycisk Wróć -->
-            <Button Grid.Column="3"
-                    Text="Wróć"
-                    FontSize="14"
-                    BackgroundColor="#FF3B30"
-                    TextColor="#FFFFFF"
-                    CornerRadius="15"
-                    HeightRequest="44"
-                    VerticalOptions="Center"
-                    Clicked="OnBackButtonClicked" />
+            <!-- Logout Timer -->
+            <Label x:Name="LogoutTimerLabel"
+                   FontSize="14"
+                   TextColor="#FFCC00"
+                   VerticalOptions="Center"
+                   HorizontalOptions="End"
+                   Grid.Column="1" />
         </Grid>
 
         <!-- Lista historii leczenia -->
@@ -82,7 +50,7 @@
                             </VerticalStackLayout>
 
                             <HorizontalStackLayout Grid.Column="1" Spacing="10" HorizontalOptions="EndAndExpand">
-                                <!-- Edit Button -->
+                                <!-- Przycisk Edytuj -->
                                 <Button Text="Edytuj"
                                         FontSize="14"
                                         BackgroundColor="#007BFF"
@@ -91,7 +59,7 @@
                                         Clicked="OnEditActionClicked"
                                         VerticalOptions="Center" />
 
-                                <!-- Delete Button -->
+                                <!-- Przycisk Usuń -->
                                 <Button Text="Usuń"
                                         FontSize="14"
                                         BackgroundColor="#FF3B30"
@@ -105,6 +73,5 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
     </Grid>
 </ContentPage>
