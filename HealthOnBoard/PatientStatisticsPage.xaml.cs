@@ -28,7 +28,7 @@ namespace HealthOnBoard
 
             // Podzia³ wed³ug grupy krwi
             BloodTypeData = patients
-                .GroupBy(p => p.BloodType ?? "Nieznana")
+                .GroupBy(p => p.BloodType?.Type ?? "Nieznana")
                 .Select(g => new StatisticDataModel { Label = g.Key, Value = g.Count() })
                 .ToList();
 
@@ -39,7 +39,7 @@ namespace HealthOnBoard
                 .ToList();
 
             // Stosunek wolnych do zajêtych ³ó¿ek
-            int totalBeds = patients.Max(p => p.BedNumber);
+            int totalBeds = patients.Max(p => p.BedNumber ?? 0);
             int occupiedBeds = patients.Select(p => p.BedNumber).Distinct().Count();
             int freeBeds = totalBeds - occupiedBeds;
 

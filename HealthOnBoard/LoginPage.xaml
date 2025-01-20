@@ -47,13 +47,13 @@
 
             <!-- Picker do wyboru numeru łóżka -->
             <Picker x:Name="BedPicker"
-                    Title="Numer łóźka"
-                    ItemsSource="{Binding BedNumbers}" 
-                    SelectedItem="{Binding SelectedBedNumber, Mode=TwoWay}"
-                    FontSize="19"
-                    HorizontalOptions="FillAndExpand"
-                    HeightRequest="80"
-                    Margin="0,30,0,30" />
+        Title="Wybierz numer łóżka"
+        ItemsSource="{Binding BedNumbers}" 
+        SelectedItem="{Binding SelectedBedNumber, Mode=TwoWay}"
+        FontSize="19"
+        HorizontalOptions="FillAndExpand"
+        HeightRequest="80"
+        Margin="0,30,0,30" />
         </VerticalStackLayout>
 
         <!-- Klawiatura numeryczna -->

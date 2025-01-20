@@ -19,7 +19,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;";
+        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;TrustServerCertificate=TRUE;";
 
         try
         {
@@ -52,7 +52,10 @@ public class DatabaseService
             throw; // Ponowne zgłoszenie wyjątku, jeśli potrzebne
         }
     }
-
+    public string GetConnectionString()
+    {
+        return _connectionString;
+    }
 
     public async Task<Patient?> GetPatientByBedNumberAsync(int bedNumber)
     {
@@ -774,80 +777,74 @@ public class DatabaseService
     {
         using (var connection = new SqlConnection(_connectionString))
         {
-            const string query = "SELECT * FROM dbo.Patients";
-            return (await connection.QueryAsync<Patient>(query)).ToList();
+            const string query = @"
+            SELECT 
+                p.PatientID, p.Name, p.Age, p.BedNumber, 
+                p.PESEL, p.Address, p.PhoneNumber, p.Email, 
+                p.DateOfBirth, p.Gender, p.EmergencyContact, 
+                p.Allergies, p.ChronicDiseases, p.Notes, 
+                b.BloodTypeID, b.Type AS BloodTypeName
+            FROM Patients p
+            LEFT JOIN BloodTypes b ON p.BloodTypeID = b.BloodTypeID";
+
+            var patients = await connection.QueryAsync<Patient, BloodType, Patient>(
+                query,
+                (patient, bloodType) =>
+                {
+                    patient.BloodType = bloodType;
+                    return patient;
+                },
+                splitOn: "BloodTypeID");
+
+            return patients.ToList();
         }
     }
+
 
     public async Task SavePatientAsync(Patient patient)
     {
-        try
+        using (var connection = new SqlConnection(_connectionString))
         {
-            using (var connection = new SqlConnection(_connectionString))
+            const string query = @"
+            UPDATE Patients
+            SET 
+                Name = @Name,
+                Age = @Age,
+                BedNumber = @BedNumber,
+                BloodTypeID = @BloodTypeID,
+                PESEL = @PESEL,
+                Address = @Address,
+                PhoneNumber = @PhoneNumber,
+                Email = @Email,
+                DateOfBirth = @DateOfBirth,
+                Gender = @Gender,
+                EmergencyContact = @EmergencyContact,
+                Allergies = @Allergies,
+                ChronicDiseases = @ChronicDiseases,
+                Notes = @Notes
+            WHERE PatientID = @PatientID";
+
+            await connection.ExecuteAsync(query, new
             {
-                // Sprawdź, czy numer łóżka jest zajęty przez innego pacjenta
-                var checkBedNumberQuery = "SELECT COUNT(1) FROM Patients WHERE BedNumber = @BedNumber AND PatientID != @PatientID";
-                int existingBedCount = await connection.ExecuteScalarAsync<int>(checkBedNumberQuery, new { BedNumber = patient.BedNumber, PatientID = patient.PatientID });
-
-                if (existingBedCount > 0)
-                {
-                    throw new InvalidOperationException($"Numer łóżka {patient.BedNumber} jest już zajęty przez innego pacjenta.");
-                }
-
-                if (patient.PatientID == 0) // Nowy pacjent
-                {
-                    // Pobierz najwyższe PatientID
-                    var maxPatientIdQuery = "SELECT ISNULL(MAX(PatientID), 0) FROM Patients";
-                    int maxPatientId = await connection.ExecuteScalarAsync<int>(maxPatientIdQuery);
-
-                    // Ustaw PatientID
-                    patient.PatientID = maxPatientId + 1;
-
-                    // Dodaj nowego pacjenta
-                    var insertQuery = @"
-                    INSERT INTO Patients (
-                        PatientID, Name, Age, BedNumber, CurrentTemperature, AssignedDrugs, Notes, PESEL, Address, PhoneNumber,
-                        Email, DateOfBirth, Gender, EmergencyContact, BloodType, Allergies, ChronicDiseases
-                    ) VALUES (
-                        @PatientID, @Name, @Age, @BedNumber, @CurrentTemperature, @AssignedDrugs, @Notes, @PESEL, @Address, 
-                        @PhoneNumber, @Email, @DateOfBirth, @Gender, @EmergencyContact, @BloodType, @Allergies, @ChronicDiseases
-                    )";
-
-                    await connection.ExecuteAsync(insertQuery, patient);
-                }
-                else // Aktualizacja istniejącego pacjenta
-                {
-                    // Zaktualizuj dane pacjenta
-                    var updateQuery = @"
-                    UPDATE Patients
-                    SET Name = @Name,
-                        Age = @Age,
-                        BedNumber = @BedNumber,
-                        CurrentTemperature = @CurrentTemperature,
-                        AssignedDrugs = @AssignedDrugs,
-                        Notes = @Notes,
-                        PESEL = @PESEL,
-                        Address = @Address,
-                        PhoneNumber = @PhoneNumber,
-                        Email = @Email,
-                        DateOfBirth = @DateOfBirth,
-                        Gender = @Gender,
-                        EmergencyContact = @EmergencyContact,
-                        BloodType = @BloodType,
-                        Allergies = @Allergies,
-                        ChronicDiseases = @ChronicDiseases
-                    WHERE PatientID = @PatientID";
-
-                    await connection.ExecuteAsync(updateQuery, patient);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error saving patient: {ex.Message}");
-            throw;
+                patient.Name,
+                patient.Age,
+                patient.BedNumber,
+                BloodTypeID = patient.BloodType?.BloodTypeID, // Przekazujemy tylko BloodTypeID
+                patient.PESEL,
+                patient.Address,
+                patient.PhoneNumber,
+                patient.Email,
+                patient.DateOfBirth,
+                patient.Gender,
+                patient.EmergencyContact,
+                patient.Allergies,
+                patient.ChronicDiseases,
+                patient.Notes,
+                patient.PatientID
+            });
         }
     }
+
 
 
     public async Task DeletePatientAsync(int patientId)

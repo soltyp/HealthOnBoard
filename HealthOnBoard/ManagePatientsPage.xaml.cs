@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using HospitalManagementData;
 
 namespace HealthOnBoard
 {
@@ -12,6 +13,11 @@ namespace HealthOnBoard
         public ObservableCollection<Patient> Patients { get; set; }
         public Patient NewPatient { get; set; }
         private readonly DatabaseService _databaseService;
+        private readonly BedService _bedService;
+        public List<BloodType> BloodTypes { get; set; }
+        private readonly BloodService _bloodService;
+
+        public ObservableCollection<int> AvailableBeds { get; set; } = new ObservableCollection<int>();
 
         private bool _isAddSectionVisible;
         public bool IsAddSectionVisible
@@ -31,7 +37,8 @@ namespace HealthOnBoard
         {
             InitializeComponent();
             _databaseService = databaseService;
-
+            _bedService = new BedService(databaseService); // Inicjalizacja BedService
+            _bloodService = new BloodService(databaseService);
             Patients = new ObservableCollection<Patient>();
             NewPatient = new Patient();
             BindingContext = this;
@@ -43,8 +50,24 @@ namespace HealthOnBoard
         {
             base.OnAppearing();
             await LoadPatientsAsync();
-        }
+            await LoadAvailableBedsAsync();
+            await LoadBloodTypesAsync();
 
+        }
+        private async Task LoadBloodTypesAsync()
+        {
+            try
+            {
+                BloodTypes = await _bloodService.GetAllBloodTypesAsync();
+                Debug.WriteLine($"Za³adowane grupy krwi: {string.Join(", ", BloodTypes.Select(bt => bt.Type))}");
+                OnPropertyChanged(nameof(BloodTypes));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading blood types: {ex.Message}");
+                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
+            }
+        }
         private async Task LoadPatientsAsync()
         {
             try
@@ -62,15 +85,39 @@ namespace HealthOnBoard
             }
         }
 
+        private async Task LoadAvailableBedsAsync()
+        {
+            try
+            {
+                var beds = await _bedService.GetAvailableBedsAsync();
+                AvailableBeds.Clear();
+                foreach (var bed in beds)
+                {
+                    AvailableBeds.Add(bed);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading beds: {ex.Message}");
+            }
+        }
+
         private async void OnAddPatientClicked(object sender, EventArgs e)
         {
             try
             {
-                await _databaseService.AddPatientAsync(NewPatient);
-                await DisplayAlert("Sukces", "Pacjent zosta³ dodany.", "OK");
-                await LoadPatientsAsync(); // Odœwie¿ listê pacjentów
-                NewPatient = new Patient(); // Wyczyœæ pola
-                OnPropertyChanged(nameof(NewPatient));
+                var availableBeds = await _bedService.GetAvailableBedsAsync();
+
+                // Dodaj aktualne ³ó¿ko pacjenta do listy dostêpnych ³ó¿ek, jeœli istnieje i nie jest ju¿ na liœcie
+                if (NewPatient.BedNumber.HasValue && !availableBeds.Contains(NewPatient.BedNumber.Value))
+                {
+                    availableBeds.Add(NewPatient.BedNumber.Value);
+                }
+
+                // Przypisz dostêpne ³ó¿ka do w³aœciwoœci bindowanej w UI
+                AvailableBeds = new ObservableCollection<int>(availableBeds.OrderBy(b => b));
+                Debug.WriteLine($"Dostêpne ³ó¿ka: {string.Join(", ", AvailableBeds)}");
+                OnPropertyChanged(nameof(AvailableBeds));
             }
             catch (InvalidOperationException ex)
             {
@@ -81,6 +128,7 @@ namespace HealthOnBoard
                 Debug.WriteLine($"B³¹d podczas dodawania pacjenta: {ex.Message}");
                 await DisplayAlert("B³¹d", "Nie uda³o siê dodaæ pacjenta.", "OK");
             }
+
         }
 
         private void OnToggleAddSectionClicked(object sender, EventArgs e)
@@ -92,7 +140,9 @@ namespace HealthOnBoard
         {
             if (sender is Button button && button.CommandParameter is Patient patient)
             {
-                await Navigation.PushAsync(new EditPatientPage(patient.PatientID, _databaseService));
+                var bedService = new BedService(_databaseService);
+                var bloodService = new BloodService(_databaseService);
+                await Navigation.PushAsync(new EditPatientPage(patient.PatientID, _databaseService, bedService, bloodService));
             }
         }
 

@@ -14,13 +14,18 @@ namespace HealthOnBoard
     {
         private readonly LoginService _loginService;
         private readonly DatabaseService _databaseService;
+        private readonly BedService _bedService;
+        private readonly IConfiguration _configuration;
+
+        public List<int> BedNumbers { get; set; } = new List<int>();
+
+       
 
         public bool IsPinInputVisible { get; set; } = true;
         public bool IsSecurityPinInputVisible { get; set; } = false;
 
         // Lista numerów łóżek
-        public List<int> BedNumbers { get; } = Enumerable.Range(1, 5).ToList();
-
+        
         private int _selectedBedNumber = 1; // Domyślnie wybrany numer łóżka
         public int SelectedBedNumber
         {
@@ -47,7 +52,24 @@ namespace HealthOnBoard
             InitializeComponent();
             _loginService = new LoginService(); // Inicjalizacja usługi logowania
             _databaseService = new DatabaseService(configuration);
+            _bedService = new BedService(_databaseService);
             BindingContext = this; // Powiązanie z kontekstem danych
+            LoadBedsAsync();
+        }
+
+        private async void LoadBedsAsync()
+        {
+            try
+            {
+                var beds = await _bedService.GetAllBedsAsync();
+                BedNumbers = beds.Select(b => b.BedNumber).ToList(); // Mapowanie na listę numerów łóżek
+                OnPropertyChanged(nameof(BedNumbers)); // Powiadomienie o zmianie listy
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Błąd podczas ładowania łóżek: {ex.Message}");
+                await DisplayAlert("Błąd", "Nie udało się załadować listy łóżek.", "OK");
+            }
         }
 
         private async void OnLoginClicked(object sender, EventArgs e)
@@ -59,7 +81,8 @@ namespace HealthOnBoard
             }
 
             var pin = PINEntry.Text;
-            Debug.WriteLine($"PIN przed autoryzacją: {pin}");
+            var selectedBedNumber = SelectedBedNumber; // Pobierz wybrany numer łóżka
+            Debug.WriteLine($"PIN przed autoryzacją: {pin}, Łóżko: {selectedBedNumber}");
 
             if (string.IsNullOrWhiteSpace(pin))
             {
@@ -67,17 +90,15 @@ namespace HealthOnBoard
                 return;
             }
 
-            var user = await _loginService.AuthenticateUserAsync(pin);
+            var user = await _loginService.AuthenticateUserAsync(PINEntry.Text, SecurityPinEntry.Text, selectedBedNumber);
             if (user != null)
             {
-                Debug.WriteLine($"Uwierzytelniono użytkownika: {user.FirstName}");
+                Debug.WriteLine($"Uwierzytelniono użytkownika: {user.FirstName}, Łóżko: {selectedBedNumber}");
 
-                // Sprawdź, czy użytkownik to administrator
                 if (_loginService.IsAdmin(user))
                 {
                     await Navigation.PushAsync(new AdminPanelPage(_databaseService));
                 }
-
                 else
                 {
                     await NavigateToDashboard(user);

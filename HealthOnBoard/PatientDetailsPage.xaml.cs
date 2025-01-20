@@ -63,7 +63,7 @@ namespace HealthOnBoard
                     PatientDateOfBirthLabel.Text = patient.DateOfBirth?.ToString("yyyy-MM-dd") ?? "Brak danych";
                     PatientGenderLabel.Text = patient.Gender ?? "Brak danych";
                     PatientEmergencyContactLabel.Text = patient.EmergencyContact ?? "Brak danych";
-                    PatientBloodTypeLabel.Text = patient.BloodType ?? "Brak danych";
+                    PatientBloodTypeLabel.Text = patient.BloodType?.Type ?? "Brak danych";
                     PatientAllergiesLabel.Text = patient.Allergies ?? "Brak danych";
                     PatientChronicDiseasesLabel.Text = patient.ChronicDiseases ?? "Brak danych";
                 }
