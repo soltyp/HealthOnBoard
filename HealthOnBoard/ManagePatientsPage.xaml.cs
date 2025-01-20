@@ -64,6 +64,7 @@ namespace HealthOnBoard
             }
             catch (Exception ex)
             {
+                //a
                 Debug.WriteLine($"Error loading blood types: {ex.Message}");
                 await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
             }
