@@ -68,6 +68,7 @@ namespace HealthOnBoard
                 await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
             }
         }
+
         private async Task LoadPatientsAsync()
         {
             try
@@ -106,30 +107,29 @@ namespace HealthOnBoard
         {
             try
             {
-                var availableBeds = await _bedService.GetAvailableBedsAsync();
+                // Zapisz nowego pacjenta do bazy danych
+                await _databaseService.AddPatientAsync(NewPatient);
 
-                // Dodaj aktualne ³ó¿ko pacjenta do listy dostêpnych ³ó¿ek, jeœli istnieje i nie jest ju¿ na liœcie
-                if (NewPatient.BedNumber.HasValue && !availableBeds.Contains(NewPatient.BedNumber.Value))
-                {
-                    availableBeds.Add(NewPatient.BedNumber.Value);
-                }
+                // Dodaj pacjenta do listy w UI
+                Patients.Add(NewPatient);
 
-                // Przypisz dostêpne ³ó¿ka do w³aœciwoœci bindowanej w UI
-                AvailableBeds = new ObservableCollection<int>(availableBeds.OrderBy(b => b));
-                Debug.WriteLine($"Dostêpne ³ó¿ka: {string.Join(", ", AvailableBeds)}");
-                OnPropertyChanged(nameof(AvailableBeds));
-            }
-            catch (InvalidOperationException ex)
-            {
-                await DisplayAlert("B³¹d", ex.Message, "OK");
+                // Wyœwietl komunikat sukcesu
+                await DisplayAlert("Sukces", "Pacjent zosta³ dodany.", "OK");
+
+                // Wyczyœæ dane w formularzu
+                NewPatient = new Patient();
+                OnPropertyChanged(nameof(NewPatient));
+
+                // Odœwie¿ listê dostêpnych ³ó¿ek
+                await LoadAvailableBedsAsync();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"B³¹d podczas dodawania pacjenta: {ex.Message}");
                 await DisplayAlert("B³¹d", "Nie uda³o siê dodaæ pacjenta.", "OK");
             }
-
         }
+
 
         private void OnToggleAddSectionClicked(object sender, EventArgs e)
         {

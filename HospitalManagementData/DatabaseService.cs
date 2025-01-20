@@ -19,7 +19,8 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;TrustServerCertificate=TRUE;";
+        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;TrustServerCertificate=TRUE;";
+        SqlMapper.AddTypeHandler(new BloodTypeHandler());
 
         try
         {
@@ -43,7 +44,7 @@ public class DatabaseService
             Debug.WriteLine($"SQL Server: {sqlEx.Server}");
             Debug.WriteLine($"Stack Trace: {sqlEx.StackTrace}");
             throw; // Ponowne zgłoszenie wyjątku, jeśli potrzebne
-        }
+        }   
         catch (Exception ex)
         {
             // Log innych wyjątków
@@ -57,6 +58,7 @@ public class DatabaseService
         return _connectionString;
     }
 
+   
     public async Task<Patient?> GetPatientByBedNumberAsync(int bedNumber)
     {
         using (var connection = new SqlConnection(_connectionString)) // Użycie bezpośrednio zainicjalizowanego _connectionString
@@ -858,45 +860,46 @@ public class DatabaseService
 
     public async Task AddPatientAsync(Patient patient)
     {
-        try
+        const string getMaxIdQuery = "SELECT ISNULL(MAX(PatientID), 0) + 1 FROM Patients;";
+        const string insertQuery = @"
+        INSERT INTO Patients (PatientID, Name, Age, BedNumber, CurrentTemperature, AssignedDrugs, Notes, 
+                              PESEL, Address, PhoneNumber, Email, DateOfBirth, Gender, 
+                              EmergencyContact, BloodType, Allergies, ChronicDiseases)
+        VALUES (@PatientID, @Name, @Age, @BedNumber, @CurrentTemperature, @AssignedDrugs, @Notes, 
+                @PESEL, @Address, @PhoneNumber, @Email, @DateOfBirth, @Gender, 
+                @EmergencyContact, @BloodType, @Allergies, @ChronicDiseases);";
+
+        using (var connection = new SqlConnection(_connectionString))
         {
-            using (var connection = new SqlConnection(_connectionString))
+            // Pobierz największy PatientID z bazy danych i zwiększ o 1
+            int newPatientId = await connection.QuerySingleAsync<int>(getMaxIdQuery);
+            patient.PatientID = newPatientId;
+
+            // Wstaw pacjenta z przypisanym PatientID
+            await connection.ExecuteAsync(insertQuery, new
             {
-                // Sprawdź, czy numer łóżka już istnieje
-                var checkBedNumberQuery = "SELECT COUNT(1) FROM Patients WHERE BedNumber = @BedNumber";
-                int existingBedCount = await connection.ExecuteScalarAsync<int>(checkBedNumberQuery, new { BedNumber = patient.BedNumber });
-
-                if (existingBedCount > 0)
-                {
-                    throw new InvalidOperationException($"Numer łóżka {patient.BedNumber} jest już zajęty przez innego pacjenta.");
-                }
-
-                // Pobierz najwyższe PatientID
-                var maxPatientIdQuery = "SELECT ISNULL(MAX(PatientID), 0) FROM Patients";
-                int maxPatientId = await connection.ExecuteScalarAsync<int>(maxPatientIdQuery);
-
-                // Ustaw PatientID na wartość o jeden większą
-                patient.PatientID = maxPatientId + 1;
-
-                // Wstaw pacjenta
-                var query = @"
-                INSERT INTO Patients (
-                    PatientID, Name, Age, BedNumber, CurrentTemperature, AssignedDrugs, Notes, PESEL, Address, PhoneNumber,
-                    Email, DateOfBirth, Gender, EmergencyContact, BloodType, Allergies, ChronicDiseases
-                ) VALUES (
-                    @PatientID, @Name, @Age, @BedNumber, @CurrentTemperature, @AssignedDrugs, @Notes, @PESEL, @Address, 
-                    @PhoneNumber, @Email, @DateOfBirth, @Gender, @EmergencyContact, @BloodType, @Allergies, @ChronicDiseases
-                )";
-
-                await connection.ExecuteAsync(query, patient);
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error adding patient: {ex.Message}");
-            throw;
+                PatientID = patient.PatientID,
+                patient.Name,
+                patient.Age,
+                patient.BedNumber,
+                patient.CurrentTemperature,
+                patient.AssignedDrugs,
+                patient.Notes,
+                patient.PESEL,
+                patient.Address,
+                patient.PhoneNumber,
+                patient.Email,
+                patient.DateOfBirth,
+                patient.Gender,
+                patient.EmergencyContact,
+                BloodType = patient.BloodType?.Type ?? (object)DBNull.Value,
+                patient.Allergies,
+                patient.ChronicDiseases
+            });
         }
     }
+
+
 
     public async Task<bool> UpdateCurrentTemperatureFromDetailsAsync()
     {

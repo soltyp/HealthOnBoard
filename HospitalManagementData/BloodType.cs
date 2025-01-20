@@ -16,6 +16,16 @@ namespace HospitalManagementData
         {
             return Type; 
         }
+        public static BloodType FromString(string type)
+        {
+            if (string.IsNullOrEmpty(type))
+            {
+                return new BloodType { Type = "Unknown" }; 
+            }
+
+            return new BloodType { Type = type };
+        }
+
 
     }
 }
