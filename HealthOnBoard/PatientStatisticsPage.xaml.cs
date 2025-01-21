@@ -16,6 +16,8 @@ namespace HealthOnBoard
 
         public ObservableCollection<BedStatisticsModel> BedStatistics { get; set; }
         public ObservableCollection<GenderStatisticsModel> GenderStatistics { get; set; }
+        public ObservableCollection<BloodTypeStatisticsModel> BloodTypeStatistics { get; set; }
+
 
         public PatientStatisticsPage(DatabaseService databaseService)
         {
@@ -23,9 +25,122 @@ namespace HealthOnBoard
             _databaseService = databaseService;
             BedStatistics = new ObservableCollection<BedStatisticsModel>();
             GenderStatistics = new ObservableCollection<GenderStatisticsModel>();
+            BloodTypeStatistics = new ObservableCollection<BloodTypeStatisticsModel>(); 
+
             BindingContext = this; 
             LoadStatistics();
         }
+
+        private void BuildPieChartForBloodTypes(Grid chartGrid, List<StatisticDataModel> data)
+        {
+            chartGrid.Children.Clear();
+
+            double total = data.Sum(d => d.Value);
+            double startAngle = 0;
+
+            foreach (var item in data)
+            {
+                double sliceAngle = (item.Value / total) * 360;
+
+                var pathFigure = new Microsoft.Maui.Controls.Shapes.PathFigure
+                {
+                    StartPoint = new Point(150, 150)
+                };
+
+                var arcPoint = GetArcPoint(150, 150, 100, startAngle + sliceAngle);
+
+                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = GetArcPoint(150, 150, 100, startAngle) });
+                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.ArcSegment
+                {
+                    Point = arcPoint,
+                    Size = new Size(100, 100),
+                    SweepDirection = SweepDirection.Clockwise,
+                    IsLargeArc = sliceAngle > 180
+                });
+                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = new Point(150, 150) });
+
+                var pathGeometry = new Microsoft.Maui.Controls.Shapes.PathGeometry();
+                pathGeometry.Figures.Add(pathFigure);
+
+                var slicePath = new Microsoft.Maui.Controls.Shapes.Path
+                {
+                    Data = pathGeometry,
+                    Fill = new SolidColorBrush(GetRandomColor()),
+                    Stroke = Colors.White,
+                    StrokeThickness = 1
+                };
+
+                chartGrid.Children.Add(slicePath);
+
+                double midAngle = startAngle + sliceAngle / 2;
+                var labelPoint = GetArcPoint(150, 150, 120, midAngle);
+
+                var label = new Label
+                {
+                    Text = $"{item.Label}: {item.Value}",
+                    FontSize = 14, // Wiêksza czcionka dla lepszej czytelnoœci
+                    TextColor = Colors.White,
+                    HorizontalTextAlignment = TextAlignment.Center,
+                    VerticalTextAlignment = TextAlignment.Center,
+                    TranslationX = labelPoint.X - 150,
+                    TranslationY = labelPoint.Y - 150
+                };
+
+                chartGrid.Children.Add(label);
+
+                startAngle += sliceAngle;
+            }
+        }
+        private async Task LoadBloodTypeStatistics()
+        {
+            try
+            {
+                var bloodTypeStats = await _databaseService.GetBloodTypeStatisticsAsync();
+                if (bloodTypeStats == null || !bloodTypeStats.Any())
+                {
+                    Debug.WriteLine("Brak danych do za³adowania dla grup krwi.");
+                    return;
+                }
+
+                BloodTypeStatistics.Clear();
+
+                foreach (var stat in bloodTypeStats)
+                {
+                    if (string.IsNullOrEmpty(stat.BloodType))
+                    {
+                        Debug.WriteLine($"Pominiêto pacjenta z brakiem grupy krwi");
+                        continue;
+                    }
+
+                    // Dodajemy do kolekcji, uwzglêdniaj¹c imiê pacjenta i numer ³ó¿ka
+                    BloodTypeStatistics.Add(stat);
+
+                    Debug.WriteLine($"Za³adowano grupê krwi: {stat.BloodType}, Liczba pacjentów: {stat.PatientCount}, Pacjent: {stat.PatientName}, £ó¿ko: {stat.BedNumber}");
+                }
+
+                var bloodTypeData = bloodTypeStats
+                    .Where(bt => !string.IsNullOrEmpty(bt.BloodType))
+                    .GroupBy(bt => bt.BloodType)
+                    .Select(g => new StatisticDataModel { Label = g.Key, Value = g.Count() })
+                    .ToList();
+
+                // Budujemy wykres ko³owy z grup krwi
+                BuildPieChartForBloodTypes(BloodTypePieChartGrid, bloodTypeData);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas ³adowania danych grup krwi: {ex.Message}");
+                throw;
+            }
+        }
+
+
+
+
+
+
+
+
 
         private async void LoadStatistics()
         {
@@ -33,6 +148,7 @@ namespace HealthOnBoard
             {
                 await LoadBedStatistics();
                 await LoadGenderStatistics();
+                await LoadBloodTypeStatistics();
             }
             catch (Exception ex)
             {

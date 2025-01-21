@@ -915,6 +915,47 @@ public class DatabaseService
             return null;
         }
     }
+    public async Task<List<BloodTypeStatisticsModel>> GetBloodTypeStatisticsAsync()
+    {
+        const string query = @"
+    SELECT 
+    bt.Type AS BloodType, 
+    COUNT(p.PatientID) AS PatientCount,
+    p.Name AS PatientName,
+    p.BedNumber
+FROM [HospitalManagement].[dbo].[Patients] p
+LEFT JOIN [HospitalManagement].[dbo].[BloodTypes] bt ON p.BloodTypeID = bt.BloodTypeID
+GROUP BY bt.Type, p.Name, p.BedNumber
+";
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            try
+            {
+                // Otwórz połączenie
+                await connection.OpenAsync();
+
+                // Wykonaj zapytanie
+                var result = await connection.QueryAsync<BloodTypeStatisticsModel>(query);
+
+                // Sprawdź, czy wynik jest pusty
+                if (result == null || !result.Any())
+                {
+                    Debug.WriteLine("Brak danych dla grup krwi.");
+                    return new List<BloodTypeStatisticsModel>();  // Zwróć pustą listę
+                }
+
+                // Zwróć wyniki
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Błąd podczas pobierania danych grup krwi: {ex.Message}");
+                throw;
+            }
+        }
+    }
+
 
     public async Task<List<Patient>> GetPatientsAsync()
     {
