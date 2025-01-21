@@ -115,6 +115,35 @@ public class DatabaseService
         }
     }
 
+    public async Task<List<GenderStatisticsModel>> GetGenderStatisticsAsync()
+    {
+        try
+        {
+            const string query = @"
+            SELECT 
+                Name,
+                CASE 
+                    WHEN Gender = 'Male' THEN 'Mężczyzna'
+                    WHEN Gender = 'Female' THEN 'Kobieta'
+                    ELSE 'Nieznana' 
+                END AS Gender
+            FROM [HospitalManagement].[dbo].[Patients]";
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                Debug.WriteLine("Łączenie z bazą danych w GetGenderStatisticsAsync...");
+                var result = await connection.QueryAsync<GenderStatisticsModel>(query);
+                Debug.WriteLine($"Pobrano {result.Count()} rekordów dotyczących płci.");
+                return result.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd w GetGenderStatisticsAsync: {ex.Message}");
+            throw;
+        }
+    }
+
 
     public string GetConnectionString()
     {

@@ -13,12 +13,12 @@
                        HorizontalOptions="Center"
                        TextColor="White" />
 
-                <!-- Układ poziomy dla tabeli i wykresu -->
+                <!-- Układ poziomy dla tabeli zajętości łóżek i wykresu -->
                 <Label Text="Statystyki łóżek" 
-       FontSize="18" 
-       FontAttributes="Bold" 
-       HorizontalOptions="Center"
-       TextColor="White" />
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center"
+                       TextColor="White" />
                 <Grid ColumnDefinitions="2*,3*"
                       VerticalOptions="Start"
                       HorizontalOptions="FillAndExpand"
@@ -31,17 +31,14 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Grid ColumnDefinitions="5*,7*" Padding="5">
-                                    <!-- Numer łóżka -->
                                     <Label Text="{Binding BedNumber}" 
                                            FontAttributes="Bold" 
                                            TextColor="White" 
                                            HorizontalTextAlignment="Start" />
-                                    <!-- Nazwa pacjenta -->
                                     <Label Text="{Binding PatientName}" 
                                            TextColor="White" 
                                            HorizontalTextAlignment="Start" 
                                            Margin="40,0,0,0" />
-                                    <!-- Zwiększony margines -->
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -55,6 +52,46 @@
                           HorizontalOptions="Center"
                           VerticalOptions="Center" />
                 </Grid>
+
+                <!-- Układ poziomy dla statystyk płci -->
+                <Label Text="Statystyki płci" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center"
+                       TextColor="White" />
+                <Grid ColumnDefinitions="3*,7*" VerticalOptions="Start" HorizontalOptions="FillAndExpand" ColumnSpacing="20">
+                    <!-- Tabela płci pacjentów -->
+                    <CollectionView ItemsSource="{Binding GenderStatistics}" Grid.Column="0" VerticalOptions="Start" HeightRequest="500">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="7*,3*" Padding="5" RowSpacing="10">
+                                    <!-- Imię i nazwisko pacjenta -->
+                                    <Label Text="{Binding Name}" 
+                       FontAttributes="Bold" 
+                       TextColor="White" 
+                       HorizontalTextAlignment="Start"
+                       VerticalTextAlignment="Center"
+                       FontSize="16" />
+
+                                    <!-- Płeć pacjenta -->
+                                    <Label Text="{Binding Gender}" 
+                       TextColor="White" 
+                       HorizontalTextAlignment="End" 
+                       VerticalTextAlignment="Center"
+                       FontSize="16"
+                       Grid.Column="1" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+
+
+
+                    <!-- Wykres kołowy płci -->
+                    <Grid x:Name="GenderPieChartGrid" Grid.Column="1" WidthRequest="400" HeightRequest="400" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Grid>
+
             </VerticalStackLayout>
         </ScrollView>
     </ContentPage.Content>

@@ -15,18 +15,34 @@ namespace HealthOnBoard
         private readonly DatabaseService _databaseService;
 
         public ObservableCollection<BedStatisticsModel> BedStatistics { get; set; }
+        public ObservableCollection<GenderStatisticsModel> GenderStatistics { get; set; }
 
         public PatientStatisticsPage(DatabaseService databaseService)
         {
             InitializeComponent();
             _databaseService = databaseService;
             BedStatistics = new ObservableCollection<BedStatisticsModel>();
-            BindingContext = this;
-
+            GenderStatistics = new ObservableCollection<GenderStatisticsModel>();
+            BindingContext = this; 
             LoadStatistics();
         }
 
         private async void LoadStatistics()
+        {
+            try
+            {
+                await LoadBedStatistics();
+                await LoadGenderStatistics();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d: {ex.Message}");
+                Debug.WriteLine($"StackTrace: {ex.StackTrace}");
+                await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas ³adowania danych. Szczegó³y: " + ex.Message, "OK");
+            }
+        }
+
+        private async Task LoadBedStatistics()
         {
             try
             {
@@ -44,18 +60,61 @@ namespace HealthOnBoard
                 int freeBeds = totalBeds - occupiedBeds;
 
                 var bedOccupancyData = new List<StatisticDataModel>
-            {
-                new StatisticDataModel { Label = "Zajête", Value = occupiedBeds },
-                new StatisticDataModel { Label = "Wolne", Value = freeBeds }
-            };
+        {
+            new StatisticDataModel { Label = "Zajête", Value = occupiedBeds },
+            new StatisticDataModel { Label = "Wolne", Value = freeBeds }
+        };
 
                 BuildPieChartForBedOccupancy(BedOccupancyPieChartGrid, bedOccupancyData);
             }
             catch (Exception ex)
             {
-                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ danych o ³ó¿kach.", "OK");
+                Debug.WriteLine($"B³¹d podczas ³adowania statystyk ³ó¿ek: {ex.Message}");
+                throw;
             }
         }
+
+        private async Task LoadGenderStatistics()
+        {
+            try
+            {
+                Debug.WriteLine("Rozpoczynam ³adowanie statystyk p³ci...");
+
+                // Pobierz dane p³ci pacjentów
+                var genderStats = await _databaseService.GetGenderStatisticsAsync();
+                Debug.WriteLine($"Pobrano {genderStats.Count} rekordów dotycz¹cych p³ci.");
+
+                GenderStatistics.Clear();
+                foreach (var gender in genderStats)
+                {
+                    Debug.WriteLine($"Dodawanie rekordu: {gender.Name}, {gender.Gender}");
+                    GenderStatistics.Add(gender);
+                }
+
+                // Oblicz udzia³ procentowy p³ci
+                int maleCount = genderStats.Count(g => g.Gender == "Mê¿czyzna");
+                int femaleCount = genderStats.Count(g => g.Gender == "Kobieta");
+                int unknownCount = genderStats.Count(g => g.Gender == "Nieznana"); // Obs³uga "Nieznana"
+
+                Debug.WriteLine($"Mê¿czyŸni: {maleCount}, Kobiety: {femaleCount}, Nieznana: {unknownCount}");
+
+                var genderData = new List<StatisticDataModel>
+        {
+            new StatisticDataModel { Label = "Mê¿czyŸni", Value = maleCount },
+            new StatisticDataModel { Label = "Kobiety", Value = femaleCount },
+            new StatisticDataModel { Label = "Nieznana", Value = unknownCount } // Dodanie "Nieznana"
+        };
+
+                BuildPieChartForBedOccupancy(GenderPieChartGrid, genderData);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas ³adowania statystyk p³ci: {ex.Message}");
+                throw;
+            }
+        }
+
+
 
         private void BuildPieChartForBedOccupancy(Grid chartGrid, List<StatisticDataModel> data)
         {
@@ -104,13 +163,14 @@ namespace HealthOnBoard
                 var label = new Label
                 {
                     Text = $"{item.Label}: {item.Value}",
-                    FontSize = 12,
+                    FontSize = 14, // Wiêksza czcionka dla lepszej czytelnoœci
                     TextColor = Colors.White,
                     HorizontalTextAlignment = TextAlignment.Center,
                     VerticalTextAlignment = TextAlignment.Center,
                     TranslationX = labelPoint.X - 150,
                     TranslationY = labelPoint.Y - 150
                 };
+
 
                 chartGrid.Children.Add(label);
 
