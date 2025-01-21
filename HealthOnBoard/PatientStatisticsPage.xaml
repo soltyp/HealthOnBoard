@@ -6,7 +6,6 @@
     <ContentPage.Content>
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="15">
-
                 <!-- Nagłówek strony -->
                 <Label Text="Statystyki pacjentów" 
                        FontSize="24" 
@@ -14,43 +13,48 @@
                        HorizontalOptions="Center"
                        TextColor="White" />
 
-                <!-- Wykres kołowy grupy krwi -->
-                <Label Text="Podział według grupy krwi" 
-                       FontSize="18" 
-                       FontAttributes="Bold" 
-                       HorizontalOptions="Center" 
-                       Margin="10,20"
-                       TextColor="White" />
-                <Grid x:Name="BloodTypePieChartGrid"
-                      WidthRequest="300"
-                      HeightRequest="300"
-                      HorizontalOptions="Center"
-                      VerticalOptions="Center" />
-
-                <!-- Wykres słupkowy według wieku -->
-                <Label Text="Ilość pacjentów w danym wieku" 
-                       FontSize="18" 
-                       FontAttributes="Bold" 
-                       HorizontalOptions="Center" 
-                       Margin="10,20"
-                       TextColor="White" />
-                <Grid x:Name="AgeBarChartGrid"
+                <!-- Układ poziomy dla tabeli i wykresu -->
+                <Label Text="Statystyki łóżek" 
+       FontSize="18" 
+       FontAttributes="Bold" 
+       HorizontalOptions="Center"
+       TextColor="White" />
+                <Grid ColumnDefinitions="2*,3*"
+                      VerticalOptions="Start"
                       HorizontalOptions="FillAndExpand"
-                      VerticalOptions="FillAndExpand" />
+                      ColumnSpacing="20">
+                    <!-- Tabela zajętości łóżek -->
+                    <CollectionView ItemsSource="{Binding BedStatistics}" 
+                                    Grid.Column="0"
+                                    VerticalOptions="Start"
+                                    HeightRequest="500">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="5*,7*" Padding="5">
+                                    <!-- Numer łóżka -->
+                                    <Label Text="{Binding BedNumber}" 
+                                           FontAttributes="Bold" 
+                                           TextColor="White" 
+                                           HorizontalTextAlignment="Start" />
+                                    <!-- Nazwa pacjenta -->
+                                    <Label Text="{Binding PatientName}" 
+                                           TextColor="White" 
+                                           HorizontalTextAlignment="Start" 
+                                           Margin="40,0,0,0" />
+                                    <!-- Zwiększony margines -->
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
 
-                <!-- Wykres kołowy zajętości łóżek -->
-                <Label Text="Stosunek zajętych do wolnych łóżek" 
-                       FontSize="18" 
-                       FontAttributes="Bold" 
-                       HorizontalOptions="Center" 
-                       Margin="10,20"
-                       TextColor="White" />
-                <Grid x:Name="BedOccupancyPieChartGrid"
-                      WidthRequest="300"
-                      HeightRequest="300"
-                      HorizontalOptions="Center"
-                      VerticalOptions="Center" />
-
+                    <!-- Wykres kołowy zajętości łóżek -->
+                    <Grid x:Name="BedOccupancyPieChartGrid"
+                          Grid.Column="1"
+                          WidthRequest="375"
+                          HeightRequest="375"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center" />
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
     </ContentPage.Content>

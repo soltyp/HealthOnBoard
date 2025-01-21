@@ -99,7 +99,21 @@ public class DatabaseService
         }
     }
 
+    public async Task<List<BedStatisticsModel>> GetBedStatisticsAsync()
+    {
+        const string query = @"
+        SELECT 
+            b.BedNumber,
+            ISNULL(p.Name, 'Łóżko wolne') AS PatientName
+        FROM [HospitalManagement].[dbo].[Beds] b
+        LEFT JOIN [HospitalManagement].[dbo].[Patients] p ON b.BedNumber = p.BedNumber
+        ORDER BY b.BedNumber";
 
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            return (await connection.QueryAsync<BedStatisticsModel>(query)).ToList();
+        }
+    }
 
 
     public string GetConnectionString()
