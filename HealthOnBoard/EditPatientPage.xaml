@@ -15,10 +15,10 @@
                 <Entry Placeholder="Wiek" Text="{Binding SelectedPatient.Age}" Keyboard="Numeric" />
 
                 <Label Text="Numer łóżka:" />
-                <Picker x:Name="BedPicker"
-        Title="Wybierz łóżko"
-        ItemsSource="{Binding AvailableBeds}"
-        SelectedItem="{Binding SelectedPatient.BedNumber, Mode=TwoWay}" />
+                <Picker
+    Title="Wybierz łóżko"
+    ItemsSource="{Binding AvailableBeds}" 
+    SelectedItem="{Binding SelectedPatient.BedNumber, Mode=TwoWay}" />
 
                 <Label Text="Temperatura:" />
                 <Entry Placeholder="Temperatura" Text="{Binding SelectedPatient.CurrentTemperature}" Keyboard="Numeric" />
@@ -50,11 +50,15 @@
                 <Label Text="Kontakt w nagłych wypadkach:" />
                 <Entry Placeholder="Kontakt w nagłych wypadkach" Text="{Binding SelectedPatient.EmergencyContact}" />
 
-                <Label Text="Grupa krwi:" />
-                <Picker Title="Wybierz grupę krwi"
-        ItemsSource="{Binding BloodTypes}" 
-        ItemDisplayBinding="{Binding Type}"
-        SelectedItem="{Binding SelectedPatient.BloodType, Mode=TwoWay}" />
+                <Picker x:Name="BloodTypePicker"
+        Title="Wybierz grupę krwi"
+        ItemsSource="{Binding BloodTypes}"
+        SelectedItem="{Binding SelectedPatient.BloodType, Mode=TwoWay}"
+        ItemDisplayBinding="{Binding Type}" />
+
+
+
+
 
                 <Label Text="Alergie:" />
                 <Entry Placeholder="Alergie" Text="{Binding SelectedPatient.Allergies}" />

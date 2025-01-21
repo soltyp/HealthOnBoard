@@ -17,31 +17,37 @@ namespace HealthOnBoard
         {
             InitializeComponent();
             _databaseService = databaseService;
-            _bedService = bedService; // Inicjalizacja BedService
+            _bedService = bedService;
             _bloodService = bloodService;
 
             SelectedPatient = new Patient();
             AvailableBeds = new List<int>();
+            BloodTypes = new List<BloodType>();
             BindingContext = this;
 
-            LoadPatient(patientId);
-            LoadAvailableBedsAsync();
             LoadBloodTypesAsync();
+            LoadAvailableBedsAsync();
+            LoadPatient(patientId);
         }
         private async void LoadBloodTypesAsync()
-        {
-            try
-            {
-                BloodTypes = await _bloodService.GetAllBloodTypesAsync();
-                Debug.WriteLine($"Za³adowane grupy krwi: {string.Join(", ", BloodTypes.Select(bt => bt.Type))}");
-                OnPropertyChanged(nameof(BloodTypes));
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error loading blood types: {ex.Message}");
-                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
-            }
-        }
+{
+    try
+    {
+        // Pobierz listê grup krwi z bazy danych
+        BloodTypes = await _bloodService.GetAllBloodTypesAsync();
+
+        Debug.WriteLine($"Za³adowane grupy krwi: {string.Join(", ", BloodTypes.Select(bt => bt.Type))}");
+        OnPropertyChanged(nameof(BloodTypes));
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"Error loading blood types: {ex.Message}");
+        await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
+    }
+}
+
+
+
         private async void LoadPatient(int patientId)
         {
             try
@@ -50,20 +56,40 @@ namespace HealthOnBoard
                 if (patient != null)
                 {
                     SelectedPatient = patient;
-                    Debug.WriteLine($"Za³adowano pacjenta: {patient.Name}, Grupa krwi: {patient.BloodType?.Type}, £ó¿ko: {patient.BedNumber}");
+
+                    // SprawdŸ, czy BloodTypeID jest null lub pusty, jeœli tak - nie ³aduj
+                    if (SelectedPatient.BloodTypeID.HasValue)
+                    {
+                        var bloodType = await _databaseService.GetBloodTypeByIdAsync(SelectedPatient.BloodTypeID.Value);
+                        if (bloodType != null)
+                        {
+                            // Przypisz grupê krwi do pacjenta
+                            SelectedPatient.BloodType = bloodType;
+                        }
+                        else
+                        {
+                            SelectedPatient.BloodType = null; // Jeœli nie znaleziono, ustaw na null
+                        }
+                    }
+
+                    Debug.WriteLine($"Za³adowano pacjenta: {patient.Name}, Grupa krwi: {SelectedPatient.BloodType?.Type}, £ó¿ko: {SelectedPatient.BedNumber}");
                     OnPropertyChanged(nameof(SelectedPatient));
                 }
                 else
                 {
-                    Debug.WriteLine("Nie uda³o siê za³adowaæ pacjenta.");
                     await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ danych pacjenta.", "OK");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading patient: {ex.Message}");
+                Debug.WriteLine($"B³¹d w LoadPatient: {ex.Message}");
+                throw;
             }
         }
+
+
+
+
 
         private async void LoadAvailableBedsAsync()
         {

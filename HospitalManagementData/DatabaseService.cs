@@ -167,23 +167,51 @@ public class DatabaseService
             using (var connection = new SqlConnection(_connectionString))
             {
                 const string query = @"
-                SELECT 
-                    PatientID, Name, Age, BedNumber, CurrentTemperature, AssignedDrugs, Notes, 
-                    PESEL, Address, PhoneNumber, Email, DateOfBirth, Gender, EmergencyContact, 
-                    BloodType, Allergies, ChronicDiseases
-                FROM dbo.Patients
-                WHERE PatientID = @PatientID";
+            SELECT 
+                p.PatientID, 
+                p.Name, 
+                p.Age, 
+                p.BedNumber, 
+                p.CurrentTemperature, 
+                p.AssignedDrugs, 
+                p.Notes, 
+                p.PESEL, 
+                p.Address, 
+                p.PhoneNumber, 
+                p.Email, 
+                p.DateOfBirth, 
+                p.Gender, 
+                p.EmergencyContact, 
+                p.Allergies, 
+                p.ChronicDiseases, 
+                b.BloodTypeID, 
+                b.Type AS BloodTypeName
+            FROM Patients p
+            LEFT JOIN BloodTypes b ON p.BloodTypeID = b.BloodTypeID
+            WHERE p.PatientID = @PatientID";
 
-                var patient = await connection.QueryFirstOrDefaultAsync<Patient>(query, new { PatientID = patientId });
-                return patient;
+                var result = await connection.QueryAsync<Patient, BloodType, Patient>(
+                    query,
+                    (patient, bloodType) =>
+                    {
+                        patient.BloodType = bloodType; // Powiąż obiekt BloodType z Patient
+                        return patient;
+                    },
+                    new { PatientID = patientId },
+                    splitOn: "BloodTypeID" // Określ, gdzie zaczynają się dane BloodType
+                );
+
+                return result.FirstOrDefault();
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error retrieving patient: {ex.Message}");
+            Debug.WriteLine($"Błąd w GetPatientByIdAsync: {ex.Message}");
             throw;
         }
     }
+
+
 
     public async Task<bool> IsLockedOutAsync()
     {
@@ -866,6 +894,27 @@ public class DatabaseService
             throw;
         }
     }
+    public async Task<BloodType?> GetBloodTypeByIdAsync(int bloodTypeId)
+    {
+        try
+        {
+            const string query = @"
+            SELECT [BloodTypeID], [Type]
+            FROM [HospitalManagement].[dbo].[BloodTypes]
+            WHERE [BloodTypeID] = @BloodTypeID";
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var result = await connection.QueryFirstOrDefaultAsync<BloodType>(query, new { BloodTypeID = bloodTypeId });
+                return result; // Zwraca grupę krwi lub null, jeśli nie znaleziono
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd w GetBloodTypeByIdAsync: {ex.Message}");
+            return null;
+        }
+    }
 
     public async Task<List<Patient>> GetPatientsAsync()
     {
@@ -900,30 +949,30 @@ public class DatabaseService
         using (var connection = new SqlConnection(_connectionString))
         {
             const string query = @"
-            UPDATE Patients
-            SET 
-                Name = @Name,
-                Age = @Age,
-                BedNumber = @BedNumber,
-                BloodTypeID = @BloodTypeID,
-                PESEL = @PESEL,
-                Address = @Address,
-                PhoneNumber = @PhoneNumber,
-                Email = @Email,
-                DateOfBirth = @DateOfBirth,
-                Gender = @Gender,
-                EmergencyContact = @EmergencyContact,
-                Allergies = @Allergies,
-                ChronicDiseases = @ChronicDiseases,
-                Notes = @Notes
-            WHERE PatientID = @PatientID";
+        UPDATE Patients
+        SET 
+            Name = @Name,
+            Age = @Age,
+            BedNumber = @BedNumber,
+            BloodType = @BloodType, -- Przypisanie stringa BloodType
+            PESEL = @PESEL,
+            Address = @Address,
+            PhoneNumber = @PhoneNumber,
+            Email = @Email,
+            DateOfBirth = @DateOfBirth,
+            Gender = @Gender,
+            EmergencyContact = @EmergencyContact,
+            Allergies = @Allergies,
+            ChronicDiseases = @ChronicDiseases,
+            Notes = @Notes
+        WHERE PatientID = @PatientID";
 
             await connection.ExecuteAsync(query, new
             {
                 patient.Name,
                 patient.Age,
                 patient.BedNumber,
-                BloodTypeID = patient.BloodType?.BloodTypeID, // Przekazujemy tylko BloodTypeID
+                BloodType = patient.BloodType, // Zapisujemy stringa
                 patient.PESEL,
                 patient.Address,
                 patient.PhoneNumber,
@@ -938,6 +987,8 @@ public class DatabaseService
             });
         }
     }
+
+
 
 
 
