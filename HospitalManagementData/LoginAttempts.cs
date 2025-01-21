@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HospitalManagementData
 {
-    internal class LoginAttempts
+    public class LoginAttempts
     {
         public int AttemptID { get; set; }           // Unikalny identyfikator próby logowania
         public int? UserID { get; set; }            // ID użytkownika (może być null, jeśli użytkownik nie został znaleziony)

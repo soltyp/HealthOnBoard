@@ -36,6 +36,14 @@
                 CornerRadius="10"
                 BackgroundColor="#007ACC"
                 TextColor="White" />
+        <Button Text="Logi Logowania" 
+                Clicked="OnLoginAttemptsClicked" 
+                FontSize="20" 
+                Padding="20" 
+                CornerRadius="10"
+                BackgroundColor="#007ACC"
+                TextColor="White" />
+
 
     </StackLayout>
 </ContentPage>

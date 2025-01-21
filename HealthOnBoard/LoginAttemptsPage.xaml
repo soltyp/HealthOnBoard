@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HealthOnBoard.LoginAttemptsPage"
+             Title="Logi Logowania">
+    <ScrollView>
+    <StackLayout Padding="10">
+        <!-- Nagłówek -->
+        <Label Text="Logi Logowania"
+           FontSize="32"
+           FontAttributes="Bold"
+           HorizontalOptions="Center"
+           Margin="0,10" />
+
+        <!-- Sekcja filtrów -->
+        <StackLayout Orientation="Horizontal" Spacing="10">
+            <DatePicker x:Name="DateFilter" Format="yyyy-MM-dd" />
+            <Entry x:Name="UserFilter" Placeholder="Filtruj po użytkowniku" />
+            <Button Text="Filtruj" Clicked="OnFilterClicked" />
+            <Button Text="Usuń filtry" Clicked="OnClearFiltersClicked" />
+        </StackLayout>
+
+        <!-- Nagłówki tabeli -->
+        <Grid ColumnDefinitions="*,*,*,*,*,*,*">
+            <Label Text="ID" FontAttributes="Bold" />
+            <Label Text="Użytkownik" FontAttributes="Bold" Grid.Column="1" />
+            <Label Text="Rola" FontAttributes="Bold" Grid.Column="2" />
+            <Label Text="Data próby" FontAttributes="Bold" Grid.Column="3" />
+            <Label Text="Sukces" FontAttributes="Bold" Grid.Column="4" />
+            <Label Text="Numer łóżka" FontAttributes="Bold" Grid.Column="5" />
+            <Label Text="Pacjent" FontAttributes="Bold" Grid.Column="6" />
+        </Grid>
+
+        <!-- Tabela danych -->
+        <CollectionView ItemsSource="{Binding LoginAttempts}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="*,*,*,*,*,*,*">
+                        <Label Text="{Binding AttemptID}" />
+                        <Label Text="{Binding UserName}" Grid.Column="1" />
+                        <Label Text="{Binding RoleName}" Grid.Column="2" />
+                        <Label Text="{Binding AttemptDate, StringFormat='{0:yyyy-MM-dd HH:mm:ss}'}" Grid.Column="3" />
+                        <Label Text="{Binding Successful, Converter={StaticResource BooleanToTextConverter}}" Grid.Column="4" />
+                        <Label Text="{Binding BedNumber}" Grid.Column="5" />
+                        <Label Text="{Binding PatientName}" Grid.Column="6" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </StackLayout>
+    </ScrollView>
+</ContentPage>

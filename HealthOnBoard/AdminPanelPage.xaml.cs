@@ -29,5 +29,12 @@ namespace HealthOnBoard
             await Navigation.PushAsync(new PatientStatisticsPage(_databaseService));
         }
 
+        private async void OnLoginAttemptsClicked(object sender, EventArgs e)
+        {
+            // Przejœcie do LoginAttemptsPage z przekazaniem DatabaseService
+            await Navigation.PushAsync(new LoginAttemptsPage(_databaseService));
+        }
+
+
     }
 }

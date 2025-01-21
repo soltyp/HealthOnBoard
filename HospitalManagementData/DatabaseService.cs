@@ -8,6 +8,7 @@ using HospitalManagementData;
 using HealthOnBoard;
 using System.Data;
 using System.Data.Common;
+using System.Text;
 
 
 public class DatabaseService
@@ -19,7 +20,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;TrustServerCertificate=TRUE;";
+        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;TrustServerCertificate=TRUE;";
         SqlMapper.AddTypeHandler(new BloodTypeHandler());
 
         try
@@ -53,6 +54,54 @@ public class DatabaseService
             throw; // Ponowne zgłoszenie wyjątku, jeśli potrzebne
         }
     }
+
+    public async Task<List<LoginAttempt>> GetLoginAttemptsAsync(DateTime? filterDate = null, string filterUser = null)
+    {
+        const string baseQuery = @"
+        SELECT 
+            la.AttemptID, 
+            la.UserID, 
+            la.AttemptDate, 
+            la.Successful, 
+            ISNULL(u.Name, 'Nieznany użytkownik') AS UserName, 
+            ISNULL(r.RoleName, 'Brak roli') AS RoleName, 
+            ISNULL(la.BedNumber, 0) AS BedNumber,
+            ISNULL(p.Name, 'Brak pacjenta') AS PatientName
+        FROM [HospitalManagement].[dbo].[LoginAttempts] la
+        LEFT JOIN [HospitalManagement].[dbo].[Users] u ON la.UserID = u.UserID
+        LEFT JOIN [HospitalManagement].[dbo].[Roles] r ON u.RoleID = r.RoleID
+        LEFT JOIN [HospitalManagement].[dbo].[Patients] p ON la.BedNumber = p.BedNumber
+        WHERE ISNULL(u.Name, '') <> 'admin'"; 
+
+    var queryBuilder = new StringBuilder(baseQuery);
+
+        // Dodaj filtr dla daty
+        if (filterDate.HasValue)
+        {
+            queryBuilder.Append(" AND CAST(la.AttemptDate AS DATE) = @FilterDate");
+        }
+
+        // Dodaj filtr dla użytkownika (operator LIKE dla częściowych dopasowań)
+        if (!string.IsNullOrEmpty(filterUser))
+        {
+            queryBuilder.Append(" AND u.Name LIKE @FilterUser");
+        }
+
+        queryBuilder.Append(" ORDER BY la.AttemptDate DESC");
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            return (await connection.QueryAsync<LoginAttempt>(queryBuilder.ToString(), new
+            {
+                FilterDate = filterDate?.Date,
+                FilterUser = $"%{filterUser}%" // Użyj % dla dopasowań częściowych
+            })).ToList();
+        }
+    }
+
+
+
+
     public string GetConnectionString()
     {
         return _connectionString;
