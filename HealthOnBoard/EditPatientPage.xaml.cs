@@ -105,7 +105,25 @@ namespace HealthOnBoard
         }
 
 
+        private async void OnRemoveBedClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                // Ustawienie BedNumber na null
+                SelectedPatient.BedNumber = null;
+                OnPropertyChanged(nameof(SelectedPatient));
 
+                // Aktualizacja w bazie danych
+                await _databaseService.SavePatientAsync(SelectedPatient);
+
+                await DisplayAlert("Sukces", "Numer ³ó¿ka zosta³ usuniêty.", "OK");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas usuwania numeru ³ó¿ka: {ex.Message}");
+                await DisplayAlert("B³¹d", "Nie uda³o siê usun¹æ numeru ³ó¿ka.", "OK");
+            }
+        }
 
 
 

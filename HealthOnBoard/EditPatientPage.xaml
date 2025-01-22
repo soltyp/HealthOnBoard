@@ -15,10 +15,17 @@
                 <Entry Placeholder="Wiek" Text="{Binding SelectedPatient.Age}" Keyboard="Numeric" />
 
                 <Label Text="Numer łóżka:" />
-                <Picker
-                    Title="Wybierz łóżko"
-                    ItemsSource="{Binding AvailableBeds}" 
-                    SelectedItem="{Binding SelectedPatient.BedNumber, Mode=TwoWay}" />
+                <HorizontalStackLayout Spacing="10">
+                    <Picker
+                        Title="Wybierz łóżko"
+                        ItemsSource="{Binding AvailableBeds}" 
+                        SelectedItem="{Binding SelectedPatient.BedNumber, Mode=TwoWay}" />
+                    <Button Text="Usuń łóżko"
+                        Clicked="OnRemoveBedClicked"
+                        BackgroundColor="Red"
+                        TextColor="White" />
+                </HorizontalStackLayout>
+
 
                 <Label Text="Temperatura:" />
                 <Entry Placeholder="Temperatura" Text="{Binding SelectedPatient.CurrentTemperature}" Keyboard="Numeric" />

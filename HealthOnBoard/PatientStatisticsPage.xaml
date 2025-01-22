@@ -13,6 +13,9 @@
                        FontAttributes="Bold" 
                        HorizontalOptions="Center"
                        TextColor="White" />
+                <!-- Przyciski akcji -->
+                <Button Text="Eksportuj do PDF"
+        Clicked="OnExportToPdfClicked" />
 
                 <!-- Układ poziomy dla tabeli zajętości łóżek i wykresu -->
                 <Label Text="Statystyki łóżek" 

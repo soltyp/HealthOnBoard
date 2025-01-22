@@ -7,6 +7,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using HospitalManagementData;
 using System.Diagnostics;
+using Microsoft.Maui.Controls.Internals;
+using Syncfusion.Pdf;
+using Syncfusion.Pdf.Graphics;
+using System.IO;
 
 namespace HealthOnBoard
 {
@@ -32,6 +36,34 @@ namespace HealthOnBoard
             BindingContext = this;
             LoadStatistics();
         }
+
+        private async void OnExportToPdfClicked(object sender, EventArgs e)
+        {
+            var generator = new PdfGenerator(BedStatistics, GenderStatistics, BloodTypeStatistics);
+            string filePath = System.IO.Path.Combine(FileSystem.AppDataDirectory, "PatientStatistics.pdf");
+
+            try
+            {
+                // Tworzenie PDF
+                generator.CreatePdf(filePath);
+
+                // Wyœwietlenie komunikatu z opcj¹ skopiowania
+                bool copyToClipboard = await DisplayAlert("Sukces", $"PDF zapisany do: {filePath}", "Skopiuj œcie¿kê", "OK");
+
+                // Kopiowanie œcie¿ki do schowka, jeœli u¿ytkownik wybierze "Skopiuj œcie¿kê"
+                if (copyToClipboard)
+                {
+                    await Clipboard.Default.SetTextAsync(filePath);
+                    await DisplayAlert("Skopiowano", "Œcie¿ka zosta³a skopiowana do schowka.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("B³¹d", $"Nie uda³o siê wyeksportowaæ PDF. Szczegó³y: {ex.Message}", "OK");
+            }
+        }
+
+
 
         private void BuildPieChartForBloodTypes(Grid chartGrid, List<StatisticDataModel> data)
         {
