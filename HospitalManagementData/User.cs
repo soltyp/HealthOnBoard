@@ -17,7 +17,7 @@ namespace HealthOnBoard
 
         [JsonPropertyName("role")]
         public string Role { get; set; }
-
+        public string RoleName { get; set; } // Dodane pole
         [JsonPropertyName("roleID")]
         public int RoleID { get; set; } // Właściwość RoleID (związana z Role)
 

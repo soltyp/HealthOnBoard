@@ -182,12 +182,11 @@ namespace HealthOnBoard
 
             // Ustaw dane w interfejsie u¿ytkownika
             UserFirstNameLabel.Text = _user.FirstName ?? "Brak danych";
-            RoleLabel.Text = _user.Role ?? "Brak roli";
+            RoleLabel.Text = GetRoleName(_user.RoleID) ?? "Brak roli";
 
             PatientNameLabel.Text = _patient.Name;
             PatientAgeLabel.Text = _patient.Age.ToString();
             BedNumberLabel.Text = _patient.BedNumber.ToString();
-
 
             // Inicjalizacja timera
             InitializeLogoutTimer();
@@ -199,7 +198,23 @@ namespace HealthOnBoard
             _databaseService = databaseService;
         }
 
-        
+        // Pobierz nazwê roli na podstawie RoleID
+        private string GetRoleName(int roleId)
+        {
+            try
+            {
+                var role = _databaseService.GetRoleById(roleId);
+                return role?.RoleName;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas pobierania nazwy roli: {ex.Message}");
+                return null;
+            }
+        }
+
+
+
 
         private async Task<bool> SaveActionToDatabase(object newAction)
         {

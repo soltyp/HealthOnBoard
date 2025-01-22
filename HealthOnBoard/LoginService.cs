@@ -36,8 +36,13 @@ public class LoginService
                     return null;
                 }
 
-                // Sprawdzanie PIN-u użytkownika
-                var query = "SELECT UserID, Name, RoleID, ActiveStatus FROM dbo.Users WHERE PIN = @PIN";
+                // Sprawdzanie PIN-u użytkownika i pobranie nazwy roli
+                var query = @"
+                SELECT u.UserID, u.Name, u.RoleID, r.RoleName, u.ActiveStatus 
+                FROM dbo.Users u
+                INNER JOIN dbo.Roles r ON u.RoleID = r.RoleID
+                WHERE u.PIN = @PIN";
+
                 using (var command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@PIN", pin);
@@ -46,7 +51,7 @@ public class LoginService
                     {
                         if (reader.Read())
                         {
-                            var activeStatus = reader.GetBoolean(3); // Pobieramy wartość ActiveStatus
+                            var activeStatus = reader.GetBoolean(4); // Pobieramy wartość ActiveStatus
 
                             if (!activeStatus) // Sprawdzamy, czy ActiveStatus wynosi 1 (true)
                             {
@@ -59,7 +64,8 @@ public class LoginService
                             {
                                 UserID = reader.GetInt32(0),
                                 FirstName = reader.GetString(1),
-                                Role = reader.GetInt32(2) == 4 ? "Admin" : "User",
+                                RoleID = reader.GetInt32(2),
+                                RoleName = reader.GetString(3),
                                 ActiveStatus = activeStatus
                             };
 
@@ -81,6 +87,7 @@ public class LoginService
 
         return null;
     }
+
 
 
     private async Task<bool> IsAccountLockedAsync(SqlConnection connection)

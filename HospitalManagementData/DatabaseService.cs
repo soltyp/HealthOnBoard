@@ -98,6 +98,32 @@ public class DatabaseService
             })).ToList();
         }
     }
+    public Role GetRoleById(int roleId)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = "SELECT RoleID, RoleName FROM Roles WHERE RoleID = @RoleID";
+            using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@RoleID", roleId);
+                connection.Open();
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new Role
+                        {
+                            RoleID = reader.GetInt32(0),
+                            RoleName = reader.GetString(1)
+                        };
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 
     public async Task<List<BedStatisticsModel>> GetBedStatisticsAsync()
     {

@@ -115,36 +115,58 @@ namespace HealthOnBoard
                 return;
             }
 
-            var user = await _loginService.AuthenticateUserAsync(PINEntry.Text, SecurityPinEntry.Text, selectedBedNumber);
-            if (user != null)
+            try
             {
-                Debug.WriteLine($"Uwierzytelniono użytkownika: {user.FirstName}, Łóżko: {selectedBedNumber}");
+                var user = await _loginService.AuthenticateUserAsync(PINEntry.Text, SecurityPinEntry.Text, selectedBedNumber);
 
-                if (_loginService.IsAdmin(user))
+                if (user != null)
                 {
-                    await Navigation.PushAsync(new AdminPanelPage(_databaseService));
+                    Debug.WriteLine($"Uwierzytelniono użytkownika: {user.FirstName}, Rola: {user.RoleName}, Łóżko: {selectedBedNumber}");
+
+                    if (!user.ActiveStatus)
+                    {
+                        await DisplayAlert("Błąd", "Konto użytkownika jest nieaktywne. Skontaktuj się z administratorem systemu.", "OK");
+                        return;
+                    }
+
+                    if (user.RoleName.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+                        user.RoleName.Equals("Administrator", StringComparison.OrdinalIgnoreCase))
+                    {
+                        await Navigation.PushAsync(new AdminPanelPage(_databaseService));
+                    }
+                    else
+                    {
+                        await NavigateToDashboard(user);
+                    }
+
+                    _failedAttempts = 0; // Reset liczby nieudanych prób po sukcesie
                 }
                 else
                 {
-                    await NavigateToDashboard(user);
+                    HandleFailedLogin();
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Błąd podczas logowania: {ex.Message}");
+                await DisplayAlert("Błąd", "Wystąpił problem podczas logowania. Spróbuj ponownie później.", "OK");
+            }
+        }
 
-                _failedAttempts = 0; // Reset liczby nieudanych prób po sukcesie
+        private void HandleFailedLogin()
+        {
+            _failedAttempts++;
+            if (_failedAttempts >= 3)
+            {
+                StartLockout();
+                DisplayAlert("Blokada", "Logowanie zablokowane po 3 nieudanych próbach. Użyj PIN-u bezpieczeństwa lub poczekaj 3 minuty.", "OK");
             }
             else
             {
-                _failedAttempts++;
-                if (_failedAttempts >= 3)
-                {
-                    StartLockout();
-                    await DisplayAlert("Blokada", "Logowanie zablokowane po 3 nieudanych próbach. Użyj PIN-u bezpieczeństwa lub poczekaj 3 minuty.", "OK");
-                }
-                else
-                {
-                    await DisplayAlert("Błąd", $"Niepoprawny PIN. Pozostało prób: {3 - _failedAttempts}.", "OK");
-                }
+                DisplayAlert("Błąd", $"Niepoprawny PIN. Pozostało prób: {3 - _failedAttempts}.", "OK");
             }
         }
+
 
         private void StartLockout()
         {
