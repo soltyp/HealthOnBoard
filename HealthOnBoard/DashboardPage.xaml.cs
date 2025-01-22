@@ -277,109 +277,117 @@ namespace HealthOnBoard
         }
 
 
+        //private async void OnEditActionClicked(object sender, EventArgs e)
+        //{
+        //    if (sender is Button button && button.CommandParameter is PatientActivity activity)
+        //    {
+        //        // Rozpoznaj, czy akcja dotyczy pomiaru temperatury
+        //        if (activity.ActionType == "Pomiar temperatury")
+        //        {
+        //            try
+        //            {
+        //                // Pobierz wartoœæ temperatury z kolumny CurrentTemperature
+        //                decimal? currentTemperature = activity.CurrentTemperature;
+
+        //                if (currentTemperature == null)
+        //                {
+        //                    await DisplayAlert("B³¹d", "Nie znaleziono wartoœci temperatury w bazie danych.", "OK");
+        //                    return;
+        //                }
+
+        //                // Wyœwietl dialog do edycji temperatury
+        //                string newTemperature = await DisplayPromptAsync(
+        //                    "Edytuj pomiar temperatury",
+        //                    "WprowadŸ now¹ wartoœæ temperatury (w °C):",
+        //                    keyboard: Keyboard.Numeric,
+        //                    initialValue: currentTemperature.Value.ToString("F1") // Formatowanie do 1 miejsca po przecinku
+        //                );
+
+        //                // Walidacja nowej temperatury
+        //                if (decimal.TryParse(newTemperature, out decimal temperatureValue) && temperatureValue >= 35 && temperatureValue <= 42)
+        //                {
+        //                    activity.ActionDetails = $"Zmieniono temperaturê na: {temperatureValue:F1}°C";
+
+        //                    // Zaktualizuj temperaturê w bazie danych
+        //                    bool tempUpdateSuccess = await _databaseService.UpdatePatientTemperatureAsync(activity.PatientID, temperatureValue);
+        //                    bool activityUpdateSuccess = await _databaseService.UpdatePatientActionAsync(activity);
+        //                    bool logUpdateSuccess = await _databaseService.UpdateActivityLogTemperatureAsync(activity.LogID, temperatureValue);
+
+        //                    if (tempUpdateSuccess && activityUpdateSuccess && logUpdateSuccess)
+        //                    {
+        //                        await DisplayAlert("Sukces", "Pomiar temperatury zosta³ zaktualizowany.", "OK");
+
+        //                        // Odœwie¿ listê aktywnoœci
+        //                        await LoadRecentActivitiesAsync();
+
+        //                        // Odœwie¿ wykres
+        //                        await LoadTemperatureChartDataAsync();
+        //                        await LoadPatientTemperatureAsync();
+        //                    }
+        //                    else
+        //                    {
+        //                        string errorDetails = $"tempUpdate: {tempUpdateSuccess}, activityUpdate: {activityUpdateSuccess}, logUpdate: {logUpdateSuccess}";
+        //                        Debug.WriteLine($"Nie uda³o siê w pe³ni zaktualizowaæ danych. Szczegó³y: {errorDetails}");
+        //                        await DisplayAlert("B³¹d", $"Nie uda³o siê w pe³ni zaktualizowaæ danych. Szczegó³y: {errorDetails}", "OK");
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    await DisplayAlert("B³¹d", "WprowadŸ poprawn¹ wartoœæ temperatury (35-42°C).", "OK");
+        //                }
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Debug.WriteLine($"B³¹d podczas edycji temperatury: {ex.Message}");
+        //                await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji pomiaru temperatury.", "OK");
+        //            }
+        //        }
+        //        else
+        //        {
+        //            // Dla innych typów akcji
+        //            string newActionDetails = await DisplayPromptAsync(
+        //                "Edytuj szczegó³y czynnoœci",
+        //                "Zmieñ szczegó³y czynnoœci:",
+        //                initialValue: activity.ActionDetails
+        //            );
+
+        //            if (!string.IsNullOrWhiteSpace(newActionDetails))
+        //            {
+        //                activity.ActionDetails = newActionDetails;
+
+        //                try
+        //                {
+        //                    // Aktualizuj w bazie danych
+        //                    bool success = await _databaseService.UpdatePatientActionAsync(activity);
+
+        //                    if (success)
+        //                    {
+        //                        await DisplayAlert("Sukces", "Czynnoœæ zosta³a zaktualizowana.", "OK");
+        //                        await LoadRecentActivitiesAsync(); // Odœwie¿ listê czynnoœci
+        //                    }
+        //                    else
+        //                    {
+        //                        await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ czynnoœci.", "OK");
+        //                    }
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                    Debug.WriteLine($"B³¹d podczas edytowania czynnoœci: {ex.Message}");
+        //                    await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji czynnoœci.", "OK");
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
         private async void OnEditActionClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is PatientActivity activity)
             {
-                // Rozpoznaj, czy akcja dotyczy pomiaru temperatury
-                if (activity.ActionType == "Pomiar temperatury")
-                {
-                    try
-                    {
-                        // Pobierz wartoœæ temperatury z kolumny CurrentTemperature
-                        decimal? currentTemperature = activity.CurrentTemperature;
-
-                        if (currentTemperature == null)
-                        {
-                            await DisplayAlert("B³¹d", "Nie znaleziono wartoœci temperatury w bazie danych.", "OK");
-                            return;
-                        }
-
-                        // Wyœwietl dialog do edycji temperatury
-                        string newTemperature = await DisplayPromptAsync(
-                            "Edytuj pomiar temperatury",
-                            "WprowadŸ now¹ wartoœæ temperatury (w °C):",
-                            keyboard: Keyboard.Numeric,
-                            initialValue: currentTemperature.Value.ToString("F1") // Formatowanie do 1 miejsca po przecinku
-                        );
-
-                        // Walidacja nowej temperatury
-                        if (decimal.TryParse(newTemperature, out decimal temperatureValue) && temperatureValue >= 35 && temperatureValue <= 42)
-                        {
-                            activity.ActionDetails = $"Zmieniono temperaturê na: {temperatureValue:F1}°C";
-
-                            // Zaktualizuj temperaturê w bazie danych
-                            bool tempUpdateSuccess = await _databaseService.UpdatePatientTemperatureAsync(activity.PatientID, temperatureValue);
-                            bool activityUpdateSuccess = await _databaseService.UpdatePatientActionAsync(activity);
-                            bool logUpdateSuccess = await _databaseService.UpdateActivityLogTemperatureAsync(activity.LogID, temperatureValue);
-
-                            if (tempUpdateSuccess && activityUpdateSuccess && logUpdateSuccess)
-                            {
-                                await DisplayAlert("Sukces", "Pomiar temperatury zosta³ zaktualizowany.", "OK");
-
-                                // Odœwie¿ listê aktywnoœci
-                                await LoadRecentActivitiesAsync();
-
-                                // Odœwie¿ wykres
-                                await LoadTemperatureChartDataAsync();
-                                await LoadPatientTemperatureAsync();
-                            }
-                            else
-                            {
-                                string errorDetails = $"tempUpdate: {tempUpdateSuccess}, activityUpdate: {activityUpdateSuccess}, logUpdate: {logUpdateSuccess}";
-                                Debug.WriteLine($"Nie uda³o siê w pe³ni zaktualizowaæ danych. Szczegó³y: {errorDetails}");
-                                await DisplayAlert("B³¹d", $"Nie uda³o siê w pe³ni zaktualizowaæ danych. Szczegó³y: {errorDetails}", "OK");
-                            }
-                        }
-                        else
-                        {
-                            await DisplayAlert("B³¹d", "WprowadŸ poprawn¹ wartoœæ temperatury (35-42°C).", "OK");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"B³¹d podczas edycji temperatury: {ex.Message}");
-                        await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji pomiaru temperatury.", "OK");
-                    }
-                }
-                else
-                {
-                    // Dla innych typów akcji
-                    string newActionDetails = await DisplayPromptAsync(
-                        "Edytuj szczegó³y czynnoœci",
-                        "Zmieñ szczegó³y czynnoœci:",
-                        initialValue: activity.ActionDetails
-                    );
-
-                    if (!string.IsNullOrWhiteSpace(newActionDetails))
-                    {
-                        activity.ActionDetails = newActionDetails;
-
-                        try
-                        {
-                            // Aktualizuj w bazie danych
-                            bool success = await _databaseService.UpdatePatientActionAsync(activity);
-
-                            if (success)
-                            {
-                                await DisplayAlert("Sukces", "Czynnoœæ zosta³a zaktualizowana.", "OK");
-                                await LoadRecentActivitiesAsync(); // Odœwie¿ listê czynnoœci
-                            }
-                            else
-                            {
-                                await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ czynnoœci.", "OK");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"B³¹d podczas edytowania czynnoœci: {ex.Message}");
-                            await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas edycji czynnoœci.", "OK");
-                        }
-                    }
-                }
+                // Nawigacja do EditActionPage z przekazaniem PatientActivity i DatabaseService
+                await Navigation.PushAsync(new EditActionPage(activity, _databaseService));
             }
         }
-
 
 
         private async void OnMorePatientDataClicked(object sender, EventArgs e)

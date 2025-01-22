@@ -40,6 +40,17 @@ namespace HealthOnBoard
                 }
             }
         }
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+
+            // Wymuś ustawienie domyślnego numeru łóżka, jeśli picker nie działa poprawnie
+            if (BedNumbers != null && BedNumbers.Contains(1))
+            {
+                SelectedBedNumber = 1;
+                OnPropertyChanged(nameof(SelectedBedNumber));
+            }
+        }
 
         // Zmienne blokady
         private bool _isLockedOut;
@@ -62,8 +73,20 @@ namespace HealthOnBoard
             try
             {
                 var beds = await _bedService.GetAllBedsAsync();
-                BedNumbers = beds.Select(b => b.BedNumber).ToList(); // Mapowanie na listę numerów łóżek
-                OnPropertyChanged(nameof(BedNumbers)); // Powiadomienie o zmianie listy
+                BedNumbers = beds.Select(b => b.BedNumber).ToList();
+
+                // Dodaj numer "1" do listy, jeśli go nie ma
+                if (!BedNumbers.Contains(1))
+                {
+                    BedNumbers.Insert(0, 1);
+                }
+
+                // Ustaw domyślny numer łóżka na "1"
+                SelectedBedNumber = 1;
+
+                // Powiadom o zmianach w liście i wyborze
+                OnPropertyChanged(nameof(BedNumbers));
+                OnPropertyChanged(nameof(SelectedBedNumber));
             }
             catch (Exception ex)
             {
@@ -71,6 +94,8 @@ namespace HealthOnBoard
                 await DisplayAlert("Błąd", "Nie udało się załadować listy łóżek.", "OK");
             }
         }
+
+
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
