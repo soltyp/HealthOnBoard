@@ -246,7 +246,7 @@ namespace HealthOnBoard
                     // Send update notification
                     MessagingCenter.Send(this, "RefreshPatientActivityHistory");
 
-                    await DisplayAlert("Success", "Data saved successfully.", "OK");
+                    await DisplayAlert("Sukces", "Dane pomyœlnie zapisane", "OK");
                     await Navigation.PopAsync();
                 }
                 else

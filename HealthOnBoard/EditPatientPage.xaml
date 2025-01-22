@@ -51,7 +51,7 @@
                 <Label Text="Data urodzenia (YYYY-MM-DD):" />
                 <Entry Placeholder="Data urodzenia (YYYY-MM-DD)" Text="{Binding SelectedPatient.DateOfBirth}" />
 
-                <Label Text="Płeć:" />
+                <Label Text="Płeć (Male/Female):" />
                 <Entry Placeholder="Płeć" Text="{Binding SelectedPatient.Gender}" />
 
                 <Label Text="Kontakt w nagłych wypadkach:" />
