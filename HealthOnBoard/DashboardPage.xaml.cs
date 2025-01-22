@@ -85,8 +85,16 @@ namespace HealthOnBoard
             {
                 await DisplayAlert("Sesja wygas≥a", "Twoja sesja wygas≥a z powodu braku aktywnoúci.", "OK");
                 await Navigation.PopToRootAsync();
+
+                // Znajdü LoginPage w stosie nawigacyjnym
+                if (Application.Current?.MainPage is NavigationPage navigationPage &&
+                    navigationPage.RootPage is LoginPage loginPage)
+                {
+                    loginPage.ClearPin();
+                }
             });
         }
+
 
         private void ResetLogoutTimer()
         {
@@ -223,6 +231,13 @@ namespace HealthOnBoard
             if (confirmLogout)
             {
                 await Navigation.PopToRootAsync();
+
+                // Znajdü LoginPage w stosie nawigacyjnym i zresetuj pole PIN
+                if (Application.Current?.MainPage is NavigationPage navigationPage &&
+                    navigationPage.RootPage is LoginPage loginPage)
+                {
+                    loginPage.ClearPin();
+                }
             }
         }
 

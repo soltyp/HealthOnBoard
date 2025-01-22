@@ -249,6 +249,11 @@ namespace HealthOnBoard
                 }
             }
         }
+        public void ClearPin()
+        {
+            PINEntry.Text = string.Empty;
+            SecurityPinEntry.Text = string.Empty;
+        }
 
         private void OnBackspaceClicked(object sender, EventArgs e)
         {
