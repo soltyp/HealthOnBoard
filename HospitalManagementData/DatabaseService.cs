@@ -241,7 +241,7 @@ public class DatabaseService
             Debug.WriteLine($"Błąd w GetPatientByIdAsync: {ex.Message}");
             throw;
         }
-    }
+    }//a
 
     public async Task<List<Patient>> GetAllPatientsAsync()
     {
