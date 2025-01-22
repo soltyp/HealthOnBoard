@@ -143,7 +143,7 @@ namespace HealthOnBoard
                 Margin = new Thickness(0, -40, 0, 10)
             };
 
-            chartGrid.Children.Add(title);
+            chartGrid.Children.Add(title);//a
         }
 
 
