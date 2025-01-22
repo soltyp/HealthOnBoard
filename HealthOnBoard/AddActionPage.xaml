@@ -3,139 +3,186 @@
              x:Class="HealthOnBoard.AddActionPage"
              Title="Dodaj Akcję"
              BackgroundColor="#1E1E2F">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="20">
 
-            <Label Text="Dodaj nową akcję"
-                   FontSize="32"
-                   TextColor="#FFFFFF"
-                   HorizontalOptions="Center" />
+    <Grid>
+        <!-- Gesture Recognizer on the Root Grid -->
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnPageTapped" />
+        </Grid.GestureRecognizers>
 
-            <Picker x:Name="ActionTypePicker"
-                    Title="Wybierz typ akcji"
-                    FontSize="24"
-                    ItemsSource="{Binding ActionTypes}"
-                    HorizontalOptions="FillAndExpand"
-                    SelectedIndexChanged="OnActionTypeChanged" />
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="20">
+                <!-- Pasek nawigacyjny -->
+                <Grid Grid.Row="0" BackgroundColor="#292A3A" VerticalOptions="Start">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-            <Entry x:Name="TemperatureEntry"
-                   Placeholder="Wprowadź temperaturę (°C)"
-                   FontSize="22"
-                   TextColor="#FFFFFF"
-                   BackgroundColor="#292A3A"
-                   IsVisible="False"
-                   HorizontalOptions="FillAndExpand" />
+                    <Image Source="user_icon.png"
+                           HeightRequest="40"
+                           WidthRequest="40"
+                           VerticalOptions="Center" />
 
-            <!-- Kontrola dla Podania Leków -->
-            <StackLayout x:Name="MedicationControls" IsVisible="False" Spacing="10">
+                    <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                        <Label x:Name="UserFirstNameLabel" Text="Jan" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
+                        <Label x:Name="RoleLabel" Text="Ordynator" TextColor="#00CCFF" FontSize="14" />
+                    </HorizontalStackLayout>
 
-                <!-- Pasek z literami alfabetu -->
-                <ScrollView Orientation="Horizontal" HeightRequest="50">
-                    <StackLayout x:Name="AlphabetButtonsContainer"
-                   Orientation="Horizontal"
-                   Spacing="5"
-                   HorizontalOptions="Center">
-                        <!-- Przyciski alfabetu -->
-                        <Button Text="A" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="20" />
-                        <Button Text="B" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="30" />
-                        <Button Text="C" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="30" />
-                        <Button Text="D" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="30" />
-                        <Button Text="E" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="F" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="G" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="H" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="I" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="J" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="K" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="L" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="M" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="N" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="O" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="P" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="Q" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="R" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="S" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="T" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="U" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="V" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="W" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="X" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="Y" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                        <Button Text="Z" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
-                    </StackLayout>
-                </ScrollView>
-
-                <!-- Picker do wyboru leku -->
-                <Picker x:Name="MedicationPicker"
-                        Title="Wybierz lek"
-                        
-                        FontSize="24"
-                        ItemsSource="{Binding FilteredMedications}"
-                        ItemDisplayBinding="{Binding Name}"
-                        HorizontalOptions="FillAndExpand" />
-
-                <!-- Ilość -->
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="20">
-                    <Button Text="-" 
-                            FontSize="36" 
-                            WidthRequest="80" 
-                            HeightRequest="80" 
-                            BackgroundColor="#8854D0"
-                            TextColor="#FFFFFF"
-                            Clicked="OnDecreaseQuantityClicked" />
-                    <Label x:Name="QuantityLabel"
-                           Text="Ilość: 1"
-                           FontSize="36"
-                           TextColor="#FFFFFF"
+                    <Frame Grid.Column="2"
+                           Padding="8,2"
+                           BackgroundColor="#1E1E2F"
+                           CornerRadius="15"
                            VerticalOptions="Center"
-                           HorizontalOptions="Center" />
-                    <Button Text="+" 
-                            FontSize="36" 
-                            WidthRequest="80" 
-                            HeightRequest="80" 
-                            BackgroundColor="#8854D0"
+                           HeightRequest="42">
+                        <Label x:Name="LogoutTimer"
+                               Text="02:56"
+                               TextColor="#FFCC00"
+                               FontSize="14"
+                               VerticalOptions="Center" />
+                    </Frame>
+
+                    <Button Grid.Column="3"
+                            Text="Wyloguj"
+                            FontSize="14"
+                            BackgroundColor="#FF3B30"
                             TextColor="#FFFFFF"
-                            Clicked="OnIncreaseQuantityClicked" />
+                            CornerRadius="15"
+                            HeightRequest="34"
+                            VerticalOptions="Center"
+                            Clicked="OnLogoutClicked" />
+                </Grid>
+
+                <Label Text="Dodaj nową akcję"
+                       FontSize="32"
+                       TextColor="#FFFFFF"
+                       HorizontalOptions="Center" />
+
+                <Picker x:Name="ActionTypePicker"
+                        Title="Wybierz typ akcji"
+                        FontSize="24"
+                        ItemsSource="{Binding ActionTypes}"
+                        HorizontalOptions="FillAndExpand"
+                        SelectedIndexChanged="OnActionTypeChanged" />
+
+                <Entry x:Name="TemperatureEntry"
+                       Placeholder="Wprowadź temperaturę (°C)"
+                       FontSize="22"
+                       TextColor="#FFFFFF"
+                       BackgroundColor="#292A3A"
+                       IsVisible="False"
+                       HorizontalOptions="FillAndExpand" />
+
+                <!-- Kontrola dla Podania Leków -->
+                <StackLayout x:Name="MedicationControls" IsVisible="False" Spacing="10">
+                    <!-- Pasek z literami alfabetu -->
+                    <ScrollView Orientation="Horizontal" HeightRequest="50">
+                        <StackLayout x:Name="AlphabetButtonsContainer"
+                                     Orientation="Horizontal"
+                                     Spacing="5"
+                                     HorizontalOptions="Center">
+                            <!-- Przyciski alfabetu -->
+                            <Button Text="A" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="20" />
+                            <Button Text="B" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="30" />
+                            <Button Text="C" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="30" />
+                            <Button Text="D" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="30" />
+                            <Button Text="E" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="F" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="G" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="H" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="I" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="J" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="K" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="L" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="M" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="N" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="O" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="P" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="Q" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="R" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="S" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="T" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="U" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="V" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="W" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="X" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="Y" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                            <Button Text="Z" Clicked="OnAlphabetFilterClicked" FontSize="20" WidthRequest="40" />
+                        </StackLayout>
+                    </ScrollView>
+
+                    <!-- Picker do wyboru leku -->
+                    <Picker x:Name="MedicationPicker"
+                            Title="Wybierz lek"
+                            FontSize="24"
+                            ItemsSource="{Binding FilteredMedications}"
+                            ItemDisplayBinding="{Binding Name}"
+                            HorizontalOptions="FillAndExpand" />
+
+                    <!-- Jednostka -->
+                    <Picker x:Name="UnitPicker"
+        Title="Wybierz jednostkę"
+        FontSize="24"
+        ItemsSource="{Binding Units}"
+        HorizontalOptions="FillAndExpand" />
+
+                    <!-- Ilość -->
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="20">
+                        <Button Text="-" 
+                                FontSize="36" 
+                                WidthRequest="80" 
+                                HeightRequest="80" 
+                                BackgroundColor="#8854D0"
+                                TextColor="#FFFFFF"
+                                Clicked="OnDecreaseQuantityClicked" />
+                        <Label x:Name="QuantityLabel"
+                               Text="Ilość: 1"
+                               FontSize="36"
+                               TextColor="#FFFFFF"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center" />
+                        <Button Text="+" 
+                                FontSize="36" 
+                                WidthRequest="80" 
+                                HeightRequest="80" 
+                                BackgroundColor="#8854D0"
+                                TextColor="#FFFFFF"
+                                Clicked="OnIncreaseQuantityClicked" />
+                    </StackLayout>
                 </StackLayout>
 
-                <!-- Jednostka -->
-                <Picker x:Name="UnitPicker"
-                        Title="Wybierz jednostkę"
+                <!-- Szczegóły akcji -->
+                <Editor x:Name="ActionDetailsEditor"
+                        Placeholder="Wprowadź szczegóły akcji"
+                        FontSize="22"
+                        TextColor="#FFFFFF"
+                        BackgroundColor="#292A3A"
+                        HeightRequest="150"
+                        VerticalOptions="Start" />
+
+                <!-- Przyciski akcji -->
+                <Button Text="Dodaj akcję"
                         FontSize="24"
-                        ItemsSource="{Binding Units}"
-                        HorizontalOptions="FillAndExpand" />
-            </StackLayout>
+                        BackgroundColor="#00CC99"
+                        TextColor="#FFFFFF"
+                        CornerRadius="15"
+                        WidthRequest="200"
+                        HeightRequest="70"
+                        HorizontalOptions="Center"
+                        Clicked="OnSaveActionClicked" />
 
-            <!-- Szczegóły akcji -->
-            <Editor x:Name="ActionDetailsEditor"
-                    Placeholder="Wprowadź szczegóły akcji"
-                    FontSize="22"
-                    TextColor="#FFFFFF"
-                    BackgroundColor="#292A3A"
-                    HeightRequest="150"
-                    VerticalOptions="Start" />
-
-            <!-- Przyciski akcji -->
-            <Button Text="Dodaj akcję"
-                    FontSize="24"
-                    BackgroundColor="#00CC99"
-                    TextColor="#FFFFFF"
-                    CornerRadius="15"
-                    WidthRequest="200"
-                    HeightRequest="70"
-                    HorizontalOptions="Center"
-                    Clicked="OnSaveActionClicked" />
-
-            <Button Text="Anuluj"
-                    FontSize="24"
-                    BackgroundColor="#FF3B30"
-                    TextColor="#FFFFFF"
-                    CornerRadius="15"
-                    WidthRequest="200"
-                    HeightRequest="70"
-                    HorizontalOptions="Center"
-                    Clicked="OnCancelClicked" />
-
-        </VerticalStackLayout>
-    </ScrollView>
+                <Button Text="Anuluj"
+                        FontSize="24"
+                        BackgroundColor="#FF3B30"
+                        TextColor="#FFFFFF"
+                        CornerRadius="15"
+                        WidthRequest="200"
+                        HeightRequest="70"
+                        HorizontalOptions="Center"
+                        Clicked="OnCancelClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>
