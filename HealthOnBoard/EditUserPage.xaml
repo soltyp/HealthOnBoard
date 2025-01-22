@@ -29,7 +29,7 @@
             <Label Text="Status aktywności:" FontSize="14" />
             <HorizontalStackLayout>
                 <Switch IsToggled="{Binding SelectedUser.ActiveStatus}" />
-                <Label Text="Aktywny użytkownik" VerticalOptions="Center" FontSize="14" />
+                <Label Text="Aktywny użytkownik - zmiana spowoduje usunięcie" VerticalOptions="Center" FontSize="14" />
             </HorizontalStackLayout>
 
             <!-- Przyciski zapisu i anulowania -->

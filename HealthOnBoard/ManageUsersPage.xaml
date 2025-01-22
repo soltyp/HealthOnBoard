@@ -29,7 +29,7 @@
                     <Label Text="Aktywny użytkownik:" />
                     <HorizontalStackLayout>
                         <Switch IsToggled="{Binding EditingUser.ActiveStatus}" />
-                        <Label Text="Tak" VerticalOptions="Center" FontSize="14" />
+                        <Label Text="Ustawienie na Off, nie pokaże użytkownika na liście, możliwość późniejszej zmiany tylko w bazie" VerticalOptions="Center" FontSize="14" />
                     </HorizontalStackLayout>
 
                     <!-- Przyciski akcji -->
@@ -59,14 +59,14 @@
                                             CommandParameter="{Binding .}"
                                             Clicked="OnEditUserClicked"
                                             WidthRequest="70" />
-
+                                    <!--
                                     <Button Text="Usuń"
                                             BackgroundColor="LightCoral"
                                             TextColor="White"
                                             CornerRadius="5"
                                             CommandParameter="{Binding .}"
                                             Clicked="OnDeleteUserClicked"
-                                            WidthRequest="70" />
+                                            WidthRequest="70" /> -->
                                 </HorizontalStackLayout>
                             </Grid>
                         </DataTemplate>

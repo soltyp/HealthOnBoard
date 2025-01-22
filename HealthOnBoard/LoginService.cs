@@ -46,12 +46,21 @@ public class LoginService
                     {
                         if (reader.Read())
                         {
+                            var activeStatus = reader.GetBoolean(3); // Pobieramy wartość ActiveStatus
+
+                            if (!activeStatus) // Sprawdzamy, czy ActiveStatus wynosi 1 (true)
+                            {
+                                Debug.WriteLine("Konto użytkownika jest nieaktywne bądź nieistnieje.");
+                                await LogLoginAttemptAsync(null, false, true, bedNumber); // Loguj próbę logowania nieaktywnego użytkownika
+                                return null;
+                            }
+
                             var user = new User
                             {
                                 UserID = reader.GetInt32(0),
                                 FirstName = reader.GetString(1),
                                 Role = reader.GetInt32(2) == 4 ? "Admin" : "User",
-                                ActiveStatus = reader.GetBoolean(3)
+                                ActiveStatus = activeStatus
                             };
 
                             // Loguj udane logowanie z numerem łóżka

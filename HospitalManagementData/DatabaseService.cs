@@ -788,7 +788,7 @@ public class DatabaseService
             using (var connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                var query = "SELECT UserID, Name, RoleID, PIN, SafetyPIN, ActiveStatus FROM dbo.Users";
+                var query = "SELECT UserID, Name, RoleID, PIN, SafetyPIN, ActiveStatus FROM dbo.Users WHERE ActiveStatus = 1";
                 using (var command = new SqlCommand(query, connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
