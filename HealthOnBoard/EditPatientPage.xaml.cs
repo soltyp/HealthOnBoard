@@ -23,32 +23,46 @@ namespace HealthOnBoard
             SelectedPatient = new Patient();
             AvailableBeds = new List<int>();
             BloodTypes = new List<BloodType>();
-            BindingContext = this;
+            
 
-            LoadBloodTypesAsync();
-            LoadAvailableBedsAsync();
-            LoadPatient(patientId);
+            InitializePage(patientId);
         }
-        private async void LoadBloodTypesAsync()
-{
-    try
-    {
-        // Pobierz listê grup krwi z bazy danych
-        BloodTypes = await _bloodService.GetAllBloodTypesAsync();
 
-        Debug.WriteLine($"Za³adowane grupy krwi: {string.Join(", ", BloodTypes.Select(bt => bt.Type))}");
-        OnPropertyChanged(nameof(BloodTypes));
-    }
-    catch (Exception ex)
-    {
-        Debug.WriteLine($"Error loading blood types: {ex.Message}");
-        await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
-    }
-}
+        private async void InitializePage(int patientId)
+        {
+            await LoadBloodTypesAsync();
+            Debug.WriteLine($"BloodTypes za³adowane: {string.Join(", ", BloodTypes.Select(bt => bt.Type))}");
 
+            await LoadAvailableBedsAsync();
+            Debug.WriteLine($"AvailableBeds za³adowane: {string.Join(", ", AvailableBeds)}");
+
+            await LoadPatient(patientId);
+            Debug.WriteLine($"Pacjent za³adowany: {SelectedPatient.Name}, Grupa krwi: {SelectedPatient.BloodType?.Type}");
+
+            BindingContext = this; // Ustaw kontekst po za³adowaniu danych
+            Debug.WriteLine($"BindingContext ustawiony: {BindingContext?.GetType().Name}");
+        }
 
 
-        private async void LoadPatient(int patientId)
+
+        private async Task LoadBloodTypesAsync()
+        {
+            try
+            {
+                BloodTypes = await _bloodService.GetAllBloodTypesAsync();
+                Debug.WriteLine($"Za³adowane grupy krwi: {string.Join(", ", BloodTypes.Select(bt => bt.Type))}");
+                OnPropertyChanged(nameof(BloodTypes));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d w LoadBloodTypesAsync: {ex.Message}");
+                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
+            }
+        }
+
+
+
+        private async Task LoadPatient(int patientId)
         {
             try
             {
@@ -57,33 +71,36 @@ namespace HealthOnBoard
                 {
                     SelectedPatient = patient;
 
-                    // SprawdŸ, czy BloodTypeID jest null lub pusty, jeœli tak - nie ³aduj
+                    // Dopasowanie obiektu BloodType z listy BloodTypes
                     if (SelectedPatient.BloodTypeID.HasValue)
                     {
-                        var bloodType = await _databaseService.GetBloodTypeByIdAsync(SelectedPatient.BloodTypeID.Value);
-                        if (bloodType != null)
-                        {
-                            // Przypisz grupê krwi do pacjenta
-                            SelectedPatient.BloodType = bloodType;
-                        }
-                        else
-                        {
-                            SelectedPatient.BloodType = null; // Jeœli nie znaleziono, ustaw na null
-                        }
+                        SelectedPatient.BloodType = BloodTypes
+                            .FirstOrDefault(bt => bt.BloodTypeID == SelectedPatient.BloodTypeID.Value)
+                            ?? new BloodType { Type = "Nieznana grupa krwi" };
+                    }
+                    else if (!string.IsNullOrEmpty(SelectedPatient.PatientBloodType))
+                    {
+                        SelectedPatient.BloodType = BloodTypes
+                            .FirstOrDefault(bt => bt.Type == SelectedPatient.PatientBloodType)
+                            ?? new BloodType { Type = SelectedPatient.PatientBloodType };
+                    }
+                    else
+                    {
+                        SelectedPatient.BloodType = new BloodType { Type = "Brak danych" };
                     }
 
-                    Debug.WriteLine($"Za³adowano pacjenta: {patient.Name}, Grupa krwi: {SelectedPatient.BloodType?.Type}, £ó¿ko: {SelectedPatient.BedNumber}");
+                    Debug.WriteLine($"Pacjent za³adowany: {SelectedPatient.Name}, Grupa krwi: {SelectedPatient.BloodType?.Type}");
                     OnPropertyChanged(nameof(SelectedPatient));
                 }
                 else
                 {
-                    await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ danych pacjenta.", "OK");
+                    await DisplayAlert("B³¹d", "Nie znaleziono danych pacjenta.", "OK");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"B³¹d w LoadPatient: {ex.Message}");
-                throw;
+                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ pacjenta.", "OK");
             }
         }
 
@@ -91,7 +108,8 @@ namespace HealthOnBoard
 
 
 
-        private async void LoadAvailableBedsAsync()
+
+        private async Task LoadAvailableBedsAsync()
         {
             try
             {

@@ -64,14 +64,15 @@ namespace HealthOnBoard
             }
             catch (Exception ex)
             {
-                //a
-                Debug.WriteLine($"Error loading blood types: {ex.Message}");
+                Debug.WriteLine($"B³¹d w LoadBloodTypesAsync: {ex.Message}");
                 await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
             }
         }
 
+
         private async Task LoadPatientsAsync()
         {
+
             try
             {
                 var patients = await _databaseService.GetPatientsAsync();

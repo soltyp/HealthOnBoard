@@ -10,28 +10,26 @@ namespace HealthOnBoard
 {
     public class Patient
     {
-        public int PatientID { get; set; } // Klucz główny pacjenta
-        public string Name { get; set; } // Imię i nazwisko pacjenta
-        public int Age { get; set; } // Wiek pacjenta
-        public int? BedNumber { get; set; } // Opcjonalny numer łóżka przypisanego pacjentowi
-        public string CurrentTemperature { get; set; } // Aktualna temperatura pacjenta
-        public string AssignedDrugs { get; set; } // Przepisane leki
-        public string Notes { get; set; } // Notatki dotyczące pacjenta
-        public string PESEL { get; set; } // Numer PESEL pacjenta
-        public string Address { get; set; } // Adres pacjenta
-        public string PhoneNumber { get; set; } // Numer telefonu pacjenta
-        public string Email { get; set; } // Adres e-mail pacjenta
-        public DateTime? DateOfBirth { get; set; } // Data urodzenia pacjenta
-        public string Gender { get; set; } // Płeć pacjenta
-        public string EmergencyContact { get; set; } // Kontakt w nagłych wypadkach
-        public string Allergies { get; set; } // Alergie pacjenta
-        public string ChronicDiseases { get; set; } // Choroby przewlekłe pacjenta
+        public int PatientID { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+        public int? BedNumber { get; set; }
+        public float? CurrentTemperature { get; set; }
+        public string AssignedDrugs { get; set; }
+        public string Notes { get; set; }
+        public string PESEL { get; set; }
+        public string Address { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string Gender { get; set; }
+        public string EmergencyContact { get; set; }
+        public string Allergies { get; set; }
+        public string ChronicDiseases { get; set; }
 
-        // ID grupy krwi (klucz obcy do tabeli BloodTypes)
-        public int? BloodTypeID { get; set; }
-
-        // Obiekt reprezentujący grupę krwi (dla relacji z tabelą BloodTypes)
-        public BloodType BloodType { get; set; }
+        public int? BloodTypeID { get; set; } // Identyfikator grupy krwi
+        public BloodType BloodType { get; set; } // Obiekt grupy krwi
+        public string PatientBloodType { get; set; } // Grupa krwi bezpośrednio z tabeli Patients
     }
 
 

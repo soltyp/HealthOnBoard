@@ -20,7 +20,7 @@ public class DatabaseService
     public DatabaseService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _connectionString = "Data Source=TUF15;Initial Catalog=HospitalManagement;Integrated Security=True;TrustServerCertificate=TRUE;";
+        _connectionString = "Data Source=LAPTOP-72SPAJ8D;Initial Catalog=HospitalManagement;Integrated Security=True;TrustServerCertificate=TRUE;";
         SqlMapper.AddTypeHandler(new BloodTypeHandler());
 
         try
@@ -167,38 +167,40 @@ public class DatabaseService
             using (var connection = new SqlConnection(_connectionString))
             {
                 const string query = @"
-            SELECT 
-                p.PatientID, 
-                p.Name, 
-                p.Age, 
-                p.BedNumber, 
-                p.CurrentTemperature, 
-                p.AssignedDrugs, 
-                p.Notes, 
-                p.PESEL, 
-                p.Address, 
-                p.PhoneNumber, 
-                p.Email, 
-                p.DateOfBirth, 
-                p.Gender, 
-                p.EmergencyContact, 
-                p.Allergies, 
-                p.ChronicDiseases, 
-                b.BloodTypeID, 
-                b.Type AS BloodTypeName
-            FROM Patients p
-            LEFT JOIN BloodTypes b ON p.BloodTypeID = b.BloodTypeID
-            WHERE p.PatientID = @PatientID";
+        SELECT 
+            p.PatientID, 
+            p.Name, 
+            p.Age, 
+            p.BedNumber, 
+            p.CurrentTemperature, 
+            p.AssignedDrugs, 
+            p.Notes, 
+            p.PESEL, 
+            p.Address, 
+            p.PhoneNumber, 
+            p.Email, 
+            p.DateOfBirth, 
+            p.Gender, 
+            p.EmergencyContact, 
+            p.Allergies, 
+            p.ChronicDiseases, 
+            p.BloodType AS PatientBloodType, -- Grupa krwi z tabeli Patients
+            b.BloodTypeID, 
+            b.Type AS BloodTypeName -- Grupa krwi z tabeli BloodTypes
+        FROM Patients p
+        LEFT JOIN BloodTypes b ON p.BloodTypeID = b.BloodTypeID
+        WHERE p.PatientID = @PatientID";
 
                 var result = await connection.QueryAsync<Patient, BloodType, Patient>(
                     query,
                     (patient, bloodType) =>
                     {
-                        patient.BloodType = bloodType; // Powiąż obiekt BloodType z Patient
+                        // Ustaw BloodType na podstawie BloodTypeID (priorytet) lub PatientBloodType
+                        patient.BloodType = bloodType ?? new BloodType { Type = patient.PatientBloodType };
                         return patient;
                     },
                     new { PatientID = patientId },
-                    splitOn: "BloodTypeID" // Określ, gdzie zaczynają się dane BloodType
+                    splitOn: "BloodTypeID"
                 );
 
                 return result.FirstOrDefault();
@@ -211,6 +213,43 @@ public class DatabaseService
         }
     }
 
+    public async Task<List<Patient>> GetAllPatientsAsync()
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                const string query = @"
+            SELECT 
+                PatientID,
+                Name,
+                Age,
+                BedNumber,
+                CurrentTemperature,
+                AssignedDrugs,
+                Notes,
+                PESEL,
+                Address,
+                PhoneNumber,
+                Email,
+                DateOfBirth,
+                Gender,
+                EmergencyContact,
+                Allergies,
+                ChronicDiseases,
+                BloodType -- Pobierz bezpośrednio kolumnę BloodType
+            FROM Patients";
+
+                var patients = await connection.QueryAsync<Patient>(query);
+                return patients.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Błąd w GetAllPatientsAsync: {ex.Message}");
+            throw;
+        }
+    }
 
 
     public async Task<bool> IsLockedOutAsync()
@@ -898,23 +937,25 @@ public class DatabaseService
     {
         try
         {
-            const string query = @"
-            SELECT [BloodTypeID], [Type]
-            FROM [HospitalManagement].[dbo].[BloodTypes]
-            WHERE [BloodTypeID] = @BloodTypeID";
-
             using (var connection = new SqlConnection(_connectionString))
             {
-                var result = await connection.QueryFirstOrDefaultAsync<BloodType>(query, new { BloodTypeID = bloodTypeId });
-                return result; // Zwraca grupę krwi lub null, jeśli nie znaleziono
+                const string query = @"
+            SELECT BloodTypeID, Type
+            FROM BloodTypes
+            WHERE BloodTypeID = @BloodTypeID";
+
+                return await connection.QueryFirstOrDefaultAsync<BloodType>(query, new { BloodTypeID = bloodTypeId });
             }
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Błąd w GetBloodTypeByIdAsync: {ex.Message}");
-            return null;
+            throw;
         }
     }
+
+
+
     public async Task<List<BloodTypeStatisticsModel>> GetBloodTypeStatisticsAsync()
     {
         const string query = @"

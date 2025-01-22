@@ -5,6 +5,7 @@
              Title="Statystyki pacjentów">
     <ContentPage.Content>
         <ScrollView>
+            
             <VerticalStackLayout Padding="20" Spacing="15">
                 <!-- Nagłówek strony -->
                 <Label Text="Statystyki pacjentów" 
@@ -164,7 +165,7 @@
 
 
             </VerticalStackLayout>
-            
+
         </ScrollView>
     </ContentPage.Content>
 </ContentPage>

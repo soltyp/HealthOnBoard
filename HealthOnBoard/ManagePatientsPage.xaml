@@ -59,10 +59,15 @@
                     <Entry Placeholder="Kontakt w nagłych wypadkach" Text="{Binding NewPatient.EmergencyContact}" />
 
                     <Label Text="Grupa krwi:" />
-                    <Picker Title="Wybierz grupę krwi"
-        ItemsSource="{Binding BloodTypes}" 
-        ItemDisplayBinding="{Binding Type}"
-        SelectedItem="{Binding NewPatient.BloodType, Mode=TwoWay}" />
+                    <Label Text="{Binding SelectedPatient.BloodType.Type}" />
+
+                    <Picker ItemsSource="{Binding BloodTypes}" 
+        SelectedItem="{Binding SelectedPatient.BloodType, Mode=TwoWay}" 
+        Title="Wybierz grupę krwi"
+        ItemDisplayBinding="{Binding Type}" />
+
+
+
 
                     <Label Text="Alergie:" />
                     <Entry Placeholder="Alergie" Text="{Binding NewPatient.Allergies}" />

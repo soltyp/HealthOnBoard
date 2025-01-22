@@ -10,8 +10,10 @@ using System.Diagnostics;
 
 namespace HealthOnBoard
 {
+
     public partial class PatientStatisticsPage : ContentPage
     {
+
         private readonly DatabaseService _databaseService;
 
         public ObservableCollection<BedStatisticsModel> BedStatistics { get; set; }
@@ -25,9 +27,9 @@ namespace HealthOnBoard
             _databaseService = databaseService;
             BedStatistics = new ObservableCollection<BedStatisticsModel>();
             GenderStatistics = new ObservableCollection<GenderStatisticsModel>();
-            BloodTypeStatistics = new ObservableCollection<BloodTypeStatisticsModel>(); 
+            BloodTypeStatistics = new ObservableCollection<BloodTypeStatisticsModel>();
 
-            BindingContext = this; 
+            BindingContext = this;
             LoadStatistics();
         }
 
@@ -37,27 +39,33 @@ namespace HealthOnBoard
 
             double total = data.Sum(d => d.Value);
             double startAngle = 0;
+            double centerX = 200;
+            double centerY = 200;
+            double radius = 100;
+            double labelRadius = 115; // Zmniejszono promieñ dla etykiet, aby by³y bli¿ej ko³a
 
             foreach (var item in data)
             {
                 double sliceAngle = (item.Value / total) * 360;
 
+                // Rysowanie jednego fragmentu wykresu
                 var pathFigure = new Microsoft.Maui.Controls.Shapes.PathFigure
                 {
-                    StartPoint = new Point(150, 150)
+                    StartPoint = new Point(centerX, centerY)
                 };
 
-                var arcPoint = GetArcPoint(150, 150, 100, startAngle + sliceAngle);
+                var startArcPoint = GetArcPoint(centerX, centerY, radius, startAngle);
+                var endArcPoint = GetArcPoint(centerX, centerY, radius, startAngle + sliceAngle);
 
-                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = GetArcPoint(150, 150, 100, startAngle) });
+                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = startArcPoint });
                 pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.ArcSegment
                 {
-                    Point = arcPoint,
-                    Size = new Size(100, 100),
+                    Point = endArcPoint,
+                    Size = new Size(radius, radius),
                     SweepDirection = SweepDirection.Clockwise,
                     IsLargeArc = sliceAngle > 180
                 });
-                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = new Point(150, 150) });
+                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = new Point(centerX, centerY) });
 
                 var pathGeometry = new Microsoft.Maui.Controls.Shapes.PathGeometry();
                 pathGeometry.Figures.Add(pathFigure);
@@ -72,57 +80,79 @@ namespace HealthOnBoard
 
                 chartGrid.Children.Add(slicePath);
 
+                // Dodanie etykiety dla fragmentu
                 double midAngle = startAngle + sliceAngle / 2;
-                var labelPoint = GetArcPoint(150, 150, 120, midAngle);
+                var labelPoint = GetArcPoint(centerX, centerY, labelRadius, midAngle);
 
                 var label = new Label
                 {
                     Text = $"{item.Label}: {item.Value}",
-                    FontSize = 14, // Wiêksza czcionka dla lepszej czytelnoœci
+                    FontSize = 12,
                     TextColor = Colors.White,
                     HorizontalTextAlignment = TextAlignment.Center,
                     VerticalTextAlignment = TextAlignment.Center,
-                    TranslationX = labelPoint.X - 150,
-                    TranslationY = labelPoint.Y - 150
+                    TranslationX = labelPoint.X - centerX,
+                    TranslationY = labelPoint.Y - centerY
                 };
 
                 chartGrid.Children.Add(label);
 
                 startAngle += sliceAngle;
             }
+
+            // Dodanie tytu³u nad wykresem
+            var title = new Label
+            {
+                Text = "Grupy krwi pacjentów",
+                FontSize = 16,
+                FontAttributes = FontAttributes.Bold,
+                TextColor = Colors.White,
+                HorizontalTextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, -40, 0, 10)
+            };
+
+            chartGrid.Children.Add(title);
         }
+
+
+
+
         private async Task LoadBloodTypeStatistics()
         {
             try
             {
-                var bloodTypeStats = await _databaseService.GetBloodTypeStatisticsAsync();
-                if (bloodTypeStats == null || !bloodTypeStats.Any())
+                // Pobierz statystyki bezpoœrednio z kolumny BloodType
+                var patients = await _databaseService.GetAllPatientsAsync();
+                if (patients == null || !patients.Any())
                 {
                     Debug.WriteLine("Brak danych do za³adowania dla grup krwi.");
                     return;
                 }
 
-                BloodTypeStatistics.Clear();
-
-                foreach (var stat in bloodTypeStats)
-                {
-                    if (string.IsNullOrEmpty(stat.BloodType))
+                // Grupowanie pacjentów wed³ug grupy krwi (Type w³aœciwoœæ)
+                var bloodTypeData = patients
+                    .Where(p => p.BloodType != null && !string.IsNullOrEmpty(p.BloodType.Type)) // Pomijamy puste wartoœci grupy krwi
+                    .GroupBy(p => p.BloodType.Type)
+                    .Select(g => new StatisticDataModel
                     {
-                        Debug.WriteLine($"Pominiêto pacjenta z brakiem grupy krwi");
-                        continue;
-                    }
+                        Label = g.Key,
+                        Value = g.Count()
+                    })
+                    .ToList();
 
-                    // Dodajemy do kolekcji, uwzglêdniaj¹c imiê pacjenta i numer ³ó¿ka
-                    BloodTypeStatistics.Add(stat);
-
-                    Debug.WriteLine($"Za³adowano grupê krwi: {stat.BloodType}, Liczba pacjentów: {stat.PatientCount}, Pacjent: {stat.PatientName}, £ó¿ko: {stat.BedNumber}");
+                // Ustawienie danych dla statystyk
+                // Ustawienie danych dla statystyk
+                BloodTypeStatistics.Clear();
+                foreach (var patient in patients.Where(p => p.BloodType != null && !string.IsNullOrEmpty(p.BloodType.Type)))
+                {
+                    BloodTypeStatistics.Add(new BloodTypeStatisticsModel
+                    {
+                        PatientName = patient.Name,
+                        BedNumber = patient.BedNumber ?? -1, // Ustawiamy -1 dla "Brak ³ó¿ka"
+                        BloodType = patient.BloodType.Type // Pobieramy w³aœciwoœæ Type jako string
+                    });
                 }
 
-                var bloodTypeData = bloodTypeStats
-                    .Where(bt => !string.IsNullOrEmpty(bt.BloodType))
-                    .GroupBy(bt => bt.BloodType)
-                    .Select(g => new StatisticDataModel { Label = g.Key, Value = g.Count() })
-                    .ToList();
 
                 // Budujemy wykres ko³owy z grup krwi
                 BuildPieChartForBloodTypes(BloodTypePieChartGrid, bloodTypeData);
@@ -130,7 +160,7 @@ namespace HealthOnBoard
             catch (Exception ex)
             {
                 Debug.WriteLine($"B³¹d podczas ³adowania danych grup krwi: {ex.Message}");
-                throw;
+                await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas ³adowania danych grup krwi.", "OK");
             }
         }
 
@@ -237,6 +267,13 @@ namespace HealthOnBoard
             chartGrid.Children.Clear();
 
             double total = data.Sum(d => d.Value);
+
+            // Nowe wartoœci œrodka dla przesuniêcia
+            double centerX = 200; // Wiêcej w prawo
+            double centerY = 200; // Wiêcej w dó³
+            double radius = 100;
+            double labelRadius = 120;
+
             double startAngle = 0;
 
             foreach (var item in data)
@@ -245,20 +282,21 @@ namespace HealthOnBoard
 
                 var pathFigure = new Microsoft.Maui.Controls.Shapes.PathFigure
                 {
-                    StartPoint = new Point(150, 150)
+                    StartPoint = new Point(centerX, centerY)
                 };
 
-                var arcPoint = GetArcPoint(150, 150, 100, startAngle + sliceAngle);
+                var startArcPoint = GetArcPoint(centerX, centerY, radius, startAngle);
+                var endArcPoint = GetArcPoint(centerX, centerY, radius, startAngle + sliceAngle);
 
-                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = GetArcPoint(150, 150, 100, startAngle) });
+                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = startArcPoint });
                 pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.ArcSegment
                 {
-                    Point = arcPoint,
-                    Size = new Size(100, 100),
+                    Point = endArcPoint,
+                    Size = new Size(radius, radius),
                     SweepDirection = SweepDirection.Clockwise,
                     IsLargeArc = sliceAngle > 180
                 });
-                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = new Point(150, 150) });
+                pathFigure.Segments.Add(new Microsoft.Maui.Controls.Shapes.LineSegment { Point = new Point(centerX, centerY) });
 
                 var pathGeometry = new Microsoft.Maui.Controls.Shapes.PathGeometry();
                 pathGeometry.Figures.Add(pathFigure);
@@ -274,7 +312,7 @@ namespace HealthOnBoard
                 chartGrid.Children.Add(slicePath);
 
                 double midAngle = startAngle + sliceAngle / 2;
-                var labelPoint = GetArcPoint(150, 150, 120, midAngle);
+                var labelPoint = GetArcPoint(centerX, centerY, labelRadius, midAngle);
 
                 var label = new Label
                 {
@@ -283,16 +321,30 @@ namespace HealthOnBoard
                     TextColor = Colors.White,
                     HorizontalTextAlignment = TextAlignment.Center,
                     VerticalTextAlignment = TextAlignment.Center,
-                    TranslationX = labelPoint.X - 150,
-                    TranslationY = labelPoint.Y - 150
+                    TranslationX = labelPoint.X - centerX,
+                    TranslationY = labelPoint.Y - centerY
                 };
-
 
                 chartGrid.Children.Add(label);
 
                 startAngle += sliceAngle;
             }
+
+            // Dodanie tytu³u nad wykresem (opcjonalnie przesuniêcie tytu³u)
+            var title = new Label
+            {
+                Text = "Stosunek zajêtych do wolnych ³ó¿ek",
+                FontSize = 16,
+                FontAttributes = FontAttributes.Bold,
+                TextColor = Colors.White,
+                HorizontalTextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, -30, 0, 10),
+                TranslationX = 50 // Opcjonalne przesuniêcie tytu³u w prawo
+            };
+
+            chartGrid.Children.Add(title);
         }
+
 
         private Point GetArcPoint(double centerX, double centerY, double radius, double angle)
         {
@@ -317,3 +369,4 @@ namespace HealthOnBoard
 
 
 }
+
