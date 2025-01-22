@@ -106,8 +106,14 @@ namespace HealthOnBoard
                     // Przypisz nazwê istniej¹cego leku do w³aœciwoœci
                     PreviousMedication = medicationName;
 
-                    // Przypisz wybrany lek na podstawie nazwy
+                    // Ustaw lek na domyœlny w Pickerze
                     SelectedMedication = Medications.FirstOrDefault(m => m.Name.Equals(medicationName, StringComparison.OrdinalIgnoreCase));
+
+                    // Jeœli lek nie znajduje siê w przefiltrowanej liœcie, dodaj go tymczasowo
+                    if (SelectedMedication != null && !FilteredMedications.Contains(SelectedMedication))
+                    {
+                        FilteredMedications.Add(SelectedMedication);
+                    }
 
                     // Przypisz iloœæ i jednostkê
                     SelectedQuantity = int.TryParse(quantityUnit[1].Split(' ')[1], out var quantity) ? quantity : 1;
@@ -122,17 +128,28 @@ namespace HealthOnBoard
             }
         }
 
+
+
         private async void LoadMedicationsAsync()
         {
             try
             {
                 var medications = await _databaseService.GetMedicationsAsync();
+                Medications.Clear();
+                FilteredMedications.Clear();
+
                 foreach (var medication in medications)
                 {
                     Medications.Add(medication);
+                    FilteredMedications.Add(medication); // Na pocz¹tku pokazujemy ca³¹ listê
                 }
 
-                // Po za³adowaniu listy leków, spróbuj ustawiæ pocz¹tkowe wartoœci
+                // Jeœli lek jest przypisany, ustaw go jako wybrany
+                if (!string.IsNullOrEmpty(PreviousMedication))
+                {
+                    SelectedMedication = Medications.FirstOrDefault(m => m.Name.Equals(PreviousMedication, StringComparison.OrdinalIgnoreCase));
+                }
+
                 PopulateMedicationFields();
             }
             catch (Exception ex)
@@ -141,6 +158,7 @@ namespace HealthOnBoard
                 await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ listy leków.", "OK");
             }
         }
+
 
         private async void OnSaveClicked(object sender, EventArgs e)
         {
@@ -197,6 +215,7 @@ namespace HealthOnBoard
 
                 // Filtrowanie leków na podstawie wybranej litery
                 FilteredMedications.Clear();
+
                 foreach (var medication in Medications)
                 {
                     if (medication.Name.StartsWith(selectedLetter, StringComparison.OrdinalIgnoreCase))
@@ -206,8 +225,12 @@ namespace HealthOnBoard
                 }
 
                 Debug.WriteLine($"Filtered medications by letter: {selectedLetter}. Found {FilteredMedications.Count} medications.");
+
+                // Automatycznie wybierz pierwszy lek z listy, jeœli istnieje
+                SelectedMedication = FilteredMedications.FirstOrDefault();
             }
         }
+
 
 
         private void DecreaseQuantity_Clicked(object sender, EventArgs e)

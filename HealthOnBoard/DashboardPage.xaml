@@ -209,7 +209,7 @@
 
                         <!-- Nagłówek ostatnich operacji -->
                         <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Fill">
-                            <Label Text="Operacje na pacjencie z ostatnich 3 dni (Nie wiem czy nie lepeij zmienic an 3 ostatnie operacje na pacjencie)" 
+                            <Label Text="Operacje na pacjencie z ostatnich 3 dni" 
                                FontSize="18" 
                                TextColor="#FFFFFF" 
                                VerticalOptions="Center" />

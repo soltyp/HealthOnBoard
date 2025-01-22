@@ -17,7 +17,7 @@
             <StackLayout IsVisible="{Binding IsDrugAdministrationVisible}" Spacing="10">
 
                 <!-- Etykieta z istniejącym lekiem -->
-                <Label Text="{Binding PreviousMedication, StringFormat='Istniejący lek ( w literke w alfabecie trzeba kliknąć 2 razy szybko): {0}'}"
+                <Label Text="{Binding PreviousMedication, StringFormat='Filtruj leki'}"
                        FontSize="16"
                        TextColor="#FFFFFF"
                        HorizontalOptions="Start" />
@@ -56,14 +56,16 @@
                 </ScrollView>
 
                 <!-- Picker do wyboru leku -->
+
                 <Picker ItemsSource="{Binding FilteredMedications}"
-                        SelectedItem="{Binding SelectedMedication}"
-                        ItemDisplayBinding="{Binding Name}"
-                        Title="Wybierz lek"
-                        FontSize="24"
-                        BackgroundColor="#292A3A"
-                        TextColor="#FFFFFF"
-                        HorizontalOptions="FillAndExpand" />
+        SelectedItem="{Binding SelectedMedication}"
+        ItemDisplayBinding="{Binding Name}"
+        Title="Wybierz lek"
+        FontSize="24"
+        BackgroundColor="#292A3A"
+        TextColor="#FFFFFF"
+        HorizontalOptions="FillAndExpand" />
+
 
                 <!-- Jednostka -->
                 <Label Text="Wybierz jednostkę:"

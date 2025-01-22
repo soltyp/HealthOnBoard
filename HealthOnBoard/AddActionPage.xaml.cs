@@ -13,7 +13,7 @@ namespace HealthOnBoard
         private int QuantityValue { get; set; } = 1;
 
         public ObservableCollection<Medication> Medications { get; set; } = new ObservableCollection<Medication>();
-        public ObservableCollection<string> Units { get; set; } = new ObservableCollection<string> { "mg", "sztuka", "tablet" };
+        public ObservableCollection<string> Units { get; set; } = new ObservableCollection<string> { "mg", "sztuka", "tabletka" };
         public ObservableCollection<Medication> FilteredMedications { get; set; } = new ObservableCollection<Medication>();
         public ObservableCollection<string> ActionTypes { get; set; } = new ObservableCollection<string>
         {

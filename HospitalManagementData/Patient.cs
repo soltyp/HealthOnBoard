@@ -30,6 +30,9 @@ namespace HealthOnBoard
         public int? BloodTypeID { get; set; } // Identyfikator grupy krwi
         public BloodType BloodType { get; set; } // Obiekt grupy krwi
         public string PatientBloodType { get; set; } // Grupa krwi bezpośrednio z tabeli Patients
+        public bool IsVisible { get; set; } // Dodana właściwość
+        public int IsVisible2 { get; set; } // Dodajemy IsVisible2 jako int
+
     }
 
 

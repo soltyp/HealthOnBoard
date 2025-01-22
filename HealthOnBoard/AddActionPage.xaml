@@ -12,7 +12,7 @@
                    HorizontalOptions="Center" />
 
             <Picker x:Name="ActionTypePicker"
-                    Title="Wybierz typ akcji (w literke w aflabecie trzeba klikanc 2 razy szybko)"
+                    Title="Wybierz typ akcji"
                     FontSize="24"
                     ItemsSource="{Binding ActionTypes}"
                     HorizontalOptions="FillAndExpand"

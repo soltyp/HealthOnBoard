@@ -68,25 +68,39 @@ namespace HealthOnBoard
                 await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ grup krwi.", "OK");
             }
         }
-
-
         private async Task LoadPatientsAsync()
         {
-
             try
             {
-                var patients = await _databaseService.GetPatientsAsync();
+                // £adujemy pacjentów, którzy s¹ widoczni
+                var patients = await _databaseService.GetVisiblePatientsAsync();
+                Debug.WriteLine($"Za³adowano pacjentów: {patients.Count()}");
+
+                // Czyœcimy listê pacjentów w UI
                 Patients.Clear();
+
+                // Iterujemy po pacjentach i dodajemy ich do listy
                 foreach (var patient in patients)
                 {
+                    Debug.WriteLine($"Pacjent: {patient.Name}, IsVisible2: {patient.IsVisible2}");
+
+                    // Dodajemy pacjentów, którzy s¹ widoczni
                     Patients.Add(patient);
                 }
+
+                Debug.WriteLine($"Liczba pacjentów wyœwietlanych w UI: {Patients.Count}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading patients: {ex.Message}");
+                Debug.WriteLine($"B³¹d podczas ³adowania pacjentów: {ex.Message}");
             }
         }
+
+
+
+
+
+
 
         private async Task LoadAvailableBedsAsync()
         {
@@ -157,17 +171,26 @@ namespace HealthOnBoard
                 {
                     try
                     {
-                        await _databaseService.DeletePatientAsync(patient.PatientID);
+                        // Ustaw IsVisible2 na 0 w bazie danych (widoczny jako "ukryty")
+                        patient.IsVisible2 = 0; // Zmieniamy na 0 (dla nie-widocznych pacjentów)
+
+                        // Zaktualizuj pacjenta w bazie danych
+                        await _databaseService.UpdatePatientAsync(patient);
+
+                        // Usuñ pacjenta z listy w UI
                         Patients.Remove(patient);
+
                         await DisplayAlert("Sukces", "Pacjent zosta³ usuniêty.", "OK");
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"Error deleting patient: {ex.Message}");
-                        await DisplayAlert("B³¹d", "Nie uda³o siê usun¹æ pacjenta.", "OK");
+                        Debug.WriteLine($"Error hiding patient: {ex.Message}");
+                        await DisplayAlert("B³¹d", "Nie uda³o siê ukryæ pacjenta.", "OK");
                     }
                 }
             }
         }
+
+
     }
 }

@@ -555,6 +555,23 @@ public class DatabaseService
             return false;
         }
     }
+    public async Task UpdatePatientAsync(Patient patient)
+    {
+        try
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Zmieniamy zapytanie, aby używało IsVisible2
+                string query = "UPDATE Patients SET IsVisible2 = @IsVisible2 WHERE PatientID = @PatientID";
+                await connection.ExecuteAsync(query, new { patient.IsVisible2, patient.PatientID });
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error updating patient: {ex.Message}");
+            throw;
+        }
+    }
 
     public async Task<bool> UpdatePatientActionAsync(PatientActivity activity)
     {
@@ -1003,14 +1020,43 @@ GROUP BY bt.Type, p.Name, p.BedNumber
         using (var connection = new SqlConnection(_connectionString))
         {
             const string query = @"
-            SELECT 
-                p.PatientID, p.Name, p.Age, p.BedNumber, 
-                p.PESEL, p.Address, p.PhoneNumber, p.Email, 
-                p.DateOfBirth, p.Gender, p.EmergencyContact, 
-                p.Allergies, p.ChronicDiseases, p.Notes, 
-                b.BloodTypeID, b.Type AS BloodTypeName
-            FROM Patients p
-            LEFT JOIN BloodTypes b ON p.BloodTypeID = b.BloodTypeID";
+        SELECT 
+            p.PatientID, p.Name, p.Age, p.BedNumber, 
+            p.PESEL, p.Address, p.PhoneNumber, p.Email, 
+            p.DateOfBirth, p.Gender, p.EmergencyContact, 
+            p.Allergies, p.ChronicDiseases, p.Notes, 
+            b.BloodTypeID, b.Type AS BloodTypeName,
+            p.IsVisible2  -- Dodajemy IsVisible2 do zapytania
+        FROM Patients p
+        LEFT JOIN BloodTypes b ON p.BloodTypeID = b.BloodTypeID";
+
+            var patients = await connection.QueryAsync<Patient, BloodType, Patient>(
+                query,
+                (patient, bloodType) =>
+                {
+                    patient.BloodType = bloodType;
+                    return patient;
+                },
+                splitOn: "BloodTypeID");
+
+            return patients.ToList();
+        }
+    }
+    public async Task<List<Patient>> GetVisiblePatientsAsync()
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            const string query = @"
+        SELECT 
+            p.PatientID, p.Name, p.Age, p.BedNumber, 
+            p.PESEL, p.Address, p.PhoneNumber, p.Email, 
+            p.DateOfBirth, p.Gender, p.EmergencyContact, 
+            p.Allergies, p.ChronicDiseases, p.Notes, 
+            b.BloodTypeID, b.Type AS BloodTypeName,
+            p.IsVisible2
+        FROM Patients p
+        LEFT JOIN BloodTypes b ON p.BloodTypeID = b.BloodTypeID
+        WHERE p.IsVisible2 = 1";  // Tylko pacjenci, którzy mają IsVisible2 = 1
 
             var patients = await connection.QueryAsync<Patient, BloodType, Patient>(
                 query,
