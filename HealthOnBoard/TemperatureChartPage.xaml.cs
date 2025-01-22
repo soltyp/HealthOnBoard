@@ -9,30 +9,93 @@ namespace HealthOnBoard
     {
         private readonly DatabaseService _databaseService;
         private readonly int _patientId;
+        private readonly User _user;
+        private System.Timers.Timer _logoutTimer;
+        private const int LogoutTimeInSeconds = 180;
+        private int _remainingTimeInSeconds;
 
-        public TemperatureChartPage(int patientId, DatabaseService databaseService)
+        public TemperatureChartPage(int patientId, User user, DatabaseService databaseService)
         {
             InitializeComponent();
-            _databaseService = databaseService;
+            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             _patientId = patientId;
+            _user = user ?? throw new ArgumentNullException(nameof(user));
 
-            // Za³aduj dane z bazy
+            // Ustaw dane u¿ytkownika w navbarze
+            UserFirstNameLabel.Text = _user.FirstName ?? "Brak danych";
+            RoleLabel.Text = GetRoleName(_user.RoleID) ?? "Brak roli";
+
+            // Inicjalizacja timera wylogowania
+            InitializeLogoutTimer();
+
+            // Dodaj gest do resetowania timera
+           // AddTapGestureToResetTimer();
+
+            // Za³aduj dane wykresu
             _ = LoadTemperatureChartDataAsync();
+        }
+
+        private string GetRoleName(int roleId)
+        {
+            try
+            {
+                var role = _databaseService.GetRoleById(roleId);
+                return role?.RoleName;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas pobierania nazwy roli: {ex.Message}");
+                return null;
+            }
+        }
+
+        private void InitializeLogoutTimer()
+        {
+            _remainingTimeInSeconds = LogoutTimeInSeconds;
+            _logoutTimer = new System.Timers.Timer(1000);
+            _logoutTimer.Elapsed += UpdateCountdown;
+            _logoutTimer.AutoReset = true;
+            _logoutTimer.Start();
+        }
+
+        private void UpdateCountdown(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            _remainingTimeInSeconds--;
+
+            Dispatcher.Dispatch(() =>
+            {
+                int minutes = _remainingTimeInSeconds / 60;
+                int seconds = _remainingTimeInSeconds % 60;
+                LogoutTimer.Text = $"{minutes:D2}:{seconds:D2}";
+
+                if (_remainingTimeInSeconds <= 0)
+                {
+                    _logoutTimer.Stop();
+                    LogoutUser();
+                }
+            });
+        }
+
+        private async void LogoutUser()
+        {
+            await Dispatcher.DispatchAsync(async () =>
+            {
+                await DisplayAlert("Sesja wygas³a", "Twoja sesja wygas³a z powodu braku aktywnoœci.", "OK");
+                await Navigation.PopToRootAsync();
+            });
+        }
+
+        private async void OnBackButtonClicked(object sender, EventArgs e)
+        {
+            await Navigation.PopAsync();
         }
 
         private async Task LoadTemperatureChartDataAsync()
         {
             try
             {
-                // Pobierz wszystkie dane o temperaturze z bazy danych
                 var temperatureLogs = await _databaseService.GetTemperatureLogsAsync(_patientId);
-
-                // Posortuj dane po dacie rosn¹co
-                var allTemperatures = temperatureLogs
-                                      .OrderBy(t => t.ActionDate)
-                                      .ToList();
-
-                // Przeka¿ dane do metody tworz¹cej wykres
+                var allTemperatures = temperatureLogs.OrderBy(t => t.ActionDate).ToList();
                 BuildTemperatureChart(allTemperatures);
             }
             catch (Exception ex)
@@ -53,14 +116,12 @@ namespace HealthOnBoard
                 return;
             }
 
-            // Oblicz minimaln¹ i maksymaln¹ temperaturê
             decimal minTemperature = temperatureLogs.Min(t => t.Temperature);
             decimal maxTemperature = temperatureLogs.Max(t => t.Temperature);
 
             if (maxTemperature == minTemperature)
-                maxTemperature = minTemperature + 1; // Zabezpieczenie przed dzieleniem przez zero
+                maxTemperature = minTemperature + 1;
 
-            // Dodaj kolumny dla ka¿dego punktu
             foreach (var _ in temperatureLogs)
             {
                 TemperatureChartGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
@@ -72,10 +133,8 @@ namespace HealthOnBoard
 
             foreach (var log in temperatureLogs)
             {
-                // Obliczenie wysokoœci punktu na wykresie
                 double verticalPosition = (double)((log.Temperature - minTemperature) / (maxTemperature - minTemperature)) * maxChartHeight;
 
-                // Punkt na wykresie
                 var point = new Ellipse
                 {
                     Fill = new SolidColorBrush(Color.FromHex("#FF5733")),
@@ -84,7 +143,6 @@ namespace HealthOnBoard
                     Margin = new Thickness(0, maxChartHeight - verticalPosition + 20, 0, 0)
                 };
 
-                // Etykieta temperatury nad punktem
                 var tempLabel = new Label
                 {
                     Text = $"{log.Temperature:F1}°C",
@@ -94,7 +152,6 @@ namespace HealthOnBoard
                     Margin = new Thickness(0, -20, 0, 0)
                 };
 
-                // Etykieta daty i godziny pod punktem
                 var dateLabel = new Label
                 {
                     Text = log.ActionDate.ToString("dd-MM HH:mm"),
@@ -105,7 +162,6 @@ namespace HealthOnBoard
                     Margin = new Thickness(0, 5, 0, 0)
                 };
 
-                // Dodanie elementów do siatki
                 TemperatureChartGrid.Children.Add(tempLabel);
                 Grid.SetColumn(tempLabel, columnIndex);
                 Grid.SetRow(tempLabel, 0);
@@ -118,8 +174,24 @@ namespace HealthOnBoard
                 Grid.SetColumn(dateLabel, columnIndex);
                 Grid.SetRow(dateLabel, 1);
 
-                columnIndex += 2; // Odstêp miêdzy punktami
+                columnIndex += 2;
             }
+        }
+
+        //private void AddTapGestureToResetTimer()
+        //{
+        //    var tapGesture = new TapGestureRecognizer();
+        //    tapGesture.Tapped += (_, _) => ResetLogoutTimer();
+        //    this.GestureRecognizers.Add(tapGesture);
+        //}
+        private void OnScreenTapped(object sender, EventArgs e)
+        {
+            ResetLogoutTimer();
+        }
+
+        private void ResetLogoutTimer()
+        {
+            _remainingTimeInSeconds = LogoutTimeInSeconds;
         }
     }
 }

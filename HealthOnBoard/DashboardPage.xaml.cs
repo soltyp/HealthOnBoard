@@ -683,7 +683,8 @@ namespace HealthOnBoard
         {
             // Pobierz ID pacjenta i przeka¿ us³ugê bazy danych
             int patientId = _patient.PatientID;
-            await Navigation.PushAsync(new TemperatureChartPage(patientId, _databaseService));
+            await Navigation.PushAsync(new TemperatureChartPage(_patient.PatientID, _user, _databaseService));
+
         }
 
         private async void OnShowPatientHistoryClicked(object sender, EventArgs e)

@@ -3,6 +3,7 @@ using Microsoft.Maui.Controls;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Timers;
 
 namespace HealthOnBoard
 {
@@ -12,7 +13,6 @@ namespace HealthOnBoard
         private readonly DatabaseService _databaseService;
 
         public string ActionDetails { get; set; }
-
         public string ActionType { get; set; }
         public bool IsTemperatureInputVisible { get; set; }
         public bool IsDetailsInputVisible { get; set; }
@@ -22,7 +22,6 @@ namespace HealthOnBoard
         public ObservableCollection<Medication> Medications { get; set; } = new ObservableCollection<Medication>();
         public ObservableCollection<string> MedicationUnits { get; set; } = new ObservableCollection<string> { "sztuka", "ml", "mg" };
         public ObservableCollection<Medication> FilteredMedications { get; set; } = new ObservableCollection<Medication>();
-
 
         private Medication _selectedMedication;
         public Medication SelectedMedication
@@ -56,20 +55,73 @@ namespace HealthOnBoard
                 OnPropertyChanged(nameof(SelectedQuantity));
             }
         }
+        // Add this to your `EditActionPage` class
+        private System.Timers.Timer _logoutTimer;
 
+        private const int LogoutTimeInSeconds = 180; // 3 minutes
+        private int _remainingTimeInSeconds;
+
+        // Initialize and start the timer
+        private void InitializeLogoutTimer()
+        {
+            _remainingTimeInSeconds = LogoutTimeInSeconds;
+
+            // Explicitly specify System.Timers.Timer
+            _logoutTimer = new System.Timers.Timer(1000); // 1-second intervals
+            _logoutTimer.Elapsed += UpdateCountdown;
+            _logoutTimer.AutoReset = true;
+            _logoutTimer.Start();
+        }
+        // Method to update the countdown timer
+        private void UpdateCountdown(object sender, ElapsedEventArgs e)
+        {
+            // Decrement the remaining time
+            _remainingTimeInSeconds--;
+
+            // Update the UI on the main thread
+            Dispatcher.Dispatch(() =>
+            {
+                int minutes = _remainingTimeInSeconds / 60;
+                int seconds = _remainingTimeInSeconds % 60;
+                LogoutTimerLabel.Text = $"{minutes:D2}:{seconds:D2}";
+
+                // If time runs out, stop the timer and log the user out
+                if (_remainingTimeInSeconds <= 0)
+                {
+                    _logoutTimer.Stop();
+                    LogoutUser();
+                }
+            });
+        }
+
+        // Reset the timer when activity occurs
+        private void ResetLogoutTimer()
+        {
+            _remainingTimeInSeconds = LogoutTimeInSeconds;
+        }
+
+        // Log the user out when the timer expires
+        private async void LogoutUser()
+        {
+            await Dispatcher.DispatchAsync(async () =>
+            {
+                await DisplayAlert("Session Expired", "Your session has expired due to inactivity.", "OK");
+                await Navigation.PopToRootAsync();
+            });
+        }
         public EditActionPage(PatientActivity activity, DatabaseService databaseService)
         {
             InitializeComponent();
 
             _activity = activity ?? throw new ArgumentNullException(nameof(activity));
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
-
-            // Ustaw widocznoœæ sekcji
+            InitializeLogoutTimer();
+            // Set section visibility
             IsDrugAdministrationVisible = _activity.ActionType == "Podanie leków";
             IsTemperatureInputVisible = _activity.ActionType == "Pomiar temperatury";
             IsDetailsInputVisible = !_activity.ActionType.Contains("Pomiar temperatury") && !_activity.ActionType.Contains("Podanie leków");
 
-            // Ustaw wartoœci pocz¹tkowe
+            // Set initial values
             ActionType = _activity.ActionType;
             ActionDetails = _activity.ActionDetails;
             CurrentTemperature = _activity.CurrentTemperature?.ToString("F1") ?? string.Empty;
@@ -82,16 +134,20 @@ namespace HealthOnBoard
 
             BindingContext = this;
         }
+        private void OnPageTapped(object sender, EventArgs e)
+        {
+            // Reset the logout timer when the page is tapped
+            ResetLogoutTimer();
+            Debug.WriteLine("Logout timer reset due to user interaction.");
+        }
 
-
-
-        public string PreviousMedication { get; set; } = "Brak"; // Domyœlnie "Brak"
+        public string PreviousMedication { get; set; } = "Brak"; // Default to "Brak"
 
         private void PopulateMedicationFields()
         {
             if (string.IsNullOrEmpty(_activity.ActionDetails))
             {
-                Debug.WriteLine("Brak szczegó³ów dla Podania Leków.");
+                Debug.WriteLine("No details for drug administration.");
                 return;
             }
 
@@ -103,32 +159,30 @@ namespace HealthOnBoard
                     var medicationName = actionDetails[0].Replace("Podano lek:", "").Trim();
                     var quantityUnit = actionDetails[1].Split(':');
 
-                    // Przypisz nazwê istniej¹cego leku do w³aœciwoœci
+                    // Assign medication name to the property
                     PreviousMedication = medicationName;
 
-                    // Ustaw lek na domyœlny w Pickerze
+                    // Set the default medication in the picker
                     SelectedMedication = Medications.FirstOrDefault(m => m.Name.Equals(medicationName, StringComparison.OrdinalIgnoreCase));
 
-                    // Jeœli lek nie znajduje siê w przefiltrowanej liœcie, dodaj go tymczasowo
+                    // If the medication is not in the filtered list, temporarily add it
                     if (SelectedMedication != null && !FilteredMedications.Contains(SelectedMedication))
                     {
                         FilteredMedications.Add(SelectedMedication);
                     }
 
-                    // Przypisz iloœæ i jednostkê
+                    // Assign quantity and unit
                     SelectedQuantity = int.TryParse(quantityUnit[1].Split(' ')[1], out var quantity) ? quantity : 1;
                     SelectedUnit = quantityUnit[1].Split(' ')[2];
 
-                    Debug.WriteLine($"Lek: {PreviousMedication}, Iloœæ: {SelectedQuantity}, Jednostka: {SelectedUnit}");
+                    Debug.WriteLine($"Medication: {PreviousMedication}, Quantity: {SelectedQuantity}, Unit: {SelectedUnit}");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"B³¹d podczas wype³niania pól Podania Leków: {ex.Message}");
+                Debug.WriteLine($"Error populating medication fields: {ex.Message}");
             }
         }
-
-
 
         private async void LoadMedicationsAsync()
         {
@@ -141,10 +195,10 @@ namespace HealthOnBoard
                 foreach (var medication in medications)
                 {
                     Medications.Add(medication);
-                    FilteredMedications.Add(medication); // Na pocz¹tku pokazujemy ca³¹ listê
+                    FilteredMedications.Add(medication); // Show the full list initially
                 }
 
-                // Jeœli lek jest przypisany, ustaw go jako wybrany
+                // Set the assigned medication as selected
                 if (!string.IsNullOrEmpty(PreviousMedication))
                 {
                     SelectedMedication = Medications.FirstOrDefault(m => m.Name.Equals(PreviousMedication, StringComparison.OrdinalIgnoreCase));
@@ -154,17 +208,16 @@ namespace HealthOnBoard
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"B³¹d podczas ³adowania leków: {ex.Message}");
-                await DisplayAlert("B³¹d", "Nie uda³o siê za³adowaæ listy leków.", "OK");
+                Debug.WriteLine($"Error loading medications: {ex.Message}");
+                await DisplayAlert("Error", "Failed to load medication list.", "OK");
             }
         }
-
 
         private async void OnSaveClicked(object sender, EventArgs e)
         {
             try
             {
-                // Przypisz odpowiednie wartoœci na podstawie typu akcji
+                // Assign values based on the action type
                 if (_activity.ActionType == "Pomiar temperatury" && decimal.TryParse(TemperatureEntry.Text, out var temperature))
                 {
                     _activity.CurrentTemperature = temperature;
@@ -178,7 +231,7 @@ namespace HealthOnBoard
                     _activity.ActionDetails = ActionDetails;
                 }
 
-                // Zaktualizuj w bazie danych
+                // Update the database
                 var success = await _databaseService.UpdateActivityLogAsync(
                     _activity.LogID,
                     _activity.ActionType,
@@ -188,32 +241,33 @@ namespace HealthOnBoard
 
                 if (success)
                 {
-                    Debug.WriteLine("Zapisano zmiany, wysy³anie powiadomienia o aktualizacji historii...");
+                    Debug.WriteLine("Changes saved, notifying history refresh...");
 
-                    // Wys³anie komunikatu o aktualizacji
+                    // Send update notification
                     MessagingCenter.Send(this, "RefreshPatientActivityHistory");
 
-                    await DisplayAlert("Sukces", "Dane zosta³y zapisane.", "OK");
+                    await DisplayAlert("Success", "Data saved successfully.", "OK");
                     await Navigation.PopAsync();
                 }
                 else
                 {
-                    await DisplayAlert("B³¹d", "Nie uda³o siê zaktualizowaæ danych.", "OK");
+                    await DisplayAlert("Error", "Failed to update data.", "OK");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"B³¹d podczas zapisu: {ex.Message}");
-                await DisplayAlert("B³¹d", $"Wyst¹pi³ problem: {ex.Message}", "OK");
+                Debug.WriteLine($"Error saving data: {ex.Message}");
+                await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
             }
         }
+
         private void OnAlphabetFilterClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.Text is not null)
             {
                 string selectedLetter = button.Text;
 
-                // Filtrowanie leków na podstawie wybranej litery
+                // Filter medications based on the selected letter
                 FilteredMedications.Clear();
 
                 foreach (var medication in Medications)
@@ -226,12 +280,10 @@ namespace HealthOnBoard
 
                 Debug.WriteLine($"Filtered medications by letter: {selectedLetter}. Found {FilteredMedications.Count} medications.");
 
-                // Automatycznie wybierz pierwszy lek z listy, jeœli istnieje
+                // Automatically select the first medication in the list, if any
                 SelectedMedication = FilteredMedications.FirstOrDefault();
             }
         }
-
-
 
         private void DecreaseQuantity_Clicked(object sender, EventArgs e)
         {
@@ -249,6 +301,15 @@ namespace HealthOnBoard
         private async void OnCancelClicked(object sender, EventArgs e)
         {
             await Navigation.PopAsync();
+        }
+
+        private async void OnLogoutClicked(object sender, EventArgs e)
+        {
+            bool confirmLogout = await DisplayAlert("Confirmation", "Are you sure you want to log out?", "Yes", "No");
+            if (confirmLogout)
+            {
+                await Navigation.PopToRootAsync();
+            }
         }
     }
 }

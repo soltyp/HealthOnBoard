@@ -3,8 +3,11 @@
              x:Class="HealthOnBoard.PatientHistoryPage"
              Title="Historia Leczenia"
              BackgroundColor="#1E1E2F">
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnScreenTapped" />
+        </Grid.GestureRecognizers>
 
-    <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -13,24 +16,44 @@
         <!-- Pasek nawigacyjny -->
         <Grid Grid.Row="0" BackgroundColor="#292A3A" Padding="10">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Label Text="Historia Leczenia"
-                   FontSize="18"
-                   TextColor="#FFFFFF"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center"
-                   Grid.Column="0" />
+            <Image Source="user_icon.png"
+                   HeightRequest="40"
+                   WidthRequest="40"
+                   VerticalOptions="Center" />
 
-            <!-- Logout Timer -->
-            <Label x:Name="LogoutTimerLabel"
-                   FontSize="14"
-                   TextColor="#FFCC00"
+            <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                <Label x:Name="UserFirstNameLabel" Text="Jan" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
+                <Label x:Name="RoleLabel" Text="Ordynator" TextColor="#00CCFF" FontSize="14" />
+            </HorizontalStackLayout>
+
+            <Frame Grid.Column="2"
+                   Padding="8,2"
+                   BackgroundColor="#1E1E2F"
+                   CornerRadius="15"
                    VerticalOptions="Center"
-                   HorizontalOptions="End"
-                   Grid.Column="1" />
+                   HeightRequest="42">
+                <Label x:Name="LogoutTimerLabel"
+                       Text="02:56"
+                       TextColor="#FFCC00"
+                       FontSize="14"
+                       VerticalOptions="Center" />
+            </Frame>
+
+            <Button Grid.Column="3"
+                    Text="Wyloguj"
+                    FontSize="14"
+                    BackgroundColor="#FF3B30"
+                    TextColor="#FFFFFF"
+                    CornerRadius="15"
+                    HeightRequest="34"
+                    VerticalOptions="Center"
+                    Clicked="OnLogoutClicked" />
         </Grid>
 
         <!-- Lista historii leczenia -->

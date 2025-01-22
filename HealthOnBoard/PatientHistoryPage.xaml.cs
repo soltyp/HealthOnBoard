@@ -2,6 +2,7 @@ using HospitalManagementData;
 using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Timers;
 
 namespace HealthOnBoard
 {
@@ -67,14 +68,35 @@ namespace HealthOnBoard
 
             BindingContext = this;
 
-            // Nas³uchiwanie na wiadomoœæ o aktualizacji historii
+            UserFirstNameLabel.Text = user.FirstName ?? "Brak danych";
+            RoleLabel.Text = GetRoleName(user.RoleID); // Use the role name retrieval method
+
+            // Initialize the logout timer
+            InitializeLogoutTimer();
+
+            // Subscribe to history refresh messages
             MessagingCenter.Subscribe<EditActionPage>(this, "RefreshPatientActivityHistory", async (sender) =>
             {
                 await RefreshPatientHistoryAsync();
             });
 
-            InitializeLogoutTimer();
+            // Load the patient's history
             LoadPatientHistoryAsync();
+        }
+
+        private string GetRoleName(int roleId)
+        {
+            try
+            {
+                // Fetch role from the database using the provided service
+                var role = _databaseService.GetRoleById(roleId);
+                return role?.RoleName ?? "Nieznana rola";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas pobierania nazwy roli: {ex.Message}");
+                return "B³¹d roli";
+            }
         }
 
         private async Task LoadPatientHistoryAsync()
@@ -119,15 +141,6 @@ namespace HealthOnBoard
             }
         }
 
-        private void UpdateViewForSelectedAction()
-        {
-            IsTemperatureInputVisible = SelectedActionType == "Pomiar temperatury";
-            IsMedicationInputVisible = SelectedActionType == "Podanie leków";
-
-            OnPropertyChanged(nameof(IsTemperatureInputVisible));
-            OnPropertyChanged(nameof(IsMedicationInputVisible));
-        }
-
         private void InitializeLogoutTimer()
         {
             _remainingTimeInSeconds = LogoutTimeInSeconds;
@@ -137,11 +150,16 @@ namespace HealthOnBoard
             _logoutTimer.Start();
         }
 
-        private void UpdateCountdown(object sender, System.Timers.ElapsedEventArgs e)
+        private void UpdateCountdown(object sender, ElapsedEventArgs e)
         {
             _remainingTimeInSeconds--;
+
             Dispatcher.Dispatch(() =>
             {
+                int minutes = _remainingTimeInSeconds / 60;
+                int seconds = _remainingTimeInSeconds % 60;
+                LogoutTimerLabel.Text = $"{minutes:D2}:{seconds:D2}";
+
                 if (_remainingTimeInSeconds <= 0)
                 {
                     _logoutTimer.Stop();
@@ -149,7 +167,10 @@ namespace HealthOnBoard
                 }
             });
         }
-
+        private void OnScreenTapped(object sender, EventArgs e)
+        {
+            ResetLogoutTimer();
+        }
         private async void LogoutUser()
         {
             await Dispatcher.DispatchAsync(async () =>
@@ -159,7 +180,7 @@ namespace HealthOnBoard
             });
         }
 
-        private void OnScreenTapped(object sender, EventArgs e)
+        private void ResetLogoutTimer()
         {
             _remainingTimeInSeconds = LogoutTimeInSeconds;
         }
@@ -197,6 +218,15 @@ namespace HealthOnBoard
                     Debug.WriteLine($"B³¹d podczas usuwania czynnoœci: {ex.Message}");
                     await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas usuwania czynnoœci.", "OK");
                 }
+            }
+        }
+
+        private async void OnLogoutClicked(object sender, EventArgs e)
+        {
+            bool confirmLogout = await DisplayAlert("Potwierdzenie", "Czy na pewno chcesz siê wylogowaæ?", "Tak", "Nie");
+            if (confirmLogout)
+            {
+                await Navigation.PopToRootAsync();
             }
         }
 

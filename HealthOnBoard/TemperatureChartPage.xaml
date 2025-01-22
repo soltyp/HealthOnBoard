@@ -4,32 +4,87 @@
              Title="Wykres Temperatury"
              BackgroundColor="#1E1E2F">
 
-    <VerticalStackLayout Padding="20" Spacing="20">
-        <!-- Nagłówek -->
-        <Label Text="Wszystkie wartości temperatury" 
-               FontSize="20" 
-               FontAttributes="Bold" 
-               TextColor="White" 
-               HorizontalOptions="Center" />
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnScreenTapped" />
+        </Grid.GestureRecognizers>
 
-        <!-- Siatka wykresu temperatury -->
-        <Frame BackgroundColor="#292A3A"
-               CornerRadius="12"
-               Padding="10,30,10,10"
-               Margin="10,0,10,10"
-               HasShadow="True"
-               HorizontalOptions="FillAndExpand"
-               VerticalOptions="FillAndExpand">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <Grid x:Name="TemperatureChartGrid"
-                  VerticalOptions="FillAndExpand"
-                  HorizontalOptions="FillAndExpand"
-                  RowSpacing="5">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="3*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-            </Grid>
-        </Frame>
-    </VerticalStackLayout>
+        <!-- Pasek nawigacyjny -->
+        <Grid Grid.Row="0" BackgroundColor="#292A3A" Padding="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Image Source="user_icon.png"
+                   HeightRequest="40"
+                   WidthRequest="40"
+                   VerticalOptions="Center" />
+
+            <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                <Label x:Name="UserFirstNameLabel" Text="Jan" TextColor="#FFFFFF" FontSize="14" FontAttributes="Bold" />
+                <Label x:Name="RoleLabel" Text="Ordynator" TextColor="#00CCFF" FontSize="14" />
+            </HorizontalStackLayout>
+
+            <Frame Grid.Column="2"
+                   Padding="8,2"
+                   BackgroundColor="#1E1E2F"
+                   CornerRadius="15"
+                   VerticalOptions="Center"
+                   HeightRequest="42">
+                <Label x:Name="LogoutTimer"
+                       Text="02:56"
+                       TextColor="#FFCC00"
+                       FontSize="14"
+                       VerticalOptions="Center" />
+            </Frame>
+
+            <Button Grid.Column="3"
+                    Text="Wróć"
+                    FontSize="14"
+                    BackgroundColor="#007BFF"
+                    TextColor="#FFFFFF"
+                    CornerRadius="15"
+                    HeightRequest="34"
+                    VerticalOptions="Center"
+                    Clicked="OnBackButtonClicked" />
+        </Grid>
+
+        <!-- Główna zawartość -->
+        <VerticalStackLayout Grid.Row="1" Padding="20" Spacing="20">
+            <!-- Nagłówek -->
+            <Label Text="Wszystkie wartości temperatury" 
+                   FontSize="20" 
+                   FontAttributes="Bold" 
+                   TextColor="White" 
+                   HorizontalOptions="Center" />
+
+            <!-- Siatka wykresu temperatury -->
+            <Frame BackgroundColor="#292A3A"
+                   CornerRadius="12"
+                   Padding="10,30,10,10"
+                   Margin="10,0,10,10"
+                   HasShadow="True"
+                   HorizontalOptions="FillAndExpand"
+                   VerticalOptions="FillAndExpand">
+
+                <Grid x:Name="TemperatureChartGrid"
+                      VerticalOptions="FillAndExpand"
+                      HorizontalOptions="FillAndExpand"
+                      RowSpacing="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                </Grid>
+            </Frame>
+        </VerticalStackLayout>
+    </Grid>
 </ContentPage>

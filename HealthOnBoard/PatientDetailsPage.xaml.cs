@@ -6,45 +6,59 @@ namespace HealthOnBoard
     {
         private readonly DatabaseService _databaseService;
         private readonly int _patientId;
-        private readonly User _user; // User information
+        private readonly User _user; // Informacje o u¿ytkowniku
         private System.Timers.Timer _logoutTimer;
-        private const int LogoutTimeInSeconds = 180; // 3 minutes
+        private const int LogoutTimeInSeconds = 180; // 3 minuty
         private int _remainingTimeInSeconds;
 
         public PatientDetailsPage(User user, int patientId, DatabaseService databaseService)
         {
             InitializeComponent();
 
-            // Assign parameters to fields
             _user = user ?? throw new ArgumentNullException(nameof(user), "User cannot be null");
-            _patientId = patientId;
-            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+            _patientId = patientId > 0 ? patientId : throw new ArgumentException("Invalid Patient ID", nameof(patientId));
+            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService), "DatabaseService cannot be null");
 
-            // Update UI and initialize components
-            UpdateNavbar();
-            InitializeLogoutTimer();
-            AddTapGestureToResetTimer();
-
-            // Load patient details
-            LoadPatientDetailsAsync();
-        }
-
-        // Update navbar information
-        private void UpdateNavbar()
-        {
+            // Ustaw dane u¿ytkownika
             UserFirstNameLabel.Text = _user.FirstName ?? "Brak danych";
-            RoleLabel.Text = _user.Role ?? "Brak roli";
+            RoleLabel.Text = GetRoleName(_user.RoleID) ?? "Brak roli";
+
+            // Inicjalizacja timera
+            InitializeLogoutTimer();
+
+            // Dodanie obs³ugi dotkniêcia ekranu
+            AddTapGestureToMainGrid();
+
+            // Za³aduj dane pacjenta
+            LoadPatientDetailsAsync();
+
+            BindingContext = this;
         }
 
-        // Add tap gesture to reset the timer
-        private void AddTapGestureToResetTimer()
+        // Pobierz nazwê roli na podstawie RoleID
+        private string GetRoleName(int roleId)
+        {
+            try
+            {
+                var role = _databaseService.GetRoleById(roleId);
+                return role?.RoleName;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"B³¹d podczas pobierania nazwy roli: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Dodanie gestu do resetowania timera
+        private void AddTapGestureToMainGrid()
         {
             var tapGesture = new TapGestureRecognizer();
             tapGesture.Tapped += (_, _) => ResetLogoutTimer();
             MainGrid.GestureRecognizers.Add(tapGesture);
         }
 
-        // Async method to load patient details
+        // Asynchroniczne za³adowanie danych pacjenta
         private async void LoadPatientDetailsAsync()
         {
             try
@@ -53,7 +67,6 @@ namespace HealthOnBoard
 
                 if (patient != null)
                 {
-                    // Update UI with patient details
                     PatientNameLabel.Text = patient.Name ?? "Brak danych";
                     PatientAgeLabel.Text = $"{patient.Age} lat";
                     PatientPESELLabel.Text = patient.PESEL ?? "Brak danych";
@@ -75,23 +88,22 @@ namespace HealthOnBoard
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"B³¹d podczas ³adowania szczegó³ów pacjenta: {ex.Message}");
+                Debug.WriteLine($"B³¹d podczas ³adowania danych pacjenta: {ex.Message}");
                 await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas ³adowania danych pacjenta.", "OK");
             }
         }
 
-
-        // Initialize the logout timer
+        // Inicjalizacja timera wylogowania
         private void InitializeLogoutTimer()
         {
             _remainingTimeInSeconds = LogoutTimeInSeconds;
-            _logoutTimer = new System.Timers.Timer(1000); // 1 second interval
+            _logoutTimer = new System.Timers.Timer(1000); // 1 sekunda
             _logoutTimer.Elapsed += UpdateCountdown;
             _logoutTimer.AutoReset = true;
             _logoutTimer.Start();
         }
 
-        // Update the countdown for the logout timer
+        // Aktualizacja timera wylogowania
         private void UpdateCountdown(object sender, System.Timers.ElapsedEventArgs e)
         {
             _remainingTimeInSeconds--;
@@ -110,7 +122,7 @@ namespace HealthOnBoard
             });
         }
 
-        // Handle logout when timer expires
+        // Wylogowanie po wygaœniêciu czasu
         private async void LogoutUser()
         {
             await Dispatcher.DispatchAsync(async () =>
@@ -120,19 +132,16 @@ namespace HealthOnBoard
             });
         }
 
-        // Reset the logout timer
+        // Resetowanie timera
         private void ResetLogoutTimer()
         {
             _remainingTimeInSeconds = LogoutTimeInSeconds;
         }
 
-        // Handle back button click
+        // Obs³uga przycisku powrotu
         private async void OnBackButtonClicked(object sender, EventArgs e)
         {
             await Navigation.PopAsync();
         }
-
-
-
     }
 }
