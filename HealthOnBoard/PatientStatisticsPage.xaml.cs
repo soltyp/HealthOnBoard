@@ -272,25 +272,58 @@ namespace HealthOnBoard
                 // Oblicz udzia³ procentowy p³ci
                 int maleCount = genderStats.Count(g => g.Gender == "Mê¿czyzna");
                 int femaleCount = genderStats.Count(g => g.Gender == "Kobieta");
-                int unknownCount = genderStats.Count(g => g.Gender == "Nieznana"); // Obs³uga "Nieznana"
+                // Obs³uga nieznanej p³ci (sprawdzamy tak¿e null lub puste wartoœci)
+                int unknownCount = genderStats.Count(g => string.IsNullOrEmpty(g.Gender) || g.Gender == "Nieznana" || g.Gender.Trim().ToLower() == "unknown");
+
+                // Dodanie wartoœci domyœlnej, jeœli którejœ kategorii brakuje
+                if (maleCount == 0 && femaleCount == 0 && unknownCount == 0)
+                {
+                    Debug.WriteLine("Brak danych o p³ciach. Dodajê domyœlne wartoœci.");
+                    unknownCount = 1; // Dodanie 1 dla "Nieznana" jako wartoœæ domyœlna
+                }
+
+                // Dodanie brakuj¹cych kategorii jako 0, jeœli ich brak
+                if (maleCount == 0)
+                {
+                    Debug.WriteLine("Brak danych dla Mê¿czyzn. Dodajê wartoœæ 0.");
+                }
+                if (femaleCount == 0)
+                {
+                    Debug.WriteLine("Brak danych dla Kobiet. Dodajê wartoœæ 0.");
+                }
+                if (unknownCount == 0)
+                {
+                    Debug.WriteLine("Brak danych dla Nieznana. Dodajê wartoœæ 0.");
+                }
 
                 Debug.WriteLine($"Mê¿czyŸni: {maleCount}, Kobiety: {femaleCount}, Nieznana: {unknownCount}");
 
+                // Przygotowanie danych do wykresu
                 var genderData = new List<StatisticDataModel>
         {
             new StatisticDataModel { Label = "Mê¿czyŸni", Value = maleCount },
             new StatisticDataModel { Label = "Kobiety", Value = femaleCount },
-            new StatisticDataModel { Label = "Nieznana", Value = unknownCount } // Dodanie "Nieznana"
+            new StatisticDataModel { Label = "Nieznana", Value = unknownCount }
         };
 
+                // Obs³uga przypadku, gdy brak danych do wykresu
+                if (!genderData.Any(d => d.Value > 0))
+                {
+                    Debug.WriteLine("Brak danych do wyœwietlenia na wykresie.");
+                    await DisplayAlert("Informacja", "Brak danych do wyœwietlenia statystyk p³ci.", "OK");
+                    return;
+                }
+
+                // Budowanie wykresu
                 BuildPieChartForBedOccupancy(GenderPieChartGrid, genderData);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"B³¹d podczas ³adowania statystyk p³ci: {ex.Message}");
-                throw;
+                await DisplayAlert("B³¹d", "Wyst¹pi³ problem podczas ³adowania statystyk p³ci. Szczegó³y: " + ex.Message, "OK");
             }
         }
+
 
 
 

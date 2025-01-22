@@ -128,12 +128,13 @@ public class DatabaseService
     public async Task<List<BedStatisticsModel>> GetBedStatisticsAsync()
     {
         const string query = @"
-        SELECT 
-            b.BedNumber,
-            ISNULL(p.Name, 'Łóżko wolne') AS PatientName
-        FROM [HospitalManagement].[dbo].[Beds] b
-        LEFT JOIN [HospitalManagement].[dbo].[Patients] p ON b.BedNumber = p.BedNumber
-        ORDER BY b.BedNumber";
+    SELECT 
+        b.BedNumber,
+        ISNULL(p.Name, 'Łóżko wolne') AS PatientName
+    FROM [HospitalManagement].[dbo].[Beds] b
+    LEFT JOIN [HospitalManagement].[dbo].[Patients] p 
+        ON b.BedNumber = p.BedNumber AND p.IsVisible2 = 1 -- Include only active patients
+    ORDER BY b.BedNumber";
 
         using (var connection = new SqlConnection(_connectionString))
         {
@@ -141,21 +142,23 @@ public class DatabaseService
         }
     }
 
+
     public async Task<List<GenderStatisticsModel>> GetGenderStatisticsAsync()
     {
         try
         {
             const string query = @"
-            SELECT 
-                Name,
-                CASE 
-                    WHEN Gender = 'Male' THEN 'Mężczyzna'
-                    WHEN Gender = 'Female' THEN 'Kobieta'
-                    ELSE 'Nieznana' 
-                END AS Gender
-            FROM [HospitalManagement].[dbo].[Patients]";
-
-            using (var connection = new SqlConnection(_connectionString))
+        SELECT 
+            Name,
+            CASE 
+                WHEN Gender = 'Male' THEN 'Mężczyzna'
+                WHEN Gender = 'Female' THEN 'Kobieta'
+                ELSE 'Nieznana' 
+            END AS Gender
+        FROM [HospitalManagement].[dbo].[Patients]
+        WHERE IsVisible2 = 1"; 
+    
+        using (var connection = new SqlConnection(_connectionString))
             {
                 Debug.WriteLine("Łączenie z bazą danych w GetGenderStatisticsAsync...");
                 var result = await connection.QueryAsync<GenderStatisticsModel>(query);
@@ -169,6 +172,7 @@ public class DatabaseService
             throw;
         }
     }
+
 
 
     public string GetConnectionString()
@@ -264,7 +268,8 @@ public class DatabaseService
                 Allergies,
                 ChronicDiseases,
                 BloodType -- Pobierz bezpośrednio kolumnę BloodType
-            FROM Patients";
+            FROM Patients
+            WHERE IsVisible2 = 1"; 
 
                 var patients = await connection.QueryAsync<Patient>(query);
                 return patients.ToList();
@@ -276,6 +281,7 @@ public class DatabaseService
             throw;
         }
     }
+
 
 
     public async Task<bool> IsLockedOutAsync()
